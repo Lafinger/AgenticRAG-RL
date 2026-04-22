@@ -1,0 +1,5 @@
+model_name_or_path: ./models/Qwen3-4B
+adapter_name_or_path: ./training/outputs/sft_qwen3_4b_zh_react
+template: qwen3_nothink
+finetuning_type: lora
+export_dir: ./models/Qwen3-4B-SFT-merged

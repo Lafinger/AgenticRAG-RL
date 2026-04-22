@@ -1,0 +1,14 @@
+datasets>=3.0
+httpx>=0.28
+numpy>=2.0
+pandas>=2.2
+pyarrow>=17.0
+pydantic>=2.9
+pyyaml>=6.0
+requests>=2.32
+uvicorn>=0.30
+
+# 以下依赖通常在 Linux / WSL2 / 远端 GPU 环境安装
+# verl==0.8.*
+# vllm==0.11.*
+# flash-attn==2.6.3
