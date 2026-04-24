@@ -15,7 +15,7 @@ from agentic_rag_rl.server import create_app
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Start the retrieval HTTP server.")
-    parser.add_argument("--corpus", default=str(ROOT / "data" / "smoke_financial" / "corpus.jsonl"))
+    parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8790)
     parser.add_argument("--device", default="cpu")

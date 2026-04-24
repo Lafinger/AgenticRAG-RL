@@ -20,6 +20,13 @@ except Exception:  # pragma: no cover
 TOKEN_PATTERN = re.compile(r"[\u4e00-\u9fff]+|[a-z0-9]+(?:\.[0-9]+)*", re.IGNORECASE)
 
 
+def _chunk_metadata(chunk: Chunk) -> dict[str, object]:
+    metadata: dict[str, object] = dict(chunk.metadata)
+    if chunk.company:
+        metadata["company"] = chunk.company
+    return metadata
+
+
 def tokenize(text: str) -> list[str]:
     text = text.lower()
     segments = TOKEN_PATTERN.findall(text)
@@ -62,7 +69,7 @@ class KeywordRetriever:
                     title=chunk.title,
                     text=chunk.text,
                     source="keyword",
-                    metadata={"company": chunk.company, **chunk.metadata},
+                    metadata=_chunk_metadata(chunk),
                 )
             )
         return results
@@ -90,7 +97,7 @@ class DenseRetriever:
                     title=chunk.title,
                     text=chunk.text,
                     source="dense",
-                    metadata={"company": chunk.company, **chunk.metadata},
+                    metadata=_chunk_metadata(chunk),
                 )
             )
         return results

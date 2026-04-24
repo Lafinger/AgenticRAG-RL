@@ -5,13 +5,13 @@ from agentic_rag_rl.judge import judge_agentic_answer
 
 def test_judge_agentic_answer_scores_grounded_predictions() -> None:
     result = judge_agentic_answer(
-        question="永辉超市和红旗连锁哪家的营业收入更高？",
-        prediction="永辉超市",
-        gold="永辉超市",
-        aliases=["永辉超市", "永辉"],
-        evidence_text="永辉超市营业收入 377.79 亿元；红旗连锁营业收入 52.33 亿元。",
-        gold_chunks=["yh_0002", "hq_0002"],
-        retrieved_chunk_ids=["yh_0002", "hq_0002"],
+        question="双水村为什么叫双水村？",
+        prediction="因为有东拉河和哭咽河。",
+        gold="因为有东拉河和哭咽河。",
+        aliases=["东拉河和哭咽河", "因东拉河和哭咽河得名"],
+        evidence_text="村边有东拉河和哭咽河，因此这个村子取名叫双水村。",
+        gold_chunks=["corpus_chunkids_000002"],
+        retrieved_chunk_ids=["corpus_chunkids_000002"],
     )
 
     assert result["correctness"] == 1.0

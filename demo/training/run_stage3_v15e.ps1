@@ -15,9 +15,9 @@ if (-not $ProjectDir) {
 $env:AGENTIC_RAG_REWARD_VERSION = "v9a"
 $VerlDir = if ($VerlDir) { $VerlDir } else { Join-Path $ProjectDir "verl" }
 $Stage2MergedModel = if ($Stage2MergedModel) { $Stage2MergedModel } else { Join-Path $ProjectDir "models\Qwen3-4B-GRPO-Stage2-merged" }
-$TrainFile = Join-Path $ProjectDir "data\financial_eval\grpo_agentic_train.parquet"
-$ValFile = Join-Path $ProjectDir "data\financial_eval\grpo_agentic_val.parquet"
-$ToolConfig = Join-Path $ProjectDir "training\config\financial_tool_config.yaml"
+$TrainFile = Join-Path $ProjectDir "data\novel_eval\grpo_agentic_train.parquet"
+$ValFile = Join-Path $ProjectDir "data\novel_eval\grpo_agentic_val.parquet"
+$ToolConfig = Join-Path $ProjectDir "training\config\novel_tool_config.yaml"
 
 $command = @"
 python -m verl.trainer.main_ppo `

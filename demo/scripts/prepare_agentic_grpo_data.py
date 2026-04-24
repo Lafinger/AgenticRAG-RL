@@ -16,9 +16,9 @@ from agentic_rag_rl.io import load_multihop_examples
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare Agentic GRPO parquet data.")
-    parser.add_argument("--input", default=str(ROOT / "data" / "smoke_financial" / "qa_pairs.jsonl"))
-    parser.add_argument("--train-output", default=str(ROOT / "data" / "financial_eval" / "grpo_agentic_train.parquet"))
-    parser.add_argument("--val-output", default=str(ROOT / "data" / "financial_eval" / "grpo_agentic_val.parquet"))
+    parser.add_argument("--input", default=str(ROOT / "data" / "novel_eval" / "qa_pairs.jsonl"))
+    parser.add_argument("--train-output", default=str(ROOT / "data" / "novel_eval" / "grpo_agentic_train.parquet"))
+    parser.add_argument("--val-output", default=str(ROOT / "data" / "novel_eval" / "grpo_agentic_val.parquet"))
     parser.add_argument("--val-ratio", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()

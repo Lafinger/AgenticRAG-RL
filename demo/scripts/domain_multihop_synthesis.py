@@ -13,9 +13,9 @@ from agentic_rag_rl.synthesis import synthesize_multihop_examples
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Synthesize multi-hop QA examples from seeds.")
-    parser.add_argument("--seeds", required=True)
-    parser.add_argument("--corpus", required=True)
-    parser.add_argument("--output", required=True)
+    parser.add_argument("--seeds", default=str(ROOT / "data" / "novel_eval" / "seeds.jsonl"))
+    parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
+    parser.add_argument("--output", default=str(ROOT / "data" / "novel_eval" / "qa_pairs.jsonl"))
     parser.add_argument("--target-count", type=int, default=200)
     args = parser.parse_args()
 

@@ -23,7 +23,7 @@ def main() -> None:
     records = load_jsonl(input_dir / "sharegpt.jsonl")
     (output_dir / "data.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     dataset_info = {
-        "financial_agent_zh_react": {
+        "novel_agent_zh_react": {
             "file_name": "data.json",
             "formatting": "sharegpt",
             "columns": {"messages": "messages"},

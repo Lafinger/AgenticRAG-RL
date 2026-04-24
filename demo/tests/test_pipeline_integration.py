@@ -8,7 +8,7 @@ from agentic_rag_rl.retrieval import HybridRetriever
 from agentic_rag_rl.traces import build_oracle_traces
 
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_financial"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_novel"
 
 
 def test_smoke_pipeline_contracts_hold_together() -> None:

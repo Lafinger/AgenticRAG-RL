@@ -7,7 +7,7 @@ from agentic_rag_rl.io import load_chunks, load_multihop_examples
 from agentic_rag_rl.traces import build_oracle_traces, convert_traces_to_sharegpt, convert_traces_to_sft_records
 
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_financial"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_novel"
 
 
 def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
@@ -25,4 +25,4 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     assert "<tool_response>" in sft_records[0]["messages"][3]["content"]
     assert sharegpt_records[0]["messages"][0]["role"] == "system"
     assert grpo_rows[0]["agent_name"] == "tool_agent"
-    assert grpo_rows[0]["reward_model"]["ground_truth"]["gold_chunks"] == ["yh_0002", "hq_0002"]
+    assert grpo_rows[0]["reward_model"]["ground_truth"]["gold_chunks"] == ["corpus_chunkids_000001", "corpus_chunkids_000001"]

@@ -8,28 +8,28 @@ from typing import Any
 DEFAULT_AGENT_NAME = "tool_agent"
 
 SYSTEM_PROMPT_ZH = (
-    "你是一个金融文档问答 Agent。"
-    "你需要通过检索工具逐步搜索证据，最后用 <answer>...</answer> 输出最终答案。"
+    "你是一个中文小说阅读问答 Agent。"
+    "你需要通过文本检索工具逐步搜索人物、地点、事件和关系证据，最后用 <answer>...</answer> 输出最终答案。"
 )
 SYSTEM_PROMPT_EN = (
-    "You are a financial document QA agent. "
-    "Use search tools step by step and end with <answer>...</answer>."
+    "You are a Chinese novel reading QA agent. "
+    "Use text search tools step by step and end with <answer>...</answer>."
 )
 
 TOOL_SCHEMAS = [
     {
         "name": "keyword_search",
-        "description": "Use BM25 style keyword retrieval for precise entities and financial terms.",
+        "description": "Use BM25 style keyword retrieval for precise character, place, and event mentions.",
         "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]},
     },
     {
         "name": "dense_search",
-        "description": "Use dense retrieval for semantic matching.",
+        "description": "Use dense retrieval for semantic matching in novel passages.",
         "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]},
     },
     {
         "name": "hybrid_search",
-        "description": "Use keyword and dense retrieval together with fusion and rerank.",
+        "description": "Use keyword and dense retrieval together with fusion and rerank over novel chunks.",
         "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]},
     },
 ]

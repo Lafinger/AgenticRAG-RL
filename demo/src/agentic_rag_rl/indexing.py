@@ -8,19 +8,18 @@ from typing import Any
 from .types import Chunk
 
 
+def _chunk_record(chunk: Chunk) -> dict[str, Any]:
+    record = {"title": chunk.title, "text": chunk.text, "metadata": chunk.metadata}
+    if chunk.company:
+        record["company"] = chunk.company
+    return record
+
+
 def build_index_bundle(chunks: list[Chunk]) -> dict[str, Any]:
     return {
         "manifest": {"chunk_count": len(chunks), "index_type": "bm25+tifidf-light"},
         "chunk_ids": [chunk.chunk_id for chunk in chunks],
-        "chunk_store": {
-            chunk.chunk_id: {
-                "title": chunk.title,
-                "text": chunk.text,
-                "company": chunk.company,
-                "metadata": chunk.metadata,
-            }
-            for chunk in chunks
-        },
+        "chunk_store": {chunk.chunk_id: _chunk_record(chunk) for chunk in chunks},
     }
 
 

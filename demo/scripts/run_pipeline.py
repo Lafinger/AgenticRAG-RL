@@ -16,7 +16,7 @@ from agentic_rag_rl.retrieval import HybridRetriever
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a pipeline-style evaluation query.")
     parser.add_argument("query")
-    parser.add_argument("--corpus", default=str(ROOT / "data" / "smoke_financial" / "corpus.jsonl"))
+    parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     args = parser.parse_args()
 
     retriever = HybridRetriever(load_chunks(args.corpus))

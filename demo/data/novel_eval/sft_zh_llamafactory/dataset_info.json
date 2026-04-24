@@ -1,0 +1,9 @@
+{
+  "novel_agent_zh_react": {
+    "file_name": "data.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages"
+    }
+  }
+}

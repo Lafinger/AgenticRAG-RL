@@ -8,7 +8,7 @@ from agentic_rag_rl.io import load_chunks
 from agentic_rag_rl.server import create_app
 
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_financial"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_novel"
 
 
 def test_retrieval_server_health_and_search() -> None:
@@ -20,8 +20,8 @@ def test_retrieval_server_health_and_search() -> None:
     assert health.status_code == 200
     assert health.json()["status"] == "ok"
 
-    response = client.post("/search", json={"query": "永辉超市 营业收入", "top_k": 2, "tool": "hybrid_search"})
+    response = client.post("/search", json={"query": "双水村 东拉河 哭咽河", "top_k": 2, "tool": "hybrid_search"})
     assert response.status_code == 200
 
     payload = response.json()
-    assert payload["results"][0]["chunk_id"] == "yh_0002"
+    assert payload["results"][0]["chunk_id"] == "corpus_chunkids_000002"

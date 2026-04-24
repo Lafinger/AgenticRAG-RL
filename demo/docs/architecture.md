@@ -2,7 +2,21 @@
 
 ## 数据链路
 
-`PDF -> corpus.jsonl -> index bundle -> seeds -> multihop qa -> oracle traces -> sft sharegpt -> grpo parquet`
+默认链路：
+
+`平凡的世界utf8.txt -> novel/corpus.jsonl -> index bundle -> seeds -> multihop qa -> oracle traces -> sft sharegpt -> grpo parquet`
+
+默认产物：
+
+- `data/novel/corpus.jsonl`
+- `data/novel/indexes/`
+- `data/novel_eval/seeds.jsonl`
+- `data/novel_eval/qa_pairs.jsonl`
+- `data/novel_eval/traces_oracle_zh.jsonl`
+- `data/novel_eval/sft/`
+- `data/novel_eval/sft_zh_llamafactory/`
+- `data/novel_eval/grpo_agentic_train.parquet`
+- `data/novel_eval/grpo_agentic_val.parquet`
 
 ## 训练链路
 
@@ -18,5 +32,5 @@
 
 ## 本机与远端职责
 
-- 本机 Windows：数据处理、SFT 数据转换、CPU retrieval server、smoke evaluation
+- 本机 Windows：小说文本解析、数据处理、SFT 数据转换、CPU retrieval server、smoke evaluation
 - 远端 Linux / WSL：LLaMA-Factory SFT、verl GRPO、vLLM Judge / rollout

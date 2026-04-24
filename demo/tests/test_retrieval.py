@@ -6,35 +6,35 @@ from agentic_rag_rl.io import load_chunks
 from agentic_rag_rl.retrieval import HybridRetriever, rrf_fuse, tokenize
 
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_financial"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_novel"
 
 
 def test_tokenize_supports_zh_and_en() -> None:
-    tokens = tokenize("永辉超市 revenue 377.79 亿元")
-    assert "永辉超市" in tokens or "永辉" in tokens
-    assert "revenue" in tokens
-    assert "377.79" in tokens
+    tokens = tokenize("孙少平 lived in 双水村")
+    assert "孙少平" in tokens or "少平" in tokens
+    assert "lived" in tokens
+    assert "双水村" in tokens or "双水" in tokens
 
 
 def test_rrf_fuse_merges_sources() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
     retriever = HybridRetriever(chunks)
-    keyword_results = retriever.keyword_search("永辉超市 营业收入", top_k=2)
-    dense_results = retriever.dense_search("永辉超市 营业收入", top_k=2)
+    keyword_results = retriever.keyword_search("双水村 东拉河 哭咽河", top_k=2)
+    dense_results = retriever.dense_search("双水村 东拉河 哭咽河", top_k=2)
 
     fused = rrf_fuse([keyword_results, dense_results])
 
     assert fused
-    assert fused[0].chunk_id == "yh_0002"
+    assert fused[0].chunk_id == "corpus_chunkids_000002"
     assert "keyword" in fused[0].source
     assert "dense" in fused[0].source
 
 
-def test_hybrid_search_prefers_financial_chunk() -> None:
+def test_hybrid_search_prefers_novel_chunk() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
     retriever = HybridRetriever(chunks)
 
-    results = retriever.hybrid_search("永辉超市 营业收入", top_k=3)
+    results = retriever.hybrid_search("孙少安 田润叶 同班", top_k=3)
 
     assert results
-    assert results[0].chunk_id == "yh_0002"
+    assert results[0].chunk_id == "corpus_chunkids_000003"

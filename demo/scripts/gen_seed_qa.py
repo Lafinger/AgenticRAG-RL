@@ -12,9 +12,9 @@ from agentic_rag_rl.synthesis import generate_seed_questions
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate seed QA from financial corpus.")
-    parser.add_argument("--corpus", required=True)
-    parser.add_argument("--output", required=True)
+    parser = argparse.ArgumentParser(description="Generate seed QA from novel corpus chunks.")
+    parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
+    parser.add_argument("--output", default=str(ROOT / "data" / "novel_eval" / "seeds.jsonl"))
     parser.add_argument("--max-per-chunk", type=int, default=2)
     args = parser.parse_args()
 

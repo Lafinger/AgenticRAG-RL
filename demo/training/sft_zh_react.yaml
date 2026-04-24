@@ -4,8 +4,8 @@ do_train: true
 finetuning_type: lora
 lora_rank: 64
 lora_target: all
-dataset: financial_agent_zh_react
-dataset_dir: ./data/financial_eval/sft_zh_llamafactory
+dataset: novel_agent_zh_react
+dataset_dir: ./data/novel_eval/sft_zh_llamafactory
 template: qwen3_nothink
 cutoff_len: 2048
 learning_rate: 1.0e-4

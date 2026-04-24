@@ -16,8 +16,8 @@ from agentic_rag_rl.retrieval import HybridRetriever
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a dataset-level pipeline evaluation.")
-    parser.add_argument("--data", default=str(ROOT / "data" / "smoke_financial" / "qa_pairs.jsonl"))
-    parser.add_argument("--corpus", default=str(ROOT / "data" / "smoke_financial" / "corpus.jsonl"))
+    parser.add_argument("--data", default=str(ROOT / "data" / "novel_eval" / "qa_pairs.jsonl"))
+    parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     parser.add_argument("--output", default=str(ROOT / "results" / "pipeline_eval.json"))
     parser.add_argument("--max-samples", type=int, default=50)
     args = parser.parse_args()

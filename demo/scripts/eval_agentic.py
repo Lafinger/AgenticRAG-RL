@@ -16,8 +16,8 @@ from agentic_rag_rl.retrieval import HybridRetriever
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate agentic search on a QA dataset.")
-    parser.add_argument("--data", default=str(ROOT / "data" / "smoke_financial" / "qa_pairs.jsonl"))
-    parser.add_argument("--corpus", default=str(ROOT / "data" / "smoke_financial" / "corpus.jsonl"))
+    parser.add_argument("--data", default=str(ROOT / "data" / "novel_eval" / "qa_pairs.jsonl"))
+    parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     parser.add_argument("--max-samples", type=int, default=50)
     parser.add_argument("--max-turns", type=int, default=7)
     parser.add_argument("--output")

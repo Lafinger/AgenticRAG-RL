@@ -11,6 +11,13 @@ def _trace_system_prompt(use_zh: bool) -> str:
     return SYSTEM_PROMPT_ZH if use_zh else SYSTEM_PROMPT_EN
 
 
+def _chunk_metadata(chunk: Chunk) -> dict[str, Any]:
+    metadata: dict[str, Any] = dict(chunk.metadata)
+    if chunk.company:
+        metadata["company"] = chunk.company
+    return metadata
+
+
 def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk], use_zh: bool = True) -> list[dict[str, Any]]:
     corpus = chunk_map(chunks)
     traces: list[dict[str, Any]] = []
@@ -28,7 +35,7 @@ def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk]
                     "title": chunk.title,
                     "text": chunk.text,
                     "source": "oracle",
-                    "metadata": {"company": chunk.company, **chunk.metadata},
+                    "metadata": _chunk_metadata(chunk),
                 }
             ]
             messages.append(

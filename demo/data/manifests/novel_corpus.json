@@ -1,0 +1,15 @@
+{
+  "description": "默认训练语料登记清单。主路径使用本地 UTF-8 小说文本，不再要求下载上市公司财报 PDF。",
+  "corpora": [
+    {
+      "name": "平凡的世界",
+      "source_file": "data/original_data/平凡的世界utf8.txt",
+      "domain": "中文小说阅读问答",
+      "default_corpus_output": "data/novel/corpus.jsonl",
+      "default_eval_output": "data/novel_eval/qa_pairs.jsonl"
+    }
+  ],
+  "legacy": {
+    "smoke_financial": "data/smoke_financial 仅作为历史兼容样例保留，不再作为默认训练语料。"
+  }
+}
