@@ -1,6 +1,6 @@
 # 中文小说多跳 Agentic RAG & RL 复现工程
 
-这个目录是 `9.2.1 垂直领域多跳 Agentic RAG & RL 简历项目.pdf` 的工程化复现版本。默认训练语料已从上市公司财报 PDF 切换为 `data/original_data/平凡的世界utf8.txt`，任务域改为中文小说人物、地点、事件、关系多跳阅读问答。
+这个目录是 `9.2.1 垂直领域多跳 Agentic RAG & RL 简历项目.pdf` 的工程化复现版本。默认训练语料是 `data/original_data/平凡的世界utf8.txt`，任务域是中文小说人物、地点、事件、关系多跳阅读问答。
 
 本工程采用 `uv` 管理本地 Python 环境。Windows 11 本机负责数据处理、检索服务、SFT/GRPO 数据构造和 smoke test；完整 SFT/GRPO 训练建议迁移到 Linux / WSL2 / A100 级 GPU 环境。
 
@@ -149,8 +149,6 @@ uv run python .\scripts\parse_text_corpus.py `
 | `metadata.line_start` | chunk 在原始 txt 中的起始行 | 证据定位、人工审查 |
 | `metadata.line_end` | chunk 在原始 txt 中的结束行 | 证据定位、人工审查 |
 | `metadata.character_aliases` | 在 chunk 中命中的人物 / 地点别名 | seed QA 生成、查询分解、诊断分析 |
-
-说明：小说 corpus 不再包含 `company` 字段；该字段只属于旧金融样例。
 
 ```mermaid
 flowchart LR
@@ -807,4 +805,3 @@ uv run python .\scripts\eval_agentic.py --data .\data\novel_eval\qa_pairs.jsonl 
 - Windows 11 本机：数据处理、SFT 数据转换、CPU retrieval server、smoke evaluation。
 - RTX 4070 Ti SUPER 16GB：适合低参模型或 1-2 条样本 rollout smoke，不适合完整 GRPO。
 - 远端 Linux / WSL / A100：完整 LLaMA-Factory SFT、verl GRPO、vLLM rollout 和 Judge。
-- `scripts/parse_pdf_corpus.py` 和 `data/smoke_financial` 作为历史兼容样例保留，但不再是默认路径。
