@@ -59,6 +59,21 @@ flowchart TD
 
 **目标**：创建可复现的本地 Python 环境，后续所有本机命令都通过 `uv run python ...` 执行。
 
+**详细说明**：
+
+- 该步骤先进入 `demo` 工程根目录，保证后续相对路径都从同一个目录解析。
+- `uv venv .venv --python 3.12` 会在当前目录创建 `.venv`，并绑定 Python 3.12 解释器。
+- `uv pip install -r .\requirements.txt` 会把本机数据处理、检索、评测所需依赖安装进 `.venv`。
+- 后续命令使用 `uv run python ...`，由 `uv` 自动选择 `.venv`，减少手动激活环境导致的路径错误。
+
+```mermaid
+flowchart LR
+    A["requirements.txt"] --> B["uv pip install"]
+    C["Python 3.12"] --> D[".venv"]
+    B --> D
+    D --> E["uv run python"]
+```
+
 **需要**：
 
 - Windows 11
@@ -89,17 +104,25 @@ uv pip install -r .\requirements.txt
 | `requirements.txt` | Python 包列表 | 本机数据处理、检索、评测所需依赖 | Step 1 到 Step 11 |
 | `pyproject.toml` | 项目元信息与 pytest 配置 | 指定源码路径和测试路径 | Step 11、单元测试 |
 
-```mermaid
-flowchart LR
-    A["requirements.txt"] --> B["uv pip install"]
-    C["Python 3.12"] --> D[".venv"]
-    B --> D
-    D --> E["uv run python"]
-```
-
 ## Step 1: 解析《平凡的世界》文本并切块
 
 **目标**：把原始 UTF-8 小说文本转换成统一 corpus 契约，供检索、QA 合成和训练数据构造使用。
+
+**详细说明**：
+
+- `parse_text_corpus.py` 读取 `平凡的世界utf8.txt`，按空行和长度窗口切分为多个 chunk。
+- 切分时会保留每个 chunk 在原始文本中的行号范围，用于后续人工定位证据。
+- 生成 `chunk_id` 时使用稳定递增编号，例如 `corpus_chunkids_000001`，保证重新生成后 ID 可预测。
+- 脚本会扫描 chunk 中出现的人物和地点别名，写入 `metadata.character_aliases`。
+- 输出的 `corpus.jsonl` 是后续检索、QA 合成、Oracle trace 和评测的共同源数据。
+
+```mermaid
+flowchart LR
+    A["平凡的世界utf8.txt"] --> B["parse_text_corpus.py"]
+    B --> C["段落 / 长度窗口切分"]
+    C --> D["识别人名 / 地名 alias"]
+    D --> E["data/novel/corpus.jsonl"]
+```
 
 **需要**：
 
@@ -150,17 +173,26 @@ uv run python .\scripts\parse_text_corpus.py `
 | `metadata.line_end` | chunk 在原始 txt 中的结束行 | 证据定位、人工审查 |
 | `metadata.character_aliases` | 在 chunk 中命中的人物 / 地点别名 | seed QA 生成、查询分解、诊断分析 |
 
-```mermaid
-flowchart LR
-    A["平凡的世界utf8.txt"] --> B["parse_text_corpus.py"]
-    B --> C["段落 / 长度窗口切分"]
-    C --> D["识别人名 / 地名 alias"]
-    D --> E["data/novel/corpus.jsonl"]
-```
-
 ## Step 2: 构建检索索引
 
 **目标**：为 corpus 构建本机可跑的轻量索引，支持 keyword、dense 和 hybrid 检索。
+
+**详细说明**：
+
+- `build_index.py` 先加载 `corpus.jsonl`，把每条 JSON 转成内部 `Chunk` 对象。
+- 索引构建会保留 chunk 顺序、chunk 文本和 metadata，便于检索结果回填原始证据。
+- 当前工程的本机索引是轻量版，主要保存 chunk store 和 ID 清单；真实检索时由 `HybridRetriever` 在内存中构建 BM25 与 TF-IDF dense 表示。
+- `chunk_store.pkl` 用于快速恢复检索所需的 chunk 内容，`manifest.json` 用于检查索引规模是否与 corpus 一致。
+
+```mermaid
+flowchart LR
+    A["corpus.jsonl"] --> B["build_index.py"]
+    B --> C["BM25 keyword"]
+    B --> D["char ngram dense"]
+    C --> E["RRF fusion"]
+    D --> E
+    E --> F["index bundle"]
+```
 
 **需要**：
 
@@ -191,19 +223,27 @@ uv run python .\scripts\build_index.py `
 | `chunk_ids.json` | chunk ID 列表 | 保留索引顺序 | 检索结果排序、调试索引错位 |
 | `chunk_store.pkl` | `chunk_id -> chunk record` | 存储检索返回所需文本和 metadata | retrieval server、Agentic evidence |
 
-```mermaid
-flowchart LR
-    A["corpus.jsonl"] --> B["build_index.py"]
-    B --> C["BM25 keyword"]
-    B --> D["char ngram dense"]
-    C --> E["RRF fusion"]
-    D --> E
-    E --> F["index bundle"]
-```
-
 ## Step 3: 生成小说域 seed QA
 
 **目标**：从 chunk 中规则化抽取基础问答，覆盖人物身份、人物关系、地点归属、事件原因、事件结果和人物行为。
+
+**详细说明**：
+
+- `gen_seed_qa.py` 逐条读取 corpus chunk，并调用 `generate_seed_questions` 做规则抽取。
+- 抽取逻辑会优先识别已知人物、地点和关键事件模式，例如孙少平、郝红梅、双水村、东拉河、哭咽河。
+- 每条 seed QA 都绑定一个 `doc_chunk_id`，表示这个问题的答案可以从哪个 chunk 中获得。
+- seed QA 是低成本的单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
+
+```mermaid
+flowchart TD
+    A["novel corpus chunks"] --> B["实体匹配"]
+    B --> C["人物关系 seed"]
+    B --> D["地点由来 seed"]
+    B --> E["人物行为 seed"]
+    C --> F["seeds.jsonl"]
+    D --> F
+    E --> F
+```
 
 **需要**：
 
@@ -236,20 +276,26 @@ uv run python .\scripts\gen_seed_qa.py `
 | `entities` | 问答中涉及的人物 / 地点 | 多跳组合、查询分解 |
 | `qa_type` | 问题类型，如 `character_relation` | 分层统计、诊断评测 |
 
-```mermaid
-flowchart TD
-    A["novel corpus chunks"] --> B["实体匹配"]
-    B --> C["人物关系 seed"]
-    B --> D["地点由来 seed"]
-    B --> E["人物行为 seed"]
-    C --> F["seeds.jsonl"]
-    D --> F
-    E --> F
-```
-
 ## Step 4: 合成多跳 QA
 
 **目标**：把 seed QA 组合成需要多次检索才能回答的问题，形成 RL/SFT 共享的阅读问答任务。
+
+**详细说明**：
+
+- `domain_multihop_synthesis.py` 加载 seed QA 和 corpus，然后按人物、地点、事件关系组合问题。
+- 合成时会把多个单跳 seed 放进 `hops[]`，再生成一个需要综合多个 hop 的 `final_question`。
+- 每个 hop 都保留原始 `question/answer/doc_chunk_id/qa_type`，用于构造 Oracle trace 和计算 `gold_chunks`。
+- `answer_aliases` 会记录可接受答案变体，降低训练和评测中因表述不同造成的误判。
+- `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
+
+```mermaid
+flowchart LR
+    A["seeds.jsonl"] --> B["按人物 / 地点 / 事件组合"]
+    B --> C["构造 final_question"]
+    B --> D["构造 hops"]
+    C --> E["qa_pairs.jsonl"]
+    D --> E
+```
 
 **需要**：
 
@@ -287,18 +333,25 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 | `hops[]` | 每跳 question/answer/doc_chunk_id/qa_type | Oracle traces、`gold_chunks`、hop recall |
 | `answer_aliases` | 可接受答案别名 | reward correctness、Judge 打分 |
 
-```mermaid
-flowchart LR
-    A["seeds.jsonl"] --> B["按人物 / 地点 / 事件组合"]
-    B --> C["构造 final_question"]
-    B --> D["构造 hops"]
-    C --> E["qa_pairs.jsonl"]
-    D --> E
-```
-
 ## Step 5: 清洗、划分和 answer aliases 增强
 
 **目标**：清理非法样本，按 train/test 划分，并增强答案别名，减少评测和 reward 对表述差异的误判。
+
+**详细说明**：
+
+- `clean_synthesis.py` 会检查每条多跳样本是否至少包含两个 hop，并确认每个 `doc_chunk_id` 都能在 corpus 中找到。
+- `split_train_test.py` 会把清洗后的样本固定划分为训练集和测试集，便于后续重复实验对比。
+- `gen_enhanced_aliases.py` 会基于标准答案和已有别名生成增强别名集合。
+- 该步骤的核心作用是把“能生成”的样本变成“适合训练和评测”的样本。
+
+```mermaid
+flowchart TD
+    A["qa_pairs.jsonl"] --> B["校验 hop 数"]
+    B --> C["校验 doc_chunk_id"]
+    C --> D["clean qa"]
+    D --> E["train / test split"]
+    D --> F["answer aliases"]
+```
 
 **需要**：
 
@@ -340,18 +393,27 @@ uv run python .\scripts\gen_enhanced_aliases.py `
 | `test.jsonl` | 多跳 QA 子集 | 固定评测集 | Agentic eval、LLM Judge |
 | `qa_pairs_aliases.json` | 增强后的 `answer_aliases` | 扩展答案可接受表达 | reward、Judge、人工审查 |
 
-```mermaid
-flowchart TD
-    A["qa_pairs.jsonl"] --> B["校验 hop 数"]
-    B --> C["校验 doc_chunk_id"]
-    C --> D["clean qa"]
-    D --> E["train / test split"]
-    D --> F["answer aliases"]
-```
-
 ## Step 6: 构造 Oracle traces
 
 **目标**：为每条多跳 QA 构造标准工具调用轨迹，作为 SFT 的监督信号，也作为 GRPO prompt 协议参考。
+
+**详细说明**：
+
+- `build_oracle_traces.py` 读取多跳 QA 中的 `hops[]`，按 gold hop 顺序构造理想检索轨迹。
+- 对每个 hop，脚本会生成一条 assistant 的 `<tool_call>`，再把对应 chunk 包装成 `<tool_response>`。
+- 最后一轮 assistant 消息使用 `<answer>...</answer>` 输出最终答案。
+- 这种 trace 不依赖模型 rollout，因此覆盖率稳定，适合作为 SFT 的格式学习数据。
+- Oracle trace 的轨迹较理想，后续 GRPO 会让模型在真实多轮检索环境中继续学习。
+
+```mermaid
+flowchart LR
+    A["qa_pairs.jsonl"] --> B["读取 gold hops"]
+    C["corpus.jsonl"] --> B
+    B --> D["生成 tool_call"]
+    D --> E["生成 tool_response"]
+    E --> F["生成 final answer"]
+    F --> G["traces_oracle_zh.jsonl"]
+```
 
 **需要**：
 
@@ -389,19 +451,24 @@ uv run python .\scripts\build_oracle_traces.py `
 | `<tool_response>` | 检索证据返回 | 训练模型 grounded answer |
 | `<answer>` | 最终答案标签 | reward 抽取答案、评测抽取答案 |
 
-```mermaid
-flowchart LR
-    A["qa_pairs.jsonl"] --> B["读取 gold hops"]
-    C["corpus.jsonl"] --> B
-    B --> D["生成 tool_call"]
-    D --> E["生成 tool_response"]
-    E --> F["生成 final answer"]
-    F --> G["traces_oracle_zh.jsonl"]
-```
-
 ## Step 7: 转换 SFT 训练数据
 
 **目标**：把 Oracle traces 转换成 ReAct/SFT 记录和 ShareGPT 格式，供 LLaMA-Factory 使用。
+
+**详细说明**：
+
+- `trace_to_sft.py` 读取 Oracle trace，把 system、user、assistant、tool 消息转换为 SFT 可训练的多轮对话。
+- 工具返回消息会被转换为用户侧消息，以适配常见 ShareGPT / chat template 训练格式。
+- 转换过程会保留 `<tool_call>`、`<tool_response>` 和 `<answer>`，确保模型学习同一套协议。
+- 输出的多个 JSONL 文件内容相近，主要用于兼容不同训练脚本或调试入口。
+
+```mermaid
+flowchart LR
+    A["oracle traces"] --> B["trace_to_sft.py"]
+    B --> C["react.jsonl"]
+    B --> D["sharegpt.jsonl"]
+    B --> E["lf_react.jsonl"]
+```
 
 **需要**：
 
@@ -435,17 +502,24 @@ uv run python .\scripts\trace_to_sft.py `
 | `messages[].role` | system/user/assistant | 标识对话角色 | tokenizer / template |
 | `messages[].content` | 消息正文 | 包含工具调用和答案标签 | SFT loss |
 
-```mermaid
-flowchart LR
-    A["oracle traces"] --> B["trace_to_sft.py"]
-    B --> C["react.jsonl"]
-    B --> D["sharegpt.jsonl"]
-    B --> E["lf_react.jsonl"]
-```
-
 ## Step 8: 导出 LLaMA-Factory 数据目录
 
 **目标**：把 ShareGPT SFT 数据打包成 LLaMA-Factory 可识别的数据集目录。
+
+**详细说明**：
+
+- `convert_sft_to_llamafactory.py` 读取 `sharegpt.jsonl`，转换成 LLaMA-Factory 使用的 `data.json`。
+- 脚本同时生成 `dataset_info.json`，声明数据集名称、文件名、格式和消息列映射。
+- `training/sft_zh_react.yaml` 通过 dataset 名 `novel_agent_zh_react` 引用该数据目录。
+- 这一步不训练模型，只负责把数据整理成训练框架能直接读取的目录结构。
+
+```mermaid
+flowchart LR
+    A["sharegpt.jsonl"] --> B["convert_sft_to_llamafactory.py"]
+    B --> C["data.json"]
+    B --> D["dataset_info.json"]
+    D --> E["novel_agent_zh_react"]
+```
 
 **需要**：
 
@@ -476,17 +550,31 @@ uv run python .\scripts\convert_sft_to_llamafactory.py `
 | `dataset_info.json` | `novel_agent_zh_react` 数据集定义 | 告诉 LLaMA-Factory 如何读取 `data.json` | `training/sft_zh_react.yaml` |
 | `training/sft_zh_react.yaml` | `dataset/template/model/output_dir` | SFT 训练配置 | Step 12 |
 
-```mermaid
-flowchart LR
-    A["sharegpt.jsonl"] --> B["convert_sft_to_llamafactory.py"]
-    B --> C["data.json"]
-    B --> D["dataset_info.json"]
-    D --> E["novel_agent_zh_react"]
-```
-
 ## Step 9: 构造 GRPO parquet 数据
 
 **目标**：把多跳 QA 转换成 `verl` Agentic GRPO 需要的 parquet 行，保留 raw chat、agent name 和 reward ground truth。
+
+**详细说明**：
+
+- `prepare_agentic_grpo_data.py` 读取多跳 QA，并调用 `build_grpo_rows` 构造 `verl` 训练行。
+- 每条样本的 `prompt` 保留原始 chat 消息，包含 system prompt 和用户问题。
+- `agent_name` 固定为 `tool_agent`，用于让 `verl` 选择带工具调用的 agent loop。
+- `reward_model.ground_truth` 会写入标准答案、答案别名、gold chunks 和 hop 数，供 reward 函数打分。
+- 脚本按 `val-ratio` 划分 train/val，并以 parquet 格式保存，减少训练时的解析成本。
+
+```mermaid
+flowchart TD
+    A["qa_pairs.jsonl"] --> B["build_grpo_rows"]
+    B --> C["prompt raw chat"]
+    B --> D["agent_name=tool_agent"]
+    B --> E["reward ground_truth"]
+    C --> F["train parquet"]
+    D --> F
+    E --> F
+    C --> G["val parquet"]
+    D --> G
+    E --> G
+```
 
 **需要**：
 
@@ -523,23 +611,27 @@ uv run python .\scripts\prepare_agentic_grpo_data.py `
 | `reward_model.ground_truth.gold_chunks` | 标准证据 chunk | hop recall / faithfulness |
 | `reward_model.ground_truth.hop_count` | 标准跳数 | 搜索充分性约束 |
 
-```mermaid
-flowchart TD
-    A["qa_pairs.jsonl"] --> B["build_grpo_rows"]
-    B --> C["prompt raw chat"]
-    B --> D["agent_name=tool_agent"]
-    B --> E["reward ground_truth"]
-    C --> F["train parquet"]
-    D --> F
-    E --> F
-    C --> G["val parquet"]
-    D --> G
-    E --> G
-```
-
 ## Step 10: 启动小说检索服务
 
 **目标**：为 Agentic rollout / GRPO 多轮工具调用提供 HTTP 检索工具服务。
+
+**详细说明**：
+
+- `retrieval_server.py` 启动 FastAPI 服务，并在内存中加载小说 corpus。
+- 服务启动后会构造 `HybridRetriever`，支持 keyword、dense 和 hybrid 三类检索请求。
+- `/search` 接口接收 `query/top_k/tool`，返回 chunk ID、标题、文本、分数和 metadata。
+- `novel_tool_config.yaml` 会告诉 `verl` 每个工具应该请求哪个 HTTP endpoint，以及如何组织 payload。
+- 本机 smoke 和远端 GRPO 可以使用同一套服务协议，差异只在运行机器和模型规模。
+
+```mermaid
+flowchart LR
+    A["corpus.jsonl"] --> B["retrieval_server.py"]
+    B --> C["/health"]
+    B --> D["/search"]
+    D --> E["keyword_search"]
+    D --> F["dense_search"]
+    D --> G["hybrid_search"]
+```
 
 **需要**：
 
@@ -574,19 +666,27 @@ uv run python .\training\tools\retrieval_server.py `
 | `results[].text` | 证据文本 | 回答依据 | faithfulness、Judge |
 | `novel_tool_config.yaml` | tool name / endpoint / payload | `verl` 工具配置 | GRPO Stage1/2/3 |
 
-```mermaid
-flowchart LR
-    A["corpus.jsonl"] --> B["retrieval_server.py"]
-    B --> C["/health"]
-    B --> D["/search"]
-    D --> E["keyword_search"]
-    D --> F["dense_search"]
-    D --> G["hybrid_search"]
-```
-
 ## Step 11: 本机 smoke 评测
 
 **目标**：在不启动真实大模型训练的情况下，验证数据、检索、agentic rollout 和 reward 所需字段能闭环。
+
+**详细说明**：
+
+- `eval_agentic.py` 加载 QA 数据和 corpus，在本地创建 `HybridRetriever`。
+- 每条样本会调用规则化的 `run_agentic_episode`，模拟多轮检索和答案生成。
+- 脚本会记录预测答案、召回 chunk、标准 gold chunks、工具调用次数和证据文本。
+- 该步骤不评估大模型能力，而是验证数据契约、检索链路和评测字段是否完整。
+- 如果该步骤失败，优先检查前面生成的 corpus、QA、chunk ID 和检索结果。
+
+```mermaid
+flowchart TD
+    A["qa_pairs.jsonl"] --> B["eval_agentic.py"]
+    C["corpus.jsonl"] --> D["HybridRetriever"]
+    D --> B
+    B --> E["tool calls"]
+    E --> F["prediction"]
+    F --> G["EM / F1 / hop_recall"]
+```
 
 **需要**：
 
@@ -622,19 +722,26 @@ uv run python .\scripts\eval_agentic.py `
 | `results[].retrieved_chunk_ids` | 实际召回 chunk | reward / hop-aware 诊断 |
 | `results[].evidence` | 检索证据详情 | 人工审查、faithfulness 分析 |
 
-```mermaid
-flowchart TD
-    A["qa_pairs.jsonl"] --> B["eval_agentic.py"]
-    C["corpus.jsonl"] --> D["HybridRetriever"]
-    D --> B
-    B --> E["tool calls"]
-    E --> F["prediction"]
-    F --> G["EM / F1 / hop_recall"]
-```
-
 ## Step 12: SFT 训练与 checkpoint 合并
 
 **目标**：用 Oracle traces 让模型先学会 Hermes 工具调用格式、检索步骤和 `<answer>` 答案协议。
+
+**详细说明**：
+
+- SFT 阶段使用 Step 8 导出的 ShareGPT 数据，让基座模型先模仿理想工具调用轨迹。
+- 训练时 `qwen3_nothink` 模板负责把多轮消息转成模型可学习的 token 序列。
+- LoRA 训练只更新少量适配器权重，降低显存和训练成本。
+- export 阶段会把 LoRA adapter 合并回基座模型，生成后续 GRPO 使用的 merged model。
+- 本机主要验证数据格式；完整 SFT 建议在更大显存环境中执行。
+
+```mermaid
+flowchart LR
+    A["novel_agent_zh_react"] --> B["LLaMA-Factory SFT"]
+    C["Qwen3-4B"] --> B
+    B --> D["LoRA adapter"]
+    D --> E["export_sft.yaml"]
+    E --> F["Qwen3-4B-SFT-merged"]
+```
 
 **需要**：
 
@@ -666,18 +773,28 @@ llamafactory-cli export .\training\export_sft.yaml
 | `training/outputs/sft_qwen3_4b_zh_react` | LoRA adapter | 学到工具调用格式的增量权重 | export |
 | `models/Qwen3-4B-SFT-merged` | 合并后的 HF 模型目录 | GRPO 初始模型 | Stage1 / v11e |
 
-```mermaid
-flowchart LR
-    A["novel_agent_zh_react"] --> B["LLaMA-Factory SFT"]
-    C["Qwen3-4B"] --> B
-    B --> D["LoRA adapter"]
-    D --> E["export_sft.yaml"]
-    E --> F["Qwen3-4B-SFT-merged"]
-```
-
 ## Step 13: Agentic GRPO 训练
 
 **目标**：在 `verl` Agentic RL 中让模型通过检索工具多轮推理，并用 reward 约束 correctness、faithfulness、hop recall 和搜索行为。
+
+**详细说明**：
+
+- Stage1 使用 SFT merged model 作为初始模型，读取 GRPO train/val parquet。
+- rollout 时模型根据 prompt 调用检索工具，工具请求会通过 `novel_tool_config.yaml` 转发到 retrieval server。
+- reward 函数从模型输出中抽取 `<answer>`，并结合答案别名、gold chunks、hop count 和工具调用记录打分。
+- Stage1 默认使用 `v6a` 强化 grounding，Stage2 使用 `v5a` 强化 correctness，Stage3 使用 `v9a` 做对照实验。
+- PowerShell 脚本提供 `-PrintOnly` 模式，先打印完整命令和路径，确认无误后再在 GPU 环境执行真实训练。
+
+```mermaid
+flowchart TD
+    A["SFT merged model"] --> B["Stage1 v11e / reward v6a"]
+    C["GRPO train / val parquet"] --> B
+    D["retrieval server"] --> B
+    B --> E["Stage1 best checkpoint"]
+    E --> F["Stage2 v14e / reward v5a"]
+    F --> G["Stage2 checkpoint"]
+    G --> H["Stage3 v15e / reward v9a 对照"]
+```
 
 **需要**：
 
@@ -715,20 +832,27 @@ flowchart LR
 | `AGENTIC_RAG_REWARD_VERSION` | `v6a/v5a/v9a` | 切换 reward 公式 | Stage1/2/3 |
 | `novel_tool_config.yaml` | tool endpoint | 多轮检索工具配置 | rollout 工具调用 |
 
-```mermaid
-flowchart TD
-    A["SFT merged model"] --> B["Stage1 v11e / reward v6a"]
-    C["GRPO train / val parquet"] --> B
-    D["retrieval server"] --> B
-    B --> E["Stage1 best checkpoint"]
-    E --> F["Stage2 v14e / reward v5a"]
-    F --> G["Stage2 checkpoint"]
-    G --> H["Stage3 v15e / reward v9a 对照"]
-```
-
 ## Step 14: 评测与诊断
 
 **目标**：比较 SFT、Stage1、Stage2、Stage3 的效果，避免只验证“能跑”，而忽略多跳检索质量和答案可信度。
+
+**详细说明**：
+
+- 评测阶段使用固定 QA 集和同一份 corpus，保证不同 checkpoint 的结果可比。
+- Pipeline eval 作为非 agentic 基线，主要衡量直接检索回答的上限和问题难度。
+- Agentic eval 会记录多轮工具调用、召回证据和最终答案，用于分析模型是否真的按 hop 搜索。
+- LLM Judge 可作为补充评估 correctness、faithfulness 和 context precision。
+- 最终应同时看答案指标、证据召回、工具调用行为和人工可审查证据，而不是只看单一分数。
+
+```mermaid
+flowchart LR
+    A["SFT / GRPO checkpoint"] --> B["Agentic eval"]
+    C["qa_pairs / test set"] --> B
+    D["retrieval evidence"] --> B
+    B --> E["EM / F1"]
+    B --> F["hop-aware diagnostics"]
+    B --> G["LLM Judge"]
+```
 
 **需要**：
 
@@ -771,17 +895,6 @@ uv run python .\scripts\run_cloud_eval.py `
 | `hop_recall` | 证据召回指标 | grounding 趋势 |
 | `tool_calls` | 工具调用次数 | 搜索行为诊断 |
 | `evidence` | 召回证据文本 | faithfulness / Judge |
-
-```mermaid
-flowchart LR
-    A["SFT / GRPO checkpoint"] --> B["Agentic eval"]
-    C["qa_pairs / test set"] --> B
-    D["retrieval evidence"] --> B
-    B --> E["EM / F1"]
-    B --> F["hop-aware diagnostics"]
-    B --> G["LLM Judge"]
-```
-
 ## 一键本机 smoke 顺序
 
 如果只想验证本机闭环，按下面顺序执行即可：
