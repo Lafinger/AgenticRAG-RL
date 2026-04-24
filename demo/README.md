@@ -113,14 +113,14 @@ uv pip install -r .\requirements.txt
 - `parse_text_corpus.py` 读取 `平凡的世界utf8.txt`，按空行和长度窗口切分为多个 chunk。
 - 切分时会保留每个 chunk 在原始文本中的行号范围，用于后续人工定位证据。
 - 生成 `chunk_id` 时使用稳定递增编号，例如 `corpus_chunkids_000001`，保证重新生成后 ID 可预测。
-- 脚本会扫描 chunk 中出现的人物和地点别名，写入 `metadata.character_aliases`。
+- 脚本会扫描 chunk 中出现的人物名称，写入 `metadata.character_aliases`。
 - 输出的 `corpus.jsonl` 是后续检索、QA 合成、Oracle trace 和评测的共同源数据。
 
 ```mermaid
 flowchart LR
     A["平凡的世界utf8.txt"] --> B["parse_text_corpus.py"]
     B --> C["段落 / 长度窗口切分"]
-    C --> D["识别人名 / 地名 alias"]
+    C --> D["识别人名 alias"]
     D --> E["data/novel/corpus.jsonl"]
 ```
 
@@ -171,7 +171,7 @@ uv run python .\scripts\parse_text_corpus.py `
 | `metadata.source_file` | 原始文本文件名 | 数据溯源、排查生成错误 |
 | `metadata.line_start` | chunk 在原始 txt 中的起始行 | 证据定位、人工审查 |
 | `metadata.line_end` | chunk 在原始 txt 中的结束行 | 证据定位、人工审查 |
-| `metadata.character_aliases` | 在 chunk 中命中的人物 / 地点别名 | seed QA 生成、查询分解、诊断分析 |
+| `metadata.character_aliases` | 在 chunk 中命中的人物名称或人物别名 | seed QA 生成、查询分解、诊断分析 |
 
 ## Step 2: 构建检索索引
 

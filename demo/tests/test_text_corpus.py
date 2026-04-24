@@ -13,7 +13,7 @@ def test_chunk_text_file_generates_stable_novel_chunks(tmp_path: Path) -> None:
                 "孙少平在学校生活艰难。",
                 "郝红梅也因为贫穷而自卑。",
                 "",
-                "双水村有东拉河和哭咽河。",
+                "孙兰花住在双水村附近。",
             ]
         ),
         encoding="utf-8",
@@ -27,7 +27,8 @@ def test_chunk_text_file_generates_stable_novel_chunks(tmp_path: Path) -> None:
     assert chunks[0].metadata["source_file"] == "平凡的世界utf8.txt"
     assert chunks[0].metadata["line_start"] == 1
     assert "孙少平" in chunks[0].metadata["character_aliases"]
-    assert any("双水村" in chunk.metadata["character_aliases"] for chunk in chunks)
+    assert any("孙兰花" in chunk.metadata["character_aliases"] for chunk in chunks)
+    assert all("双水村" not in chunk.metadata["character_aliases"] for chunk in chunks)
 
 
 def test_chunk_text_file_to_jsonl_keeps_readable_chinese_and_omits_company(tmp_path: Path) -> None:
