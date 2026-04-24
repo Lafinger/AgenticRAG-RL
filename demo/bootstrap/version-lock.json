@@ -1,0 +1,11 @@
+{
+  "llamafactory_repo": "https://github.com/hiyouga/LLaMA-Factory.git",
+  "llamafactory_ref": "v0.9.4",
+  "verl_repo": "https://github.com/volcengine/verl.git",
+  "verl_ref": "main",
+  "target_stack": {
+    "qwen": "Qwen3-4B",
+    "vllm": "0.11.x",
+    "flash_attn": "2.6.3"
+  }
+}

@@ -1,0 +1,28 @@
+tools:
+  - name: keyword_search
+    type: http
+    endpoint: http://localhost:8790/search
+    method: POST
+    timeout: 30
+    payload_template:
+      query: "{query}"
+      top_k: 5
+      tool: keyword_search
+  - name: dense_search
+    type: http
+    endpoint: http://localhost:8790/search
+    method: POST
+    timeout: 30
+    payload_template:
+      query: "{query}"
+      top_k: 5
+      tool: dense_search
+  - name: hybrid_search
+    type: http
+    endpoint: http://localhost:8790/search
+    method: POST
+    timeout: 30
+    payload_template:
+      query: "{query}"
+      top_k: 5
+      tool: hybrid_search
