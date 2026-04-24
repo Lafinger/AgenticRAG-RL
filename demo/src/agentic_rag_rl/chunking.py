@@ -27,8 +27,11 @@ NOVEL_ALIASES = [
     "侯玉英",
 ]
 
+INVISIBLE_UNICODE_PATTERN = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]")
+
 
 def normalize_text(text: str) -> str:
+    text = INVISIBLE_UNICODE_PATTERN.sub("", text)
     text = text.replace("\u00a0", " ")
     text = re.sub(r"\r\n?", "\n", text)
     text = re.sub(r"[ \t]+", " ", text)
