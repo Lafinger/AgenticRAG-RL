@@ -233,8 +233,10 @@ uv run python .\scripts\build_index.py `
 - 模型必须只基于当前 chunk 生成问题，输出 JSON 数组，字段为 `question/answer/qa_type/entities`。
 - Prompt 核心要求参考原项目“种子 QA 生成”，但改成小说域标准：原子性、可验证性、时间 / 阶段明确性、唯一答案。
 - `answer` 必须是人物名、地点名、物品名、明确关系或明确行为结果之一，拒绝主观判断、抽象感悟、长段解释和多原因并列。
+- `qa_type` 固定收敛为 5 类：`character`、`place`、`object`、`relation`、`action_result`。
 - 如果片段有明确时间、年代、季节、上学阶段或事件阶段，问题必须写入；如果片段没有明确时间或阶段，不强制补时间，也不能编造时间。
 - 脚本会把模型输出规范化，并补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
+- 如果模型返回旧类型，脚本会映射到新的 5 类，例如 `character_relation -> relation`、`object_reference -> object`、`character_behavior -> action_result`。
 - 每条 seed QA 都绑定一个 `doc_chunk_id`，表示这个问题的答案可以从哪个 chunk 中获得。
 - seed QA 是单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
 
@@ -281,7 +283,7 @@ uv run python .\scripts\gen_seed_qa.py `
 | `doc_chunk_id` | 支撑该 seed 的证据 chunk | `hops[].doc_chunk_id`、Oracle trace 检索目标 |
 | `tool` | 默认检索工具，如 `keyword_search` | Oracle trace 工具调用 |
 | `entities` | 问答中涉及的人物 / 地点 | 多跳组合、查询分解 |
-| `qa_type` | 问题类型，如 `character_relation` | 分层统计、诊断评测 |
+| `qa_type` | Seed QA 类型，只允许 `character/place/object/relation/action_result` | 分层统计、诊断评测、多跳 hop 类型 |
 
 **小说域 Prompt 核心要求**：
 
@@ -291,6 +293,7 @@ uv run python .\scripts\gen_seed_qa.py `
 | 可验证性 | 答案必须直接来自片段，且属于人物名、地点名、物品名、明确关系或明确行为结果之一 |
 | 时间 / 阶段明确性 | 片段出现明确时间、年代、季节、上学阶段或事件阶段时，问题必须写入；片段没有则不强制、不编造 |
 | 唯一答案 | 问题必须足够具体，使片段中只有一个明确答案，避免“他/她/这个人”等指代不清 |
+| 类型收敛 | `qa_type` 只使用 `character/place/object/relation/action_result`，避免过细分类造成模型乱分桶 |
 
 ## Step 4: 合成多跳 QA
 
@@ -304,7 +307,7 @@ uv run python .\scripts\gen_seed_qa.py `
 - 当前实现复现“逐跳扩展”的数据流：`seed -> 检索候选 chunk -> 选择候选 QA -> 豆包 thinking 模型合并为多跳样本`。
 - 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，只负责生成自然的 `final_question/final_answer/answer_aliases`；逐跳检索和候选 QA 选择仍由规则流程完成。
 - 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并。
-- 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，用于构造 Oracle trace、计算 `gold_chunks` 和诊断检索路径。
+- 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 `qa_type` 继承 seed QA 的 5 类类型，用于构造 Oracle trace、计算 `gold_chunks` 和诊断检索路径。
 - `answer_aliases` 会记录可接受答案变体，降低训练和评测中因表述不同造成的误判。
 - `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
 
@@ -358,7 +361,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 | `hop_count` | 需要的推理跳数 | reward 搜索充分性、hop-aware 指标 |
 | `qa_type` | 多跳题型 | 评测分桶、错误诊断 |
 | `subset` | 样本子集标签 | train/test 统计、实验对比 |
-| `hops[]` | 每跳 question/answer/doc_chunk_id/qa_type/search_tools | Oracle traces、`gold_chunks`、hop recall |
+| `hops[]` | 每跳 question/answer/doc_chunk_id/qa_type/search_tools，hop 级 `qa_type` 继承 seed QA 的 5 类类型 | Oracle traces、`gold_chunks`、hop recall |
 | `answer_aliases` | 可接受答案别名 | reward correctness、Judge 打分 |
 
 ## Step 5: 清洗、划分和 answer aliases 增强

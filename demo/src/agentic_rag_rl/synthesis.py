@@ -12,6 +12,18 @@ from .types import Chunk
 
 logger = logging.getLogger(__name__)
 
+SEED_QA_TYPES = {"character", "place", "object", "relation", "action_result"}
+LEGACY_SEED_QA_TYPE_MAP = {
+    "character_identity": "character",
+    "place_origin": "place",
+    "object_reference": "object",
+    "character_relation": "relation",
+    "event_result": "action_result",
+    "event_cause": "action_result",
+    "character_behavior": "action_result",
+    "inference": "action_result",
+}
+
 
 def _first_sentence(text: str, max_chars: int = 80) -> str:
     sentence = re.split(r"[。！？\n]", text.strip(), maxsplit=1)[0]
@@ -60,7 +72,7 @@ def iter_seed_question_batches(
                 "doc_chunk_id": chunk.chunk_id,
                 "tool": "keyword_search",
                 "entities": item.get("entities", []),
-                "qa_type": item.get("qa_type", "inference"),
+                "qa_type": item.get("qa_type", "action_result"),
             }
             batch.append(seed)
             seeds.append(seed)
@@ -127,7 +139,12 @@ def _build_seed_qa_messages(chunk_text: str, *, max_items: int) -> list[ChatMess
 - 避免"他/她/这个人"这类指代不清的问题；必须写出人物名或明确称谓。
 
 5. 问题类型
-- qa_type 只能取 character_identity、character_relation、place_origin、event_cause、event_result、character_behavior、object_reference、inference。
+- qa_type 只能取以下 5 类之一：
+  - character：答案是人物名或人物身份。
+  - place：答案是地点名。
+  - object：答案是物品名。
+  - relation：答案是明确人物关系。
+  - action_result：答案是明确行为或明确结果。
 
 6. 输出格式
 - 输出 JSON 数组，每个元素包含 question、answer、qa_type、entities。
@@ -172,9 +189,16 @@ def _normalize_seed_qa_record(record: dict[str, Any]) -> dict[str, Any]:
     return {
         "question": str(record.get("question", "")).strip(),
         "answer": str(record.get("answer", "")).strip(),
-        "qa_type": str(record.get("qa_type", "inference")).strip() or "inference",
+        "qa_type": _normalize_seed_qa_type(record.get("qa_type")),
         "entities": [str(entity).strip() for entity in entities if str(entity).strip()],
     }
+
+
+def _normalize_seed_qa_type(value: Any) -> str:
+    qa_type = str(value or "").strip()
+    if qa_type in SEED_QA_TYPES:
+        return qa_type
+    return LEGACY_SEED_QA_TYPE_MAP.get(qa_type, "action_result")
 
 
 def synthesize_multihop_examples(
@@ -198,7 +222,7 @@ def synthesize_multihop_examples(
     for seed in seeds:
         if len(examples) >= target_count:
             break
-        chain = [_seed_to_hop(seed, hop_idx=1, qa_type="initial_qa")]
+        chain = [_seed_to_hop(seed, hop_idx=1)]
         for hop_idx in range(2, 4):
             if len(examples) >= target_count:
                 break
@@ -211,7 +235,7 @@ def synthesize_multihop_examples(
                     hop_idx,
                 )
                 break
-            chain.append(_seed_to_hop(next_seed, hop_idx=hop_idx, qa_type="inference"))
+            chain.append(_seed_to_hop(next_seed, hop_idx=hop_idx))
             example = _build_stepwise_example(chain, merge_llm_client=merge_llm_client)
             if example["final_question"] in seen_questions:
                 continue
@@ -240,13 +264,13 @@ def _group_seeds_by_chunk(seeds: list[dict[str, Any]]) -> dict[str, list[dict[st
     return grouped
 
 
-def _seed_to_hop(seed: dict[str, Any], *, hop_idx: int, qa_type: str) -> dict[str, Any]:
+def _seed_to_hop(seed: dict[str, Any], *, hop_idx: int) -> dict[str, Any]:
     return {
         "hop_idx": hop_idx,
         "question": seed["question"],
         "answer": seed["answer"],
         "doc_chunk_id": seed["doc_chunk_id"],
-        "qa_type": qa_type,
+        "qa_type": _normalize_seed_qa_type(seed.get("qa_type")),
         "search_tools": seed.get("search_tools", [seed.get("tool", "hybrid_search")]),
     }
 

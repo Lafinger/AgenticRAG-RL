@@ -27,7 +27,7 @@ class FakeLLMClient:
             {
                 "question": "孙少平在学校生活艰难的表现是什么？",
                 "answer": "最后去取黑高粱面馍。",
-                "qa_type": "character_behavior",
+                "qa_type": "action_result",
                 "entities": ["孙少平"]
             }
 ]
@@ -63,7 +63,7 @@ def test_generate_seed_questions_uses_llm_client() -> None:
             "doc_chunk_id": "corpus_chunkids_000001",
             "tool": "keyword_search",
             "entities": ["孙少平"],
-            "qa_type": "character_behavior",
+            "qa_type": "action_result",
         }
     ]
 
@@ -82,6 +82,8 @@ def test_seed_qa_prompt_uses_novel_domain_constraints() -> None:
     prompt = messages[1]["content"]
 
     assert all(term in prompt for term in ["人物名", "地点名", "物品名", "明确关系", "明确行为结果"])
+    assert all(qa_type in prompt for qa_type in ["character", "place", "object", "relation", "action_result"])
+    assert "character_identity" not in prompt
     assert "如果片段中出现明确时间、年代、季节、上学阶段、事件阶段" in prompt
     assert "不能编造时间" in prompt
     assert "唯一答案" in prompt
@@ -99,3 +101,4 @@ def test_synthesize_and_clean_multihop_examples() -> None:
     assert cleaned[0]["final_question"] == "孙少平的学校处境相关线索最终指向什么表现？"
     assert cleaned[0]["hop_count"] >= 2
     assert all(hop["doc_chunk_id"] for hop in cleaned[0]["hops"])
+    assert all(hop["qa_type"] == "action_result" for hop in cleaned[0]["hops"])
