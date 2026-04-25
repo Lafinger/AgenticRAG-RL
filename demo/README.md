@@ -309,6 +309,8 @@ uv run python .\scripts\gen_seed_qa.py `
 | 唯一答案 | 问题必须足够具体，使片段中只有一个明确答案，避免“他/她/这个人”等指代不清 |
 | 类型收敛 | `qa_type` 只使用 `character/place/object/relation/action_result`，避免过细分类造成模型乱分桶 |
 
+TODO: 质量过滤 、 答案精炼。
+
 ## Step 4: 合成多跳 QA
 
 **目标**：参考原项目的“逐跳扩展”思路，从单跳 seed QA 出发，逐步检索相关 chunk 并扩展成 2-hop / 3-hop 阅读问答任务。
