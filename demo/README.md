@@ -249,7 +249,7 @@ flowchart TD
 
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/gen_seed_qa.py`
-- API Key：环境变量 `ARK_API_KEY` 或 `DOUBAO_API_KEY`
+- 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY` 或 `DOUBAO_API_KEY`
 - 默认模型：`doubao-seed-2-0-pro-260215`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
@@ -259,8 +259,7 @@ flowchart TD
 ```powershell
 uv run python .\scripts\gen_seed_qa.py `
   --corpus .\data\novel\corpus.jsonl `
-  --output .\data\novel_eval\seeds.jsonl `
-  --model doubao-seed-2-0-pro-260215
+  --output .\data\novel_eval\seeds.jsonl
 ```
 
 **能拿到的结果**：
@@ -903,18 +902,20 @@ uv run python .\scripts\run_cloud_eval.py `
 
 如果只想验证本机闭环，按下面顺序执行即可：
 
-执行到 `gen_seed_qa.py` 前，需要先在当前 PowerShell 会话中设置豆包 API Key：
-
-```powershell
-$env:ARK_API_KEY = "你的火山方舟 API Key"
-```
+执行到 `gen_seed_qa.py` 前，需要先复制环境变量示例并填写敏感信息：
 
 ```powershell
 Set-Location C:\Workspace\AI\Learning\AgenticRAG-RL\demo
+Copy-Item .\.env.example .\.env
+```
+
+在 `.env` 中至少填写 `ARK_API_KEY` 或 `DOUBAO_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
+
+```powershell
 uv run python -m pytest
 uv run python .\scripts\parse_text_corpus.py --input .\data\original_data\平凡的世界utf8.txt --output .\data\novel\corpus.jsonl
 uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes
-uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl --model doubao-seed-2-0-pro-260215
+uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
 uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50
 uv run python .\scripts\build_oracle_traces.py --qa .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\traces_oracle_zh.jsonl --use-zh
 uv run python .\scripts\trace_to_sft.py --input .\data\novel_eval\traces_oracle_zh.jsonl --output-dir .\data\novel_eval\sft --lang zh

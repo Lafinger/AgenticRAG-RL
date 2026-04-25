@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from agentic_rag_rl.llm_client import DoubaoSeedQAClient, extract_json_array
+from agentic_rag_rl.llm_client import DoubaoSeedQAClient, extract_json_array, get_doubao_base_url, get_doubao_model
 
 
 def test_extract_json_array_handles_markdown_fenced_output() -> None:
@@ -34,6 +34,17 @@ def test_doubao_seed_qa_client_normalizes_records() -> None:
     ]
 
 
-def test_doubao_seed_qa_client_requires_api_key_for_real_transport() -> None:
+def test_doubao_seed_qa_client_requires_api_key_for_real_transport(monkeypatch) -> None:
+    monkeypatch.delenv("ARK_API_KEY", raising=False)
+    monkeypatch.delenv("DOUBAO_API_KEY", raising=False)
+
     with pytest.raises(ValueError, match="ARK_API_KEY|DOUBAO_API_KEY"):
         DoubaoSeedQAClient(api_key="")
+
+
+def test_doubao_defaults_can_come_from_environment(monkeypatch) -> None:
+    monkeypatch.setenv("DOUBAO_MODEL", "env-model")
+    monkeypatch.setenv("DOUBAO_BASE_URL", "https://env.example/api/v3")
+
+    assert get_doubao_model() == "env-model"
+    assert get_doubao_base_url() == "https://env.example/api/v3"

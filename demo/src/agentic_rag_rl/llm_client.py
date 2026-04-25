@@ -39,6 +39,21 @@ def _read_api_key(explicit_api_key: str | None = None) -> str:
     return api_key.strip()
 
 
+def get_doubao_model(explicit_model: str | None = None) -> str:
+    return explicit_model or os.getenv("DOUBAO_MODEL") or DEFAULT_DOUBAO_MODEL
+
+
+def get_doubao_base_url(explicit_base_url: str | None = None) -> str:
+    return explicit_base_url or os.getenv("DOUBAO_BASE_URL") or DEFAULT_DOUBAO_BASE_URL
+
+
+def get_doubao_timeout(explicit_timeout: float | None = None) -> float:
+    if explicit_timeout is not None:
+        return explicit_timeout
+    value = os.getenv("DOUBAO_TIMEOUT_SECONDS", "60")
+    return float(value)
+
+
 def _normalize_base_url(base_url: str) -> str:
     return base_url.rstrip("/")
 
@@ -47,15 +62,15 @@ class DoubaoSeedQAClient:
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = DEFAULT_DOUBAO_MODEL,
-        base_url: str = DEFAULT_DOUBAO_BASE_URL,
-        timeout_seconds: float = 60.0,
+        model: str | None = None,
+        base_url: str | None = None,
+        timeout_seconds: float | None = None,
         transport: Callable[[list[dict[str, str]]], str] | None = None,
     ) -> None:
         self.api_key = _read_api_key(api_key) if transport is None else (api_key or "test-key")
-        self.model = model
-        self.base_url = _normalize_base_url(base_url)
-        self.timeout_seconds = timeout_seconds
+        self.model = get_doubao_model(model)
+        self.base_url = _normalize_base_url(get_doubao_base_url(base_url))
+        self.timeout_seconds = get_doubao_timeout(timeout_seconds)
         self._transport = transport
 
     def generate_seed_qa(self, chunk_text: str, *, max_items: int) -> list[dict[str, Any]]:

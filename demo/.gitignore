@@ -1,6 +1,7 @@
 .venv/
 .venv-agenticrag/
 .venv-verl/
+.env
 __pycache__/
 .pytest_cache/
 *.pyc
