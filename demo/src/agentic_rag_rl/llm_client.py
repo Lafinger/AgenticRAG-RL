@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
+import time
 from collections.abc import Callable
 from typing import Any
 
@@ -11,6 +13,7 @@ import httpx
 
 DEFAULT_DOUBAO_MODEL = "doubao-seed-2-0-pro-260215"
 DEFAULT_DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+logger = logging.getLogger(__name__)
 
 
 def extract_json_array(text: str) -> list[dict[str, Any]]:
@@ -74,10 +77,41 @@ class DoubaoSeedQAClient:
         self._transport = transport
 
     def generate_seed_qa(self, chunk_text: str, *, max_items: int) -> list[dict[str, Any]]:
+        start_time = time.perf_counter()
+        logger.info(
+            "doubao_seed_qa.start model=%s base_url=%s max_items=%s chunk_chars=%s",
+            self.model,
+            self.base_url,
+            max_items,
+            len(chunk_text),
+        )
         messages = self._build_messages(chunk_text, max_items=max_items)
-        content = self._transport(messages) if self._transport else self._chat_completions(messages)
-        records = extract_json_array(content)
-        return [self._normalize_record(record) for record in records[:max_items] if self._is_usable_record(record)]
+        try:
+            content = self._transport(messages) if self._transport else self._chat_completions(messages)
+            logger.info(
+                "doubao_seed_qa.response_received elapsed_seconds=%.2f response_chars=%s",
+                time.perf_counter() - start_time,
+                len(content),
+            )
+            records = extract_json_array(content)
+        except Exception:
+            logger.exception(
+                "doubao_seed_qa.failed elapsed_seconds=%.2f chunk_chars=%s",
+                time.perf_counter() - start_time,
+                len(chunk_text),
+            )
+            raise
+
+        normalized_records = [
+            self._normalize_record(record) for record in records[:max_items] if self._is_usable_record(record)
+        ]
+        logger.info(
+            "doubao_seed_qa.done elapsed_seconds=%.2f raw_count=%s returned_count=%s",
+            time.perf_counter() - start_time,
+            len(records),
+            len(normalized_records),
+        )
+        return normalized_records
 
     def _build_messages(self, chunk_text: str, *, max_items: int) -> list[dict[str, str]]:
         system_prompt = (

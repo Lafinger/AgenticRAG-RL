@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 from pathlib import Path
 import sys
 
@@ -13,6 +14,14 @@ from agentic_rag_rl.llm_client import DoubaoSeedQAClient, get_doubao_base_url, g
 from agentic_rag_rl.synthesis import generate_seed_questions
 
 
+def _configure_logging(level: str) -> None:
+    logging.basicConfig(
+        level=getattr(logging, level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+        stream=sys.stdout,
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate seed QA from novel corpus chunks.")
     parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
@@ -23,15 +32,35 @@ def main() -> None:
     parser.add_argument("--model")
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
+    parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()
 
+    _configure_logging(args.log_level)
+    logging.info(
+        "gen_seed_qa.start corpus=%s output=%s max_per_chunk=%s max_chunks=%s",
+        args.corpus,
+        args.output,
+        args.max_per_chunk,
+        args.max_chunks,
+    )
     load_env_file(args.env_file)
     chunks = load_chunks(args.corpus)
     if args.max_chunks is not None:
         chunks = chunks[: args.max_chunks]
-    client = DoubaoSeedQAClient(api_key=args.api_key, model=get_doubao_model(args.model), base_url=get_doubao_base_url(args.base_url))
+    logging.info(
+        "gen_seed_qa.loaded_chunks chunk_count=%s model=%s base_url=%s",
+        len(chunks),
+        get_doubao_model(args.model),
+        get_doubao_base_url(args.base_url),
+    )
+    client = DoubaoSeedQAClient(
+        api_key=args.api_key,
+        model=get_doubao_model(args.model),
+        base_url=get_doubao_base_url(args.base_url),
+    )
     seeds = generate_seed_questions(chunks, client, max_per_chunk=args.max_per_chunk)
     write_jsonl(seeds, args.output)
+    logging.info("gen_seed_qa.done output=%s seed_count=%s", args.output, len(seeds))
     print(f"seed_count={len(seeds)}")
 
 
