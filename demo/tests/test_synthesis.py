@@ -6,6 +6,7 @@ from agentic_rag_rl.io import load_chunks
 from agentic_rag_rl.synthesis import (
     _build_seed_qa_messages,
     clean_multihop_examples,
+    generate_seed_qa,
     generate_seed_questions,
     iter_synthesize_multihop_examples,
     iter_seed_question_batches,
@@ -52,6 +53,28 @@ class FakeMergeLLMClient:
 }"""
 
 
+class FlakySeedLLMClient:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del messages, temperature
+        self.calls += 1
+        if self.calls == 1:
+            return '[{"question": "坏 JSON", "answer" "缺少冒号"}]'
+        return '[{"question": "孙少平取了什么？", "answer": "黑高粱面馍", "qa_type": "object", "entities": ["孙少平"]}]'
+
+
+class BrokenSeedLLMClient:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del messages, temperature
+        self.calls += 1
+        return '[{"question": "坏 JSON", "answer" "缺少冒号"}]'
+
+
 def test_generate_seed_questions_uses_llm_client() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
     client = FakeLLMClient()
@@ -78,6 +101,43 @@ def test_iter_seed_question_batches_yields_per_chunk() -> None:
 
     assert len(batches) == 2
     assert [batch[0]["doc_chunk_id"] for batch in batches] == [chunk.chunk_id for chunk in chunks]
+
+
+def test_generate_seed_qa_retries_invalid_json_response() -> None:
+    client = FlakySeedLLMClient()
+
+    records = generate_seed_qa(client, "孙少平取走黑高粱面馍。", max_items=1, max_attempts=2)
+
+    assert client.calls == 2
+    assert records == [
+        {
+            "question": "孙少平取了什么？",
+            "answer": "黑高粱面馍",
+            "qa_type": "object",
+            "entities": ["孙少平"],
+        }
+    ]
+
+
+def test_iter_seed_question_batches_can_continue_after_invalid_json() -> None:
+    chunks = [Chunk(chunk_id="c1", title="1", text="孙少平取走黑高粱面馍。")]
+    client = BrokenSeedLLMClient()
+    failed_chunk_ids: list[str] = []
+
+    batches = list(
+        iter_seed_question_batches(
+            chunks,
+            client,
+            max_per_chunk=1,
+            max_attempts=1,
+            continue_on_error=True,
+            on_chunk_failed=lambda chunk, exc: failed_chunk_ids.append(chunk.chunk_id),
+        )
+    )
+
+    assert batches == []
+    assert failed_chunk_ids == ["c1"]
+    assert client.calls == 1
 
 
 def test_seed_qa_prompt_uses_novel_domain_constraints() -> None:

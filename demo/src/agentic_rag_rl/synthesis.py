@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from .llm_client import ChatMessage, LLMClient
@@ -41,6 +41,9 @@ def iter_seed_question_batches(
     chunks: Iterable[Chunk],
     llm_client: LLMClient,
     max_per_chunk: int = 2,
+    max_attempts: int = 2,
+    continue_on_error: bool = False,
+    on_chunk_failed: Callable[[Chunk, Exception], None] | None = None,
 ) -> Iterable[list[dict[str, Any]]]:
     chunk_list = list(chunks)
     seeds: list[dict[str, Any]] = []
@@ -55,14 +58,18 @@ def iter_seed_question_batches(
             len(chunk.text),
         )
         try:
-            items = generate_seed_qa(llm_client, chunk.text, max_items=max_per_chunk)
-        except Exception:
+            items = generate_seed_qa(llm_client, chunk.text, max_items=max_per_chunk, max_attempts=max_attempts)
+        except Exception as exc:
             logger.exception(
                 "seed_qa_generation.chunk_failed index=%s/%s chunk_id=%s",
                 index,
                 len(chunk_list),
                 chunk.chunk_id,
             )
+            if on_chunk_failed:
+                on_chunk_failed(chunk, exc)
+            if continue_on_error:
+                continue
             raise
         batch: list[dict[str, Any]] = []
         for item in items:
@@ -88,20 +95,38 @@ def iter_seed_question_batches(
     logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
 
 
-def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int) -> list[dict[str, Any]]:
+def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int, max_attempts: int = 2) -> list[dict[str, Any]]:
     logger.info("seed_qa.start max_items=%s chunk_chars=%s", max_items, len(chunk_text))
-    content = llm_client.chat(_build_seed_qa_messages(chunk_text, max_items=max_items), temperature=0.2)
-    records = _extract_json_array(content)
-    normalized_records = [
-        _normalize_seed_qa_record(record) for record in records[:max_items] if _is_usable_seed_qa_record(record)
-    ]
-    logger.info(
-        "seed_qa.done raw_count=%s returned_count=%s response_chars=%s",
-        len(records),
-        len(normalized_records),
-        len(content),
-    )
-    return normalized_records
+    last_error: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        content = ""
+        try:
+            content = llm_client.chat(_build_seed_qa_messages(chunk_text, max_items=max_items), temperature=0.2)
+            records = _extract_json_array(content)
+            normalized_records = [
+                _normalize_seed_qa_record(record) for record in records[:max_items] if _is_usable_seed_qa_record(record)
+            ]
+            logger.info(
+                "seed_qa.done attempt=%s raw_count=%s returned_count=%s response_chars=%s",
+                attempt,
+                len(records),
+                len(normalized_records),
+                len(content),
+            )
+            return normalized_records
+        except Exception as exc:
+            last_error = exc
+            logger.warning(
+                "seed_qa.attempt_failed attempt=%s/%s error_type=%s error=%s response_preview=%r",
+                attempt,
+                max_attempts,
+                type(exc).__name__,
+                exc,
+                content[:300],
+            )
+    if last_error is None:
+        raise RuntimeError("Seed QA generation failed without an exception.")
+    raise last_error
 
 
 def _build_seed_qa_messages(chunk_text: str, *, max_items: int) -> list[ChatMessage]:

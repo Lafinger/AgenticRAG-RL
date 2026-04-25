@@ -239,6 +239,8 @@ uv run python .\scripts\build_index.py `
 - 如果模型返回旧类型，脚本会映射到新的 5 类，例如 `character_relation -> relation`、`object_reference -> object`、`character_behavior -> action_result`。
 - 每条 seed QA 都绑定一个 `doc_chunk_id`，表示这个问题的答案可以从哪个 chunk 中获得。
 - 脚本默认启用断点续写：如果 `seeds.jsonl` 已存在，会读取已有 `doc_chunk_id`，跳过已经生成过 seed 的 chunk，只处理剩余 chunk。
+- 如果豆包返回非法 JSON 或单个 chunk 多次失败，脚本默认把失败 chunk 写入 `seeds.failed.jsonl` 并继续后续 chunk，避免整个任务中断。
+- 再次执行同一命令时，脚本会从第一条 corpus chunk 开始逐条校验；只有已经成功写入 `seeds.jsonl` 的 `doc_chunk_id` 会被跳过，之前失败但未成功写入的 chunk 会自动重新生成。
 - 如果要清空旧结果重新生成，需要显式添加 `--overwrite`。
 - seed QA 是单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
 
@@ -282,6 +284,7 @@ uv run python .\scripts\gen_seed_qa.py `
 **能拿到的结果**：
 
 - `data/novel_eval/seeds.jsonl`
+- `data/novel_eval/seeds.failed.jsonl`，仅当部分 chunk 多次失败时产生
 - 每条 seed 包含 `question/answer/doc_chunk_id/tool/entities/qa_type`
 - 每条 seed 的 `question/answer/qa_type/entities` 来自豆包模型，`doc_chunk_id/tool` 由脚本补齐
 

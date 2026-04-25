@@ -4,6 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 import sys
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -22,6 +23,10 @@ def _configure_logging(level: str) -> None:
     )
 
 
+def _default_failed_output(output: Path) -> Path:
+    return output.with_name(f"{output.stem}.failed.jsonl")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate seed QA from novel corpus chunks.")
     parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
@@ -34,6 +39,9 @@ def main() -> None:
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
     parser.add_argument("--overwrite", action="store_true", help="Clear output and regenerate from the beginning.")
+    parser.add_argument("--failed-output", help="JSONL file for chunks that still fail after retries.")
+    parser.add_argument("--fail-fast", action="store_true", help="Stop immediately when one chunk fails.")
+    parser.add_argument("--max-attempts", type=int, default=2, help="LLM attempts per chunk before marking it failed.")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()
 
@@ -58,6 +66,10 @@ def main() -> None:
     )
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    failed_output_path = Path(args.failed_output) if args.failed_output else _default_failed_output(output_path)
+    failed_output_path.parent.mkdir(parents=True, exist_ok=True)
+    if args.overwrite and failed_output_path.exists():
+        failed_output_path.unlink()
     existing_records = [] if args.overwrite or not output_path.exists() else load_jsonl(output_path)
     completed_chunk_ids = {str(record.get("doc_chunk_id")) for record in existing_records if record.get("doc_chunk_id")}
     pending_chunks = [chunk for chunk in chunks if chunk.chunk_id not in completed_chunk_ids]
@@ -80,15 +92,48 @@ def main() -> None:
         base_url=get_doubao_base_url(args.base_url),
     )
     mode = "w" if args.overwrite else "a"
+    failed_count = 0
     with output_path.open(mode, encoding="utf-8", newline="") as handle:
-        for seed_batch in iter_seed_question_batches(pending_chunks, llm_client, max_per_chunk=args.max_per_chunk):
+
+        def record_failed_chunk(chunk: Any, exc: Exception) -> None:
+            nonlocal failed_count
+            with failed_output_path.open("a", encoding="utf-8", newline="") as failed_handle:
+                write_jsonl_record(
+                    failed_handle,
+                    {
+                        "chunk_id": chunk.chunk_id,
+                        "title": chunk.title,
+                        "error_type": type(exc).__name__,
+                        "error": str(exc),
+                    },
+                )
+                failed_handle.flush()
+            failed_count += 1
+
+        for seed_batch in iter_seed_question_batches(
+            pending_chunks,
+            llm_client,
+            max_per_chunk=args.max_per_chunk,
+            max_attempts=args.max_attempts,
+            continue_on_error=not args.fail_fast,
+            on_chunk_failed=record_failed_chunk,
+        ):
             for seed in seed_batch:
                 write_jsonl_record(handle, seed)
                 seed_count += 1
             handle.flush()
             logging.info("gen_seed_qa.appended batch_count=%s total_seed_count=%s", len(seed_batch), seed_count)
-    logging.info("gen_seed_qa.done output=%s seed_count=%s", args.output, seed_count)
+    logging.info(
+        "gen_seed_qa.done output=%s seed_count=%s failed_output=%s failed_count=%s",
+        args.output,
+        seed_count,
+        failed_output_path,
+        failed_count,
+    )
     print(f"seed_count={seed_count}")
+    if failed_count:
+        print(f"failed_count={failed_count}")
+        print(f"failed_output={failed_output_path}")
 
 
 if __name__ == "__main__":
