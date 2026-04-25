@@ -4,6 +4,7 @@ from pathlib import Path
 
 from agentic_rag_rl.io import load_chunks
 from agentic_rag_rl.synthesis import (
+    _build_seed_qa_messages,
     clean_multihop_examples,
     generate_seed_questions,
     iter_seed_question_batches,
@@ -74,6 +75,16 @@ def test_iter_seed_question_batches_yields_per_chunk() -> None:
 
     assert len(batches) == 2
     assert [batch[0]["doc_chunk_id"] for batch in batches] == [chunk.chunk_id for chunk in chunks]
+
+
+def test_seed_qa_prompt_uses_novel_domain_constraints() -> None:
+    messages = _build_seed_qa_messages("孙少平取走两个高粱面馍。", max_items=1)
+    prompt = messages[1]["content"]
+
+    assert all(term in prompt for term in ["人物名", "地点名", "物品名", "明确关系", "明确行为结果"])
+    assert "如果片段中出现明确时间、年代、季节、上学阶段、事件阶段" in prompt
+    assert "不能编造时间" in prompt
+    assert "唯一答案" in prompt
 
 
 def test_synthesize_and_clean_multihop_examples() -> None:

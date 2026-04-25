@@ -94,19 +94,45 @@ def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int) 
 
 def _build_seed_qa_messages(chunk_text: str, *, max_items: int) -> list[ChatMessage]:
     system_prompt = (
-        "你是中文小说阅读问答数据构造专家。"
-        "请只基于给定片段生成可由该片段直接回答的 seed QA。"
-        "问题类型应覆盖人物身份、人物关系、地点归属、事件原因、事件结果、人物行为。"
+        "你是中文小说信息抽取和阅读问答数据构造专家。"
+        "请只基于给定小说片段提取原子化、可验证、唯一答案的 seed QA。"
         "只能输出 JSON 数组，不要输出解释。"
     )
     user_prompt = f"""请为下面《平凡的世界》片段生成最多 {max_items} 条 seed QA。
 
-要求：
-1. 每条必须能从片段中直接找到证据。
-2. answer 要短，避免长段摘抄。
-3. qa_type 只能取 character_identity、character_relation、place_origin、event_cause、event_result、character_behavior、inference。
-4. entities 写出问题涉及的人物、地点或事件关键词。
-5. 输出 JSON 数组，字段为 question、answer、qa_type、entities。
+# 任务
+给定一段小说文本，提取一组原子化、可验证的事实，并将每个事实转化为问答对。
+
+# 问答生成规则
+1. 原子性
+- 每个 QA 只包含一个不可拆分的事实，不能把多个动作、多个原因、多个关系并列在一个答案里。
+- 错误示例："孙少平为什么最后取饭？" -> "因为贫穷、敏感、自尊心强"。
+- 正确做法：拆成更单一的问题，例如"孙少平最后取饭体现了怎样的生活处境？"。
+
+2. 可验证性
+- answer 必须直接来自片段，且只能属于以下类型之一：
+  - 人物名：如 孙少平、郝红梅。
+  - 地点名：如 双水村、罐子村。
+  - 物品名：如 粮票、黑高粱面馍。
+  - 明确关系：如 同班同学、兄妹、父子。
+  - 明确行为结果：如 借书、取走两个高粱面馍、被老师没收。
+- 拒绝主观判断、抽象感悟、长段解释或多原因概括。
+
+3. 时间 / 阶段明确性
+- 如果片段中出现明确时间、年代、季节、上学阶段、事件阶段，question 必须写入该时间或阶段。
+- 如果片段没有明确时间或阶段，不强制补时间，不能编造时间。
+
+4. 唯一答案
+- question 必须足够具体，使片段中只有一个明确答案。
+- 避免"他/她/这个人"这类指代不清的问题；必须写出人物名或明确称谓。
+
+5. 问题类型
+- qa_type 只能取 character_identity、character_relation、place_origin、event_cause、event_result、character_behavior、object_reference、inference。
+
+6. 输出格式
+- 输出 JSON 数组，每个元素包含 question、answer、qa_type、entities。
+- answer 要短，不要摘抄长句。
+- entities 写出问题涉及的人物、地点、物品或事件关键词。
 
 片段：
 {chunk_text}

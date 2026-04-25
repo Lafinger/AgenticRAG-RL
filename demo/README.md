@@ -225,12 +225,15 @@ uv run python .\scripts\build_index.py `
 
 ## Step 3: 生成小说域 seed QA
 
-**目标**：通过豆包大模型 `doubao-seed-1-6-flash-250828` 从 chunk 中生成基础问答，覆盖人物身份、人物关系、地点归属、事件原因、事件结果和人物行为。
+**目标**：通过豆包大模型 `doubao-seed-1-6-flash-250828` 从 chunk 中生成原子化、可验证、唯一答案的小说域基础问答。
 
 **详细说明**：
 
 - `gen_seed_qa.py` 逐条读取 corpus chunk，并把 chunk 文本发送给豆包模型生成 seed QA。
 - 模型必须只基于当前 chunk 生成问题，输出 JSON 数组，字段为 `question/answer/qa_type/entities`。
+- Prompt 核心要求参考原项目“种子 QA 生成”，但改成小说域标准：原子性、可验证性、时间 / 阶段明确性、唯一答案。
+- `answer` 必须是人物名、地点名、物品名、明确关系或明确行为结果之一，拒绝主观判断、抽象感悟、长段解释和多原因并列。
+- 如果片段有明确时间、年代、季节、上学阶段或事件阶段，问题必须写入；如果片段没有明确时间或阶段，不强制补时间，也不能编造时间。
 - 脚本会把模型输出规范化，并补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
 - 每条 seed QA 都绑定一个 `doc_chunk_id`，表示这个问题的答案可以从哪个 chunk 中获得。
 - seed QA 是单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
@@ -238,10 +241,10 @@ uv run python .\scripts\build_index.py `
 ```mermaid
 flowchart TD
     A["novel corpus chunks"] --> B["gen_seed_qa.py"]
-    B --> C["DoubaoSeedQAClient"]
+    B --> C["小说域原子 QA Prompt"]
     C --> D["doubao-seed-1-6-flash-250828"]
     D --> E["JSON seed QA"]
-    E --> F["补充 doc_chunk_id / tool"]
+    E --> F["规范化 / 补充 doc_chunk_id / tool"]
     F --> G["seeds.jsonl"]
 ```
 
@@ -279,6 +282,15 @@ uv run python .\scripts\gen_seed_qa.py `
 | `tool` | 默认检索工具，如 `keyword_search` | Oracle trace 工具调用 |
 | `entities` | 问答中涉及的人物 / 地点 | 多跳组合、查询分解 |
 | `qa_type` | 问题类型，如 `character_relation` | 分层统计、诊断评测 |
+
+**小说域 Prompt 核心要求**：
+
+| 约束 | 小说域标准 |
+| --- | --- |
+| 原子性 | 每个 QA 只包含一个不可拆分事实，不能把多个动作、多个原因、多个关系并列在同一个答案里 |
+| 可验证性 | 答案必须直接来自片段，且属于人物名、地点名、物品名、明确关系或明确行为结果之一 |
+| 时间 / 阶段明确性 | 片段出现明确时间、年代、季节、上学阶段或事件阶段时，问题必须写入；片段没有则不强制、不编造 |
+| 唯一答案 | 问题必须足够具体，使片段中只有一个明确答案，避免“他/她/这个人”等指代不清 |
 
 ## Step 4: 合成多跳 QA
 
