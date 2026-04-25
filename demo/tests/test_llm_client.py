@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+import httpx
 
 from agentic_rag_rl.llm_client import (
     DoubaoLLMClient,
@@ -41,6 +42,19 @@ def test_doubao_llm_client_requires_api_key_for_real_transport(monkeypatch) -> N
 
     with pytest.raises(ValueError, match="ARK_API_KEY"):
         DoubaoLLMClient(api_key="")
+
+
+def test_doubao_llm_client_reports_model_not_found() -> None:
+    client = DoubaoLLMClient(api_key="test-key", transport=lambda _: "ok")
+    request = httpx.Request("POST", "https://example.test/chat/completions")
+    response = httpx.Response(
+        404,
+        request=request,
+        text='{"error":{"code":"InvalidEndpointOrModel.NotFound","message":"not found"}}',
+    )
+
+    with pytest.raises(RuntimeError, match="DOUBAO_THINKING_MODEL|--merge-model|--disable-llm-merge"):
+        client._raise_for_status(response)
 
 
 def test_doubao_defaults_can_come_from_environment(monkeypatch) -> None:

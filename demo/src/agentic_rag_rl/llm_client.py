@@ -11,7 +11,7 @@ import httpx
 
 DEFAULT_LLM_PROVIDER = "doubao"
 DEFAULT_DOUBAO_MODEL = "doubao-seed-1-6-flash-250828"
-DEFAULT_DOUBAO_THINKING_MODEL = "doubao-seed-1-6-thinking-250715"
+DEFAULT_DOUBAO_THINKING_MODEL = "doubao-seed-2-0-pro-260215"
 DEFAULT_DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 logger = logging.getLogger(__name__)
 
@@ -113,6 +113,23 @@ class DoubaoLLMClient:
             json={"model": self.model, "messages": messages, "temperature": temperature},
             timeout=self.timeout_seconds,
         )
-        response.raise_for_status()
+        self._raise_for_status(response)
         payload = response.json()
         return payload["choices"][0]["message"]["content"]
+
+    def _raise_for_status(self, response: httpx.Response) -> None:
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            body = response.text[:1000]
+            hint = ""
+            if "InvalidEndpointOrModel.NotFound" in body:
+                hint = (
+                    " Hint: the configured Doubao model or Ark endpoint is not available for this account. "
+                    "Set DOUBAO_THINKING_MODEL to an enabled Ark model/endpoint, pass --merge-model, "
+                    "or use --disable-llm-merge for offline synthesis."
+                )
+            raise RuntimeError(
+                f"Doubao request failed: status={response.status_code}, model={self.model}, "
+                f"base_url={self.base_url}, response={body}.{hint}"
+            ) from exc

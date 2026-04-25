@@ -290,7 +290,7 @@ uv run python .\scripts\gen_seed_qa.py `
 - 每条 seed QA 会先作为 hop1；扩展下一跳时，主查询使用当前 hop 的 `question`，辅查询使用当前 hop 的 `answer`。
 - 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`，从新的 chunk 中选择已有 seed QA 作为下一跳。
 - 当前实现复现“逐跳扩展”的数据流：`seed -> 检索候选 chunk -> 选择候选 QA -> 豆包 thinking 模型合并为多跳样本`。
-- 多跳合并默认使用 `doubao-seed-1-6-thinking-250715`，只负责生成自然的 `final_question/final_answer/answer_aliases`；逐跳检索和候选 QA 选择仍由规则流程完成。
+- 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，只负责生成自然的 `final_question/final_answer/answer_aliases`；逐跳检索和候选 QA 选择仍由规则流程完成。
 - 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并。
 - 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，用于构造 Oracle trace、计算 `gold_chunks` 和诊断检索路径。
 - `answer_aliases` 会记录可接受答案变体，降低训练和评测中因表述不同造成的误判。
@@ -305,7 +305,7 @@ flowchart TD
     D --> E["候选 chunk 去重"]
     E --> F["选择候选 chunk 的 seed QA"]
     F --> G["追加 hop2 / hop3"]
-    G --> H["doubao-seed-1-6-thinking-250715 合并"]
+    G --> H["doubao-seed-2-0-pro-260215 合并"]
     H --> I["构造 final_question / final_answer"]
     I --> J["qa_pairs.jsonl"]
 ```
@@ -317,7 +317,7 @@ flowchart TD
 - 脚本：`scripts/domain_multihop_synthesis.py`
 - 环境文件：`.env` 中填写 `ARK_API_KEY`
 - 默认 Provider：`doubao`
-- 默认合并模型：`doubao-seed-1-6-thinking-250715`
+- 默认合并模型：`doubao-seed-2-0-pro-260215`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
 
 **怎么做**：
