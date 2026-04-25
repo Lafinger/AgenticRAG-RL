@@ -36,9 +36,8 @@ def test_doubao_seed_qa_client_normalizes_records() -> None:
 
 def test_doubao_seed_qa_client_requires_api_key_for_real_transport(monkeypatch) -> None:
     monkeypatch.delenv("ARK_API_KEY", raising=False)
-    monkeypatch.delenv("DOUBAO_API_KEY", raising=False)
 
-    with pytest.raises(ValueError, match="ARK_API_KEY|DOUBAO_API_KEY"):
+    with pytest.raises(ValueError, match="ARK_API_KEY"):
         DoubaoSeedQAClient(api_key="")
 
 

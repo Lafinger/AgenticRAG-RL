@@ -249,7 +249,7 @@ flowchart TD
 
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/gen_seed_qa.py`
-- 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY` 或 `DOUBAO_API_KEY`
+- 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY`
 - 默认模型：`doubao-seed-2-0-pro-260215`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
@@ -909,7 +909,7 @@ Set-Location C:\Workspace\AI\Learning\AgenticRAG-RL\demo
 Copy-Item .\.env.example .\.env
 ```
 
-在 `.env` 中至少填写 `ARK_API_KEY` 或 `DOUBAO_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
+在 `.env` 中填写 `ARK_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
 
 ```powershell
 uv run python -m pytest

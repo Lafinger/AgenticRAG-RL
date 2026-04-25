@@ -33,9 +33,9 @@ def extract_json_array(text: str) -> list[dict[str, Any]]:
 
 
 def _read_api_key(explicit_api_key: str | None = None) -> str:
-    api_key = explicit_api_key or os.getenv("ARK_API_KEY") or os.getenv("DOUBAO_API_KEY") or ""
+    api_key = explicit_api_key or os.getenv("ARK_API_KEY") or ""
     if not api_key.strip():
-        raise ValueError("Doubao API key is required. Set ARK_API_KEY or DOUBAO_API_KEY.")
+        raise ValueError("Doubao API key is required. Set ARK_API_KEY.")
     return api_key.strip()
 
 
