@@ -33,6 +33,21 @@ class FakeLLMClient:
 ```"""
 
 
+class FakeMergeLLMClient:
+    def __init__(self) -> None:
+        self.calls: list[list[dict[str, str]]] = []
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del temperature
+        self.calls.append(messages)
+        return """{
+  "final_question": "孙少平的学校处境相关线索最终指向什么表现？",
+  "final_answer": "最后去取黑高粱面馍。",
+  "qa_type": "inference",
+  "answer_aliases": ["最后去取黑高粱面馍"]
+}"""
+
+
 def test_generate_seed_questions_uses_llm_client() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
     client = FakeLLMClient()
@@ -64,9 +79,12 @@ def test_iter_seed_question_batches_yields_per_chunk() -> None:
 def test_synthesize_and_clean_multihop_examples() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
     seeds = generate_seed_questions(chunks, FakeLLMClient(), max_per_chunk=1)
-    examples = synthesize_multihop_examples(seeds, chunks, target_count=2)
+    merge_client = FakeMergeLLMClient()
+    examples = synthesize_multihop_examples(seeds, chunks, target_count=2, merge_llm_client=merge_client)
     cleaned = clean_multihop_examples(examples, {chunk.chunk_id for chunk in chunks})
 
+    assert merge_client.calls
     assert cleaned
+    assert cleaned[0]["final_question"] == "孙少平的学校处境相关线索最终指向什么表现？"
     assert cleaned[0]["hop_count"] >= 2
     assert all(hop["doc_chunk_id"] for hop in cleaned[0]["hops"])

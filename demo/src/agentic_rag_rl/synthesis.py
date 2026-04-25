@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from .llm_client import ChatMessage, LLMClient
+from .retrieval import HybridRetriever, RetrievalResult
 from .types import Chunk
 
 logger = logging.getLogger(__name__)
@@ -150,7 +151,12 @@ def _normalize_seed_qa_record(record: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def synthesize_multihop_examples(seeds: list[dict[str, Any]], chunks: list[Chunk], target_count: int = 100) -> list[dict[str, Any]]:
+def synthesize_multihop_examples(
+    seeds: list[dict[str, Any]],
+    chunks: list[Chunk],
+    target_count: int = 100,
+    merge_llm_client: LLMClient | None = None,
+) -> list[dict[str, Any]]:
     logger.info(
         "multihop_synthesis.start seed_count=%s chunk_count=%s target_count=%s",
         len(seeds),
@@ -158,87 +164,208 @@ def synthesize_multihop_examples(seeds: list[dict[str, Any]], chunks: list[Chunk
         target_count,
     )
     examples: list[dict[str, Any]] = []
-    relation_seed = next((seed for seed in seeds if "孙少平和郝红梅" in seed["question"]), None)
-    hardship_seed = next((seed for seed in seeds if "孙少平在学校生活艰难" in seed["question"]), relation_seed)
-    place_seed = next((seed for seed in seeds if "双水村为什么" in seed["question"]), None)
-    classmate_seed = next((seed for seed in seeds if "孙少安和田润叶" in seed["question"]), None)
-    logger.info(
-        "multihop_synthesis.anchor_seeds relation=%s hardship=%s place=%s classmate=%s",
-        bool(relation_seed),
-        bool(hardship_seed),
-        bool(place_seed),
-        bool(classmate_seed),
-    )
+    retriever = HybridRetriever(chunks)
+    seeds_by_chunk = _group_seeds_by_chunk(seeds)
+    seen_questions: set[str] = set()
+    extension_attempt_count = 0
 
-    if relation_seed and hardship_seed:
-        examples.append(
-            {
-                "final_question": "孙少平和郝红梅在学校有什么共同处境？这种处境体现在哪件日常小事上？",
-                "final_answer": "他们都很贫穷，常常最后去取黑高粱面馍。",
-                "hop_count": 2,
-                "qa_type": "inference",
-                "subset": "2hop_novel_relation",
-                "hops": [
-                    {**hardship_seed, "hop_idx": 1},
-                    {**relation_seed, "hop_idx": 2},
-                ],
-                "answer_aliases": ["贫穷", "都很贫穷", "最后去取黑高粱面馍"],
-            }
-        )
-        logger.info("multihop_synthesis.added subset=2hop_novel_relation total_count=%s", len(examples))
-
-    if classmate_seed and place_seed and len(examples) < target_count:
-        examples.append(
-            {
-                "final_question": "孙少安和田润叶曾在哪里同班读书？这个地方为什么叫双水村？",
-                "final_answer": "他们曾在双水村小学同班读书；双水村因东拉河和哭咽河得名。",
-                "hop_count": 2,
-                "qa_type": "inference",
-                "subset": "2hop_novel_place",
-                "hops": [
-                    {**classmate_seed, "hop_idx": 1},
-                    {**place_seed, "hop_idx": 2},
-                ],
-                "answer_aliases": ["双水村小学", "东拉河和哭咽河", "因东拉河和哭咽河得名"],
-            }
-        )
-        logger.info("multihop_synthesis.added subset=2hop_novel_place total_count=%s", len(examples))
-
-    generic_attempt_count = 0
-    for left, right in zip(seeds, seeds[1:]):
+    for seed in seeds:
         if len(examples) >= target_count:
             break
-        generic_attempt_count += 1
-        if left["doc_chunk_id"] == right["doc_chunk_id"]:
-            logger.debug(
-                "multihop_synthesis.skip_same_chunk left_chunk_id=%s right_chunk_id=%s",
-                left["doc_chunk_id"],
-                right["doc_chunk_id"],
+        chain = [_seed_to_hop(seed, hop_idx=1, qa_type="initial_qa")]
+        for hop_idx in range(2, 4):
+            if len(examples) >= target_count:
+                break
+            extension_attempt_count += 1
+            next_seed = _select_next_seed(chain, seeds_by_chunk, retriever)
+            if next_seed is None:
+                logger.debug(
+                    "multihop_synthesis.extension_miss seed_chunk_id=%s hop_idx=%s",
+                    seed["doc_chunk_id"],
+                    hop_idx,
+                )
+                break
+            chain.append(_seed_to_hop(next_seed, hop_idx=hop_idx, qa_type="inference"))
+            example = _build_stepwise_example(chain, merge_llm_client=merge_llm_client)
+            if example["final_question"] in seen_questions:
+                continue
+            seen_questions.add(example["final_question"])
+            examples.append(example)
+            logger.info(
+                "multihop_synthesis.added subset=%s total_count=%s target_count=%s",
+                example["subset"],
+                len(examples),
+                target_count,
             )
-            continue
-        examples.append(
-            {
-                "final_question": f"先回答“{left['question']}”，再结合“{right['question']}”说明两条信息的关系。",
-                "final_answer": f"{left['answer']}；{right['answer']}",
-                "hop_count": 2,
-                "qa_type": "inference",
-                "subset": "2hop_novel_generic",
-                "hops": [{**left, "hop_idx": 1}, {**right, "hop_idx": 2}],
-                "answer_aliases": [left["answer"], right["answer"], _first_sentence(f"{left['answer']}；{right['answer']}")],
-            }
-        )
-        logger.info(
-            "multihop_synthesis.added subset=2hop_novel_generic total_count=%s target_count=%s",
-            len(examples),
-            target_count,
-        )
+
     logger.info(
-        "multihop_synthesis.done generated_count=%s target_count=%s generic_attempt_count=%s",
+        "multihop_synthesis.done generated_count=%s target_count=%s extension_attempt_count=%s",
         len(examples),
         target_count,
-        generic_attempt_count,
+        extension_attempt_count,
     )
     return examples
+
+
+def _group_seeds_by_chunk(seeds: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for seed in seeds:
+        grouped.setdefault(seed["doc_chunk_id"], []).append(seed)
+    return grouped
+
+
+def _seed_to_hop(seed: dict[str, Any], *, hop_idx: int, qa_type: str) -> dict[str, Any]:
+    return {
+        "hop_idx": hop_idx,
+        "question": seed["question"],
+        "answer": seed["answer"],
+        "doc_chunk_id": seed["doc_chunk_id"],
+        "qa_type": qa_type,
+        "search_tools": seed.get("search_tools", [seed.get("tool", "hybrid_search")]),
+    }
+
+
+def _select_next_seed(
+    chain: list[dict[str, Any]],
+    seeds_by_chunk: dict[str, list[dict[str, Any]]],
+    retriever: HybridRetriever,
+) -> dict[str, Any] | None:
+    used_chunk_ids = {hop["doc_chunk_id"] for hop in chain}
+    last_hop = chain[-1]
+    for result in _retrieve_extension_candidates(last_hop, retriever):
+        if result.chunk_id in used_chunk_ids:
+            continue
+        for seed in seeds_by_chunk.get(result.chunk_id, []):
+            return {**seed, "search_tools": _result_search_tools(result)}
+    return None
+
+
+def _retrieve_extension_candidates(hop: dict[str, Any], retriever: HybridRetriever) -> list[RetrievalResult]:
+    primary_results = retriever.hybrid_search(hop["question"], top_k=8, candidate_k=12)
+    secondary_results: list[RetrievalResult] = []
+    if not _is_low_signal_query(hop["answer"]):
+        secondary_results = retriever.hybrid_search(hop["answer"], top_k=4, candidate_k=8)
+    return _merge_retrieval_results(primary_results, secondary_results)
+
+
+def _is_low_signal_query(text: str) -> bool:
+    stripped = str(text).strip()
+    if len(stripped) < 2:
+        return True
+    return bool(re.fullmatch(r"[\d\s.,，。:：;；%％元年月日+-]+", stripped))
+
+
+def _merge_retrieval_results(*results_lists: list[RetrievalResult]) -> list[RetrievalResult]:
+    merged: dict[str, RetrievalResult] = {}
+    for results in results_lists:
+        for result in results:
+            if result.chunk_id not in merged:
+                merged[result.chunk_id] = result
+    return list(merged.values())
+
+
+def _result_search_tools(result: RetrievalResult) -> list[str]:
+    tools: list[str] = []
+    if "keyword" in result.source:
+        tools.append("keyword_search")
+    if "dense" in result.source:
+        tools.append("dense_search")
+    return tools or ["hybrid_search"]
+
+
+def _build_stepwise_example(chain: list[dict[str, Any]], merge_llm_client: LLMClient | None = None) -> dict[str, Any]:
+    hop_count = len(chain)
+    merged = _merge_stepwise_question_with_llm(chain, merge_llm_client) if merge_llm_client else {}
+    final_answer = merged.get("final_answer") or chain[-1]["answer"]
+    final_question = merged.get("final_question") or _build_stepwise_question(chain)
+    qa_type = merged.get("qa_type") or "inference"
+    answer_aliases = merged.get("answer_aliases") or [final_answer, _first_sentence(final_answer)]
+    return {
+        "final_question": final_question,
+        "final_answer": final_answer,
+        "hop_count": hop_count,
+        "qa_type": qa_type,
+        "subset": f"{hop_count}hop_novel_stepwise",
+        "hops": [dict(hop) for hop in chain],
+        "answer_aliases": answer_aliases,
+    }
+
+
+def _merge_stepwise_question_with_llm(chain: list[dict[str, Any]], llm_client: LLMClient) -> dict[str, Any]:
+    logger.info("multihop_merge.start hop_count=%s", len(chain))
+    content = llm_client.chat(_build_multihop_merge_messages(chain), temperature=0.2)
+    try:
+        payload = _extract_json_object(content)
+    except Exception:
+        logger.exception("multihop_merge.invalid_json response_chars=%s", len(content))
+        return {}
+    final_question = str(payload.get("final_question", "")).strip()
+    final_answer = str(payload.get("final_answer", "")).strip()
+    if not final_question or not final_answer:
+        logger.warning("multihop_merge.missing_required_fields keys=%s", sorted(payload))
+        return {}
+    answer_aliases = payload.get("answer_aliases", [final_answer])
+    if isinstance(answer_aliases, str):
+        answer_aliases = [answer_aliases]
+    if not isinstance(answer_aliases, list):
+        answer_aliases = [final_answer]
+    logger.info("multihop_merge.done hop_count=%s final_question_chars=%s", len(chain), len(final_question))
+    return {
+        "final_question": final_question,
+        "final_answer": final_answer,
+        "qa_type": str(payload.get("qa_type", "inference")).strip() or "inference",
+        "answer_aliases": [str(alias).strip() for alias in answer_aliases if str(alias).strip()],
+    }
+
+
+def _build_multihop_merge_messages(chain: list[dict[str, Any]]) -> list[ChatMessage]:
+    hop_lines = "\n".join(
+        f"hop{hop['hop_idx']}:\n"
+        f"- question: {hop['question']}\n"
+        f"- answer: {hop['answer']}\n"
+        f"- doc_chunk_id: {hop['doc_chunk_id']}"
+        for hop in chain
+    )
+    system_prompt = (
+        "你是中文小说多跳阅读问答合成专家。"
+        "请把给定的逐跳 QA 链合并成一个自然、明确、必须按顺序检索才能回答的多跳问题。"
+        "只能输出 JSON 对象，不要输出解释。"
+    )
+    user_prompt = f"""请基于以下逐跳 QA 链生成多跳 QA。
+
+要求：
+1. final_question 必须自然，不能直接暴露“第1步/第2步”。
+2. final_question 必须需要全部 hop 才能回答。
+3. final_answer 默认使用最后一跳 answer，除非链路逻辑要求更准确的短答案。
+4. qa_type 取 inference。
+5. answer_aliases 给出 1-3 个可接受短答案。
+6. 输出 JSON 对象，字段为 final_question、final_answer、qa_type、answer_aliases。
+
+逐跳 QA：
+{hop_lines}
+"""
+    return [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
+
+
+def _extract_json_object(text: str) -> dict[str, Any]:
+    cleaned = text.strip()
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned, flags=re.DOTALL)
+    if fenced:
+        cleaned = fenced.group(1)
+    else:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start >= 0 and end > start:
+            cleaned = cleaned[start : end + 1]
+    payload = json.loads(cleaned)
+    if not isinstance(payload, dict):
+        raise ValueError("LLM merge response must be a JSON object.")
+    return payload
+
+
+def _build_stepwise_question(chain: list[dict[str, Any]]) -> str:
+    steps = "；".join(f"第{hop['hop_idx']}步回答“{hop['question']}”" for hop in chain)
+    return f"{steps}。请沿着这些线索逐步检索，最终答案是什么？"
 
 
 def clean_multihop_examples(records: list[dict[str, Any]], valid_chunk_ids: set[str]) -> list[dict[str, Any]]:

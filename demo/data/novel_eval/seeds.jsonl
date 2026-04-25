@@ -1,0 +1,732 @@
+{"question": "县立高中的大院坝在哪里？", "answer": "半山腰", "doc_chunk_id": "corpus_chunkids_000001", "tool": "keyword_search", "entities": ["县立高中的大院坝"], "qa_type": "place_origin"}
+{"question": "学生们午饭时做了什么？", "answer": "敲碗筷、踏泥带水、叫叫嚷嚷地跑过院坝", "doc_chunk_id": "corpus_chunkids_000001", "tool": "keyword_search", "entities": ["学生们"], "qa_type": "character_behavior"}
+{"question": "高一（1）班的值日生有什么特征？", "answer": "矮矮胖胖的女生，小时候得过小儿麻痹，行走有点瘸跛", "doc_chunk_id": "corpus_chunkids_000002", "tool": "keyword_search", "entities": ["高一（1）班值日生"], "qa_type": "character_identity"}
+{"question": "值日生在饭场上做什么？", "answer": "等待最后一个跚跚来迟者", "doc_chunk_id": "corpus_chunkids_000002", "tool": "keyword_search", "entities": ["值日生"], "qa_type": "character_behavior"}
+{"question": "跛女子的家庭情况如何？", "answer": "中等人家", "doc_chunk_id": "corpus_chunkids_000003", "tool": "keyword_search", "entities": ["跛女子"], "qa_type": "character_identity"}
+{"question": "瘦高个青年人在馍筐前拿了几个高粱面馍？", "answer": "两个", "doc_chunk_id": "corpus_chunkids_000003", "tool": "keyword_search", "entities": ["瘦高个青年人"], "qa_type": "character_behavior"}
+{"question": "孙少平与郝红梅为什么最后来取饭？", "answer": "因为贫穷、吃不起好饭、年轻敏感的自尊心，躲避公众目光", "doc_chunk_id": "corpus_chunkids_000004", "tool": "keyword_search", "entities": ["孙少平、郝红梅、取饭、贫穷、自尊心"], "qa_type": "event_cause"}
+{"question": "孙少平与郝红梅的关系是什么？", "answer": "同班同学，不熟悉，未交谈过", "doc_chunk_id": "corpus_chunkids_000004", "tool": "keyword_search", "entities": ["孙少平、郝红梅、同班同学"], "qa_type": "character_relation"}
+{"question": "孙少平的身份是什么？", "answer": "高中生", "doc_chunk_id": "corpus_chunkids_000005", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "character_identity"}
+{"question": "孙少平最痛苦的原因是什么？", "answer": "贫困带来的自尊心伤害", "doc_chunk_id": "corpus_chunkids_000005", "tool": "keyword_search", "entities": ["孙少平、贫困、自尊心伤害"], "qa_type": "event_cause"}
+{"question": "孙少平与金波是什么关系？", "answer": "同村朋友", "doc_chunk_id": "corpus_chunkids_000006", "tool": "keyword_search", "entities": ["孙少平,金波"], "qa_type": "character_relation"}
+{"question": "孙少平在顾养民点名时做了什么？", "answer": "故意没有吭声", "doc_chunk_id": "corpus_chunkids_000006", "tool": "keyword_search", "entities": ["孙少平,顾养民"], "qa_type": "character_behavior"}
+{"question": "孙少平与金波是什么关系？", "answer": "从小一起长大，关系特别好，一起上学", "doc_chunk_id": "corpus_chunkids_000007", "tool": "keyword_search", "entities": ["孙少平、金波"], "qa_type": "character_relation"}
+{"question": "金波的父亲从事什么工作？", "answer": "地区运输公司汽车司机", "doc_chunk_id": "corpus_chunkids_000007", "tool": "keyword_search", "entities": ["金波、父亲"], "qa_type": "character_identity"}
+{"question": "他为什么对润生家的书产生好奇心？", "answer": "因为书内容奇怪（明明是炼钢书却讲保尔·柯察金的故事）", "doc_chunk_id": "corpus_chunkids_000008", "tool": "keyword_search", "entities": ["他，润生家的书，保尔·柯察金"], "qa_type": "event_cause"}
+{"question": "他看完课外书后意识到了什么？", "answer": "外面有辽阔的大世界，生活可以很美好", "doc_chunk_id": "corpus_chunkids_000008", "tool": "keyword_search", "entities": ["他，课外书，大世界"], "qa_type": "event_result"}
+{"question": "片段中的“他”是谁？", "answer": "孙少平", "doc_chunk_id": "corpus_chunkids_000009", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "character_identity"}
+{"question": "谁揭发了孙少平？", "answer": "侯玉英", "doc_chunk_id": "corpus_chunkids_000009", "tool": "keyword_search", "entities": ["侯玉英、孙少平"], "qa_type": "character_relation"}
+{"question": "孙少平在课堂上做了什么？", "answer": "在桌子下面看小说", "doc_chunk_id": "corpus_chunkids_000010", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "character_behavior"}
+{"question": "郝红梅在班里的身份是什么？", "answer": "班里最漂亮的女生", "doc_chunk_id": "corpus_chunkids_000010", "tool": "keyword_search", "entities": ["郝红梅"], "qa_type": "character_identity"}
+{"question": "孙少平是否把书借给了女生？", "answer": "是，第二天他把书交到了她手里", "doc_chunk_id": "corpus_chunkids_000011", "tool": "keyword_search", "entities": ["孙少平、书、女生"], "qa_type": "event_result"}
+{"question": "女生问孙少平的问题是什么？", "answer": "那天，老师没收了你的那本书，叫什么名字？", "doc_chunk_id": "corpus_chunkids_000011", "tool": "keyword_search", "entities": ["女生、孙少平、书"], "qa_type": "character_behavior"}
+{"question": "孙少平借书给郝红梅后，两人如何进行借书还书？", "answer": "悄悄进行", "doc_chunk_id": "corpus_chunkids_000012", "tool": "keyword_search", "entities": ["孙少平、郝红梅"], "qa_type": "character_behavior"}
+{"question": "孙少平与郝红梅悄悄借书还书的原因是什么？", "answer": "怕班里同学发现引起反响", "doc_chunk_id": "corpus_chunkids_000012", "tool": "keyword_search", "entities": ["孙少平、郝红梅、同学"], "qa_type": "event_cause"}
+{"question": "润生的二爸是什么身份？", "answer": "县革委会副主任", "doc_chunk_id": "corpus_chunkids_000013", "tool": "keyword_search", "entities": ["润生的二爸"], "qa_type": "character_identity"}
+{"question": "孙少平与郝红梅现在的交往状态如何？", "answer": "比开始时自然多了，对对方情况有了解", "doc_chunk_id": "corpus_chunkids_000013", "tool": "keyword_search", "entities": ["孙少平、郝红梅"], "qa_type": "character_relation"}
+{"question": "润叶的职业是什么？", "answer": "城关小学教师", "doc_chunk_id": "corpus_chunkids_000014", "tool": "keyword_search", "entities": ["润叶"], "qa_type": "character_identity"}
+{"question": "润叶为什么被全村人夸赞？", "answer": "因为她常提着点心看望户族里的傻瓜叔叔田二及其傻儿子", "doc_chunk_id": "corpus_chunkids_000014", "tool": "keyword_search", "entities": ["润叶,田二"], "qa_type": "event_result"}
+{"question": "孙少平为什么不去润叶姐二爸家吃饭？", "answer": "惧怕去领导家吃饭、觉得衣服丢人", "doc_chunk_id": "corpus_chunkids_000015", "tool": "keyword_search", "entities": ["孙少平、润叶姐二爸家"], "qa_type": "event_cause"}
+{"question": "润叶姐为什么坐在孙少平宿舍的炕边？", "answer": "等孙少平回来", "doc_chunk_id": "corpus_chunkids_000015", "tool": "keyword_search", "entities": ["润叶姐、孙少平宿舍"], "qa_type": "event_result"}
+{"question": "润叶的二爸是谁？", "answer": "田主任", "doc_chunk_id": "corpus_chunkids_000016", "tool": "keyword_search", "entities": ["润叶的二爸,田主任"], "qa_type": "character_identity"}
+{"question": "润生是谁的儿子？", "answer": "田福堂", "doc_chunk_id": "corpus_chunkids_000016", "tool": "keyword_search", "entities": ["润生,田福堂"], "qa_type": "character_relation"}
+{"question": "田晓霞是谁的女儿？", "answer": "田润叶的二爸的女儿", "doc_chunk_id": "corpus_chunkids_000017", "tool": "keyword_search", "entities": ["田晓霞", "田润叶", "二爸"], "qa_type": "character_identity"}
+{"question": "田晓霞和孙少平是哪里的老乡？", "answer": "双水村", "doc_chunk_id": "corpus_chunkids_000017", "tool": "keyword_search", "entities": ["田晓霞", "孙少平", "双水村"], "qa_type": "place_origin"}
+{"question": "孙少平是谁家的二小子？", "answer": "孙玉厚的二小子", "doc_chunk_id": "corpus_chunkids_000018", "tool": "keyword_search", "entities": ["孙少平", "孙玉厚"], "qa_type": "character_identity"}
+{"question": "润叶和少平是什么关系？", "answer": "润叶是少平的姐姐（润叶姐）", "doc_chunk_id": "corpus_chunkids_000018", "tool": "keyword_search", "entities": ["润叶", "少平"], "qa_type": "character_relation"}
+{"question": "润叶与少平是什么关系？", "answer": "少平的嫂子（润叶姐）", "doc_chunk_id": "corpus_chunkids_000019", "tool": "keyword_search", "entities": ["润叶、少平"], "qa_type": "character_relation"}
+{"question": "润叶塞给少平什么东西？", "answer": "粮票", "doc_chunk_id": "corpus_chunkids_000019", "tool": "keyword_search", "entities": ["润叶、少平、粮票"], "qa_type": "character_behavior"}
+{"question": "孙少平为什么要给祖母买药？", "answer": "润叶姐给他的钱", "doc_chunk_id": "corpus_chunkids_000020", "tool": "keyword_search", "entities": ["孙少平", "祖母", "润叶姐"], "qa_type": "event_cause"}
+{"question": "孙少平与金波是什么关系？", "answer": "朋友（或同学）", "doc_chunk_id": "corpus_chunkids_000020", "tool": "keyword_search", "entities": ["孙少平", "金波"], "qa_type": "character_relation"}
+{"question": "少平的姐姐兰花出嫁在哪个村？", "answer": "罐子村", "doc_chunk_id": "corpus_chunkids_000021", "tool": "keyword_search", "entities": ["兰花,少平,罐子村"], "qa_type": "character_relation"}
+{"question": "少平和金波在分水岭上坡时为什么要推车？", "answer": "坡度很长很陡", "doc_chunk_id": "corpus_chunkids_000021", "tool": "keyword_search", "entities": ["分水岭,少平,金波,自行车"], "qa_type": "event_cause"}
+{"question": "兰香称呼少平什么？", "answer": "姐夫", "doc_chunk_id": "corpus_chunkids_000022", "tool": "keyword_search", "entities": ["兰香、少平"], "qa_type": "character_relation"}
+{"question": "兰香的姐夫被劳教的原因是什么？", "answer": "出去贩卖老鼠药，被认为走资本主义道路", "doc_chunk_id": "corpus_chunkids_000022", "tool": "keyword_search", "entities": ["兰香的姐夫、贩卖老鼠药"], "qa_type": "event_cause"}
+{"question": "孙少平与兰香是什么关系？", "answer": "兄妹", "doc_chunk_id": "corpus_chunkids_000023", "tool": "keyword_search", "entities": ["孙少平,兰香"], "qa_type": "character_relation"}
+{"question": "兰香一开始为什么不想离开公路边？", "answer": "姐姐让她在这里照门", "doc_chunk_id": "corpus_chunkids_000023", "tool": "keyword_search", "entities": ["兰香,姐姐"], "qa_type": "character_behavior"}
+{"question": "二爸的身份是什么？", "answer": "部委员，队里的基建队长", "doc_chunk_id": "corpus_chunkids_000024", "tool": "keyword_search", "entities": ["二爸"], "qa_type": "character_identity"}
+{"question": "兰香和少平被本村人认为是谁的小舅子和小姨子？", "answer": "王满银", "doc_chunk_id": "corpus_chunkids_000024", "tool": "keyword_search", "entities": ["兰香、少平、王满银"], "qa_type": "character_relation"}
+{"question": "王满银的老祖上曾有什么身份？", "answer": "拔贡", "doc_chunk_id": "corpus_chunkids_000025", "tool": "keyword_search", "entities": ["王满银,老祖上"], "qa_type": "character_identity"}
+{"question": "王满银为何被公社民兵小分队带到工地？", "answer": "他在石圪节集市倒卖老鼠药被民兵小分队知道", "doc_chunk_id": "corpus_chunkids_000025", "tool": "keyword_search", "entities": ["王满银,公社民兵小分队,石圪节集市,倒卖老鼠药"], "qa_type": "event_cause"}
+{"question": "王满银为什么想娶兰花？", "answer": "兰花身体壮实，能做下苦活（砍柴、担水、种自留地），王满银不愿干也干不了这些活", "doc_chunk_id": "corpus_chunkids_000026", "tool": "keyword_search", "entities": ["王满银", "兰花"], "qa_type": "event_cause"}
+{"question": "王满银是如何追求兰花的？", "answer": "三一回五一回跑双水村，黄昏时在村头小路边挡兰花没话寻话，后在村后河湾抱住亲吻并塞时新衣裳", "doc_chunk_id": "corpus_chunkids_000026", "tool": "keyword_search", "entities": ["王满银", "兰花"], "qa_type": "character_behavior"}
+{"question": "王满银来自哪个村子？", "answer": "罐子村", "doc_chunk_id": "corpus_chunkids_000027", "tool": "keyword_search", "entities": ["王满银", "罐子村"], "qa_type": "place_origin"}
+{"question": "兰花和王满银是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000027", "tool": "keyword_search", "entities": ["兰花", "王满银"], "qa_type": "character_relation"}
+{"question": "王满银的村子叫什么？", "answer": "罐子村", "doc_chunk_id": "corpus_chunkids_000028", "tool": "keyword_search", "entities": ["王满银,罐子村"], "qa_type": "place_origin"}
+{"question": "王满银为什么想递烟给装土的人？", "answer": "想让装土的人稍慢一点，自己多歇一会", "doc_chunk_id": "corpus_chunkids_000028", "tool": "keyword_search", "entities": ["王满银,装土的人"], "qa_type": "character_behavior"}
+{"question": "王满银对民兵小分队的人做了什么？", "answer": "硬往表现最动摇的小伙子手里塞高级烟", "doc_chunk_id": "corpus_chunkids_000029", "tool": "keyword_search", "entities": ["王满银,民兵小分队的人"], "qa_type": "character_behavior"}
+{"question": "孙玉厚老汉为什么痛苦？", "answer": "女婿王满银被拉到工地劳教且让他装土", "doc_chunk_id": "corpus_chunkids_000029", "tool": "keyword_search", "entities": ["孙玉厚,王满银,劳教,装土"], "qa_type": "event_cause"}
+{"question": "孙玉厚为什么心疼兰花？", "answer": "因为兰花不听他的话，嫁给罐子村二流子，生活困苦、独自操劳", "doc_chunk_id": "corpus_chunkids_000030", "tool": "keyword_search", "entities": ["孙玉厚,兰花,罐子村二流子"], "qa_type": "event_cause"}
+{"question": "孙玉厚收工后打算做什么？", "answer": "回家吃饭后到罐子村接猫蛋和狗蛋回来", "doc_chunk_id": "corpus_chunkids_000030", "tool": "keyword_search", "entities": ["孙玉厚,猫蛋,狗蛋"], "qa_type": "character_behavior"}
+{"question": "孙少安去米家镇做什么？", "answer": "给队里生病的牛看病", "doc_chunk_id": "corpus_chunkids_000031", "tool": "keyword_search", "entities": ["孙少安,米家镇,队里的牛"], "qa_type": "character_behavior"}
+{"question": "王满银被拉到哪里‘劳教’？", "answer": "兰花的娘家村里", "doc_chunk_id": "corpus_chunkids_000031", "tool": "keyword_search", "entities": ["王满银,兰花,娘家村里"], "qa_type": "place_origin"}
+{"question": "老太太的孙子是谁？", "answer": "少安", "doc_chunk_id": "corpus_chunkids_000032", "tool": "keyword_search", "entities": ["老太太，少安"], "qa_type": "character_relation"}
+{"question": "老太太为什么哭？", "answer": "担心孙子少安被枪打死", "doc_chunk_id": "corpus_chunkids_000032", "tool": "keyword_search", "entities": ["老太太，少安，枪"], "qa_type": "event_cause"}
+{"question": "老祖母为什么哭？", "answer": "因为少安（安安）死了", "doc_chunk_id": "corpus_chunkids_000033", "tool": "keyword_search", "entities": ["老祖母、少安"], "qa_type": "event_cause"}
+{"question": "兰香做了什么？", "answer": "提猪食桶出去喂猪", "doc_chunk_id": "corpus_chunkids_000033", "tool": "keyword_search", "entities": ["兰香、猪食桶、喂猪"], "qa_type": "character_behavior"}
+{"question": "润叶和少平是什么关系？", "answer": "润叶是少平的姐姐（润叶姐）", "doc_chunk_id": "corpus_chunkids_000034", "tool": "keyword_search", "entities": ["润叶、少平"], "qa_type": "character_relation"}
+{"question": "奶奶一开始哭泣的原因是什么？", "answer": "担心姐夫出事", "doc_chunk_id": "corpus_chunkids_000034", "tool": "keyword_search", "entities": ["奶奶、姐夫"], "qa_type": "event_cause"}
+{"question": "少平给奶奶做了什么？", "answer": "给奶奶买药并点眼药", "doc_chunk_id": "corpus_chunkids_000035", "tool": "keyword_search", "entities": ["少平,奶奶,买药,点眼药"], "qa_type": "character_behavior"}
+{"question": "少平现在是什么角色？", "answer": "临时主事人", "doc_chunk_id": "corpus_chunkids_000035", "tool": "keyword_search", "entities": ["少平,临时主事人"], "qa_type": "character_identity"}
+{"question": "兰香是谁的女儿？", "answer": "孙玉厚的女儿", "doc_chunk_id": "corpus_chunkids_000036", "tool": "keyword_search", "entities": ["兰香,孙玉厚"], "qa_type": "character_identity"}
+{"question": "兰香做了什么？", "answer": "喂猪、捡柴禾", "doc_chunk_id": "corpus_chunkids_000036", "tool": "keyword_search", "entities": ["兰香"], "qa_type": "character_behavior"}
+{"question": "最小的孩子在哪里上初中？", "answer": "石圪节", "doc_chunk_id": "corpus_chunkids_000037", "tool": "keyword_search", "entities": ["石圪节、最小的孩子"], "qa_type": "place_origin"}
+{"question": "孙玉厚难受的原因是什么？", "answer": "孩子没扯过象样的衣服，穿旧衣服", "doc_chunk_id": "corpus_chunkids_000037", "tool": "keyword_search", "entities": ["孙玉厚、最小的孩子"], "qa_type": "event_cause"}
+{"question": "孙少平做了什么？", "answer": "提饭罐扛铺盖卷去小学送东西给落难的姐夫", "doc_chunk_id": "corpus_chunkids_000038", "tool": "keyword_search", "entities": ["孙少平,饭罐,铺盖卷,小学,姐夫"], "qa_type": "character_behavior"}
+{"question": "孙玉亭是孙少平的什么人？", "answer": "二爸", "doc_chunk_id": "corpus_chunkids_000038", "tool": "keyword_search", "entities": ["孙少平,孙玉亭"], "qa_type": "character_relation"}
+{"question": "双水村的枣树林过去属于谁？", "answer": "姓金的人家", "doc_chunk_id": "corpus_chunkids_000039", "tool": "keyword_search", "entities": ["双水村枣树林,姓金的人家"], "qa_type": "place_origin"}
+{"question": "打枣期间双水村人有什么行为？", "answer": "全村人可去打枣，打枣者可放开吃", "doc_chunk_id": "corpus_chunkids_000039", "tool": "keyword_search", "entities": ["双水村人,打枣"], "qa_type": "character_behavior"}
+{"question": "双水村的名字是怎么来的？", "answer": "因为有东拉河和哭咽河", "doc_chunk_id": "corpus_chunkids_000040", "tool": "keyword_search", "entities": ["双水村,东拉河,哭咽河"], "qa_type": "event_cause"}
+{"question": "金家祖坟的位置在哪里？", "answer": "哭咽河北岸的神仙山下", "doc_chunk_id": "corpus_chunkids_000040", "tool": "keyword_search", "entities": ["金家祖坟,哭咽河,神仙山"], "qa_type": "place_origin"}
+{"question": "王满银和孙少平是什么关系？", "answer": "孙少平的姐夫", "doc_chunk_id": "corpus_chunkids_000041", "tool": "keyword_search", "entities": ["王满银,孙少平"], "qa_type": "character_relation"}
+{"question": "孙少平在哪里上过整整五年学？", "answer": "小学校的院子", "doc_chunk_id": "corpus_chunkids_000041", "tool": "keyword_search", "entities": ["孙少平,小学校的院子"], "qa_type": "place_origin"}
+{"question": "少平的二妈是谁？", "answer": "贺凤英", "doc_chunk_id": "corpus_chunkids_000042", "tool": "keyword_search", "entities": ["少平、二妈、贺凤英"], "qa_type": "character_identity"}
+{"question": "少平下学校后沿着哪条河走？", "answer": "哭咽河", "doc_chunk_id": "corpus_chunkids_000042", "tool": "keyword_search", "entities": ["少平、哭咽河"], "qa_type": "place_origin"}
+{"question": "片段中的‘她’是谁的二妈？", "answer": "少平的二妈", "doc_chunk_id": "corpus_chunkids_000043", "tool": "keyword_search", "entities": ["少平、二妈"], "qa_type": "character_relation"}
+{"question": "少平要去哪里？", "answer": "金波家", "doc_chunk_id": "corpus_chunkids_000043", "tool": "keyword_search", "entities": ["少平、金波家"], "qa_type": "character_behavior"}
+{"question": "孙玉亭和孙玉厚是什么关系？", "answer": "兄弟", "doc_chunk_id": "corpus_chunkids_000044", "tool": "keyword_search", "entities": ["孙玉亭,孙玉厚"], "qa_type": "character_relation"}
+{"question": "孙玉亭为什么不上孙玉厚家来？", "answer": "因女婿满银被劳教，怕连累自己", "doc_chunk_id": "corpus_chunkids_000044", "tool": "keyword_search", "entities": ["孙玉亭,满银被劳教"], "qa_type": "event_cause"}
+{"question": "孙玉亭和孙玉厚是什么关系？", "answer": "兄弟", "doc_chunk_id": "corpus_chunkids_000045", "tool": "keyword_search", "entities": ["孙玉亭、孙玉厚"], "qa_type": "character_relation"}
+{"question": "孙玉亭从孙玉厚那里拿了什么？", "answer": "旱烟", "doc_chunk_id": "corpus_chunkids_000045", "tool": "keyword_search", "entities": ["孙玉亭、孙玉厚、旱烟"], "qa_type": "character_behavior"}
+{"question": "孙玉亭的哥哥是谁？", "answer": "孙玉厚", "doc_chunk_id": "corpus_chunkids_000046", "tool": "keyword_search", "entities": ["孙玉亭", "孙玉厚"], "qa_type": "character_relation"}
+{"question": "孙玉亭初中毕业后做了什么？", "answer": "到太原钢厂当了工人", "doc_chunk_id": "corpus_chunkids_000046", "tool": "keyword_search", "entities": ["孙玉亭", "太原钢厂工人"], "qa_type": "event_result"}
+{"question": "孙玉亭为什么不想回太原工作？", "answer": "工资不够买土豆，想在家乡娶媳妇", "doc_chunk_id": "corpus_chunkids_000047", "tool": "keyword_search", "entities": ["孙玉亭,太原工作"], "qa_type": "event_cause"}
+{"question": "孙玉亭在村里担任什么职务？", "answer": "大队党支部委员、农田基建队队长、贫下中农管理学校委员会主任", "doc_chunk_id": "corpus_chunkids_000047", "tool": "keyword_search", "entities": ["孙玉亭"], "qa_type": "character_identity"}
+{"question": "孙玉亭在双水村农田基建大会战中担任什么职务？", "answer": "副总指挥", "doc_chunk_id": "corpus_chunkids_000048", "tool": "keyword_search", "entities": ["孙玉亭,双水村农田基建大会战,副总指挥"], "qa_type": "character_identity"}
+{"question": "孙玉亭老婆对他的称呼有什么变化？", "answer": "前面不再带‘孙’字，称呼他‘玉亭’", "doc_chunk_id": "corpus_chunkids_000048", "tool": "keyword_search", "entities": ["孙玉亭,老婆"], "qa_type": "character_relation"}
+{"question": "孙玉亭的身份是什么？", "answer": "副总指挥", "doc_chunk_id": "corpus_chunkids_000049", "tool": "keyword_search", "entities": ["孙玉亭"], "qa_type": "character_identity"}
+{"question": "孙玉亭为什么要找金俊山商量事？", "answer": "田福堂去公社开会不在村里", "doc_chunk_id": "corpus_chunkids_000049", "tool": "keyword_search", "entities": ["孙玉亭,金俊山,田福堂"], "qa_type": "event_cause"}
+{"question": "金俊山的成份是什么？", "answer": "中农", "doc_chunk_id": "corpus_chunkids_000050", "tool": "keyword_search", "entities": ["金俊山"], "qa_type": "character_identity"}
+{"question": "孙玉亭想批判谁？", "answer": "田二", "doc_chunk_id": "corpus_chunkids_000050", "tool": "keyword_search", "entities": ["孙玉亭,田二"], "qa_type": "character_behavior"}
+{"question": "金成的身份是什么？", "answer": "在村里教小学", "doc_chunk_id": "corpus_chunkids_000051", "tool": "keyword_search", "entities": ["金成"], "qa_type": "character_identity"}
+{"question": "金芳出嫁到了哪里？", "answer": "米家镇", "doc_chunk_id": "corpus_chunkids_000051", "tool": "keyword_search", "entities": ["金芳、米家镇"], "qa_type": "place_origin"}
+{"question": "金俊山的身份是什么？", "answer": "副书记", "doc_chunk_id": "corpus_chunkids_000052", "tool": "keyword_search", "entities": ["金俊山"], "qa_type": "character_identity"}
+{"question": "谁被决定去充数参加批判会？", "answer": "田二", "doc_chunk_id": "corpus_chunkids_000052", "tool": "keyword_search", "entities": ["田二、批判会"], "qa_type": "event_result"}
+{"question": "孙玉亭让田二去充数的原因是什么？", "answer": "双水村没人陪罪，玉亭不好给徐主任交差。", "doc_chunk_id": "corpus_chunkids_000053", "tool": "keyword_search", "entities": ["孙玉亭,田二,双水村,徐主任"], "qa_type": "event_cause"}
+{"question": "孙玉亭在金俊山家之后做了什么？", "answer": "匆忙从金俊山家土坡下来，顺着哭咽河畔小路向金家湾后面的小学赶去。", "doc_chunk_id": "corpus_chunkids_000053", "tool": "keyword_search", "entities": ["孙玉亭,金俊山家土坡,哭咽河畔小路,金家湾后面的小学"], "qa_type": "character_behavior"}
+{"question": "贺凤英的身份是什么？", "answer": "双水村妇女主任", "doc_chunk_id": "corpus_chunkids_000054", "tool": "keyword_search", "entities": ["贺凤英"], "qa_type": "character_identity"}
+{"question": "批判资本主义倾向大会在哪里召开？", "answer": "双水村小学院子里", "doc_chunk_id": "corpus_chunkids_000054", "tool": "keyword_search", "entities": ["双水村小学院子"], "qa_type": "place_origin"}
+{"question": "徐治功的现任职务是什么？", "answer": "公社副主任", "doc_chunk_id": "corpus_chunkids_000055", "tool": "keyword_search", "entities": ["徐治功"], "qa_type": "character_identity"}
+{"question": "石圪节公社批判大会确定的批判对象是谁？", "answer": "田二", "doc_chunk_id": "corpus_chunkids_000055", "tool": "keyword_search", "entities": ["石圪节公社批判大会、田二"], "qa_type": "event_result"}
+{"question": "为什么要批判田二？", "answer": "因田二（田福顺）到处散布‘世事要变了’的话。", "doc_chunk_id": "corpus_chunkids_000056", "tool": "keyword_search", "entities": ["田二,散布‘世事要变了’"], "qa_type": "event_cause"}
+{"question": "田福顺（田二）和田福堂是什么关系？", "answer": "没什么关系，只是一个老先人，现在都不知隔多少代了。", "doc_chunk_id": "corpus_chunkids_000056", "tool": "keyword_search", "entities": ["田福顺,田福堂"], "qa_type": "character_relation"}
+{"question": "孙玉亭在大批判会上做了什么？", "answer": "吹话筒、弹话筒，说‘把阶级敌人带上来！’", "doc_chunk_id": "corpus_chunkids_000057", "tool": "keyword_search", "entities": ["孙玉亭"], "qa_type": "character_behavior"}
+{"question": "王满银为什么在双水村大批判会上不自在？", "answer": "在老丈人村里丢脸现丑，院子都是熟人", "doc_chunk_id": "corpus_chunkids_000057", "tool": "keyword_search", "entities": ["王满银、兰花、双水村"], "qa_type": "event_cause"}
+{"question": "田二的身份是什么？", "answer": "憨老汉", "doc_chunk_id": "corpus_chunkids_000058", "tool": "keyword_search", "entities": ["田二"], "qa_type": "character_identity"}
+{"question": "孙玉亭为什么拉田二去批判大会？", "answer": "徐主任要求找阶级敌人，孙玉亭找不到，遂拉田二", "doc_chunk_id": "corpus_chunkids_000058", "tool": "keyword_search", "entities": ["孙玉亭、田二、徐主任"], "qa_type": "event_cause"}
+{"question": "田二和憨牛是什么关系？", "answer": "父子关系", "doc_chunk_id": "corpus_chunkids_000059", "tool": "keyword_search", "entities": ["田二,憨牛"], "qa_type": "character_relation"}
+{"question": "外村后生批判田二的原因是什么？", "answer": "孙玉亭说田二有‘变天’思想", "doc_chunk_id": "corpus_chunkids_000059", "tool": "keyword_search", "entities": ["田二,孙玉亭,变天思想"], "qa_type": "event_cause"}
+{"question": "田二的身份是什么？", "answer": "双水村人", "doc_chunk_id": "corpus_chunkids_000060", "tool": "keyword_search", "entities": ["田二"], "qa_type": "character_identity"}
+{"question": "田二为什么免于“劳教”？", "answer": "因年纪太大，被革命宽恕", "doc_chunk_id": "corpus_chunkids_000060", "tool": "keyword_search", "entities": ["田二, 劳教"], "qa_type": "event_cause"}
+{"question": "孙玉亭离开小学院子时做了什么？", "answer": "收拾停当会场，最后一个离开学校的院子", "doc_chunk_id": "corpus_chunkids_000061", "tool": "keyword_search", "entities": ["孙玉亭,小学院子"], "qa_type": "character_behavior"}
+{"question": "哭咽河的位置在哪里？", "answer": "学校下面", "doc_chunk_id": "corpus_chunkids_000061", "tool": "keyword_search", "entities": ["哭咽河,学校"], "qa_type": "place_origin"}
+{"question": "牛为什么病了？", "answer": "牛肚子里上了火", "doc_chunk_id": "corpus_chunkids_000062", "tool": "keyword_search", "entities": ["牛、生病"], "qa_type": "event_cause"}
+{"question": "孙少安给牛灌完药后牛有什么变化？", "answer": "牛的眼睛出现活泼的亮色", "doc_chunk_id": "corpus_chunkids_000062", "tool": "keyword_search", "entities": ["孙少安、牛、灌药"], "qa_type": "event_result"}
+{"question": "片段中的“他”是谁？", "answer": "孙少安", "doc_chunk_id": "corpus_chunkids_000063", "tool": "keyword_search", "entities": ["孙少安"], "qa_type": "character_identity"}
+{"question": "金芳的父亲是谁？", "answer": "俊山叔", "doc_chunk_id": "corpus_chunkids_000063", "tool": "keyword_search", "entities": ["金芳，俊山叔"], "qa_type": "character_relation"}
+{"question": "孙少安为什么去铁匠铺？", "answer": "没火点烟，去借火", "doc_chunk_id": "corpus_chunkids_000064", "tool": "keyword_search", "entities": ["孙少安、铁匠铺"], "qa_type": "event_cause"}
+{"question": "孙少安卷烟用什么卷？", "answer": "旧作业本", "doc_chunk_id": "corpus_chunkids_000064", "tool": "keyword_search", "entities": ["孙少安"], "qa_type": "character_behavior"}
+{"question": "孙少安来自哪里？", "answer": "双水村", "doc_chunk_id": "corpus_chunkids_000065", "tool": "keyword_search", "entities": ["孙少安,双水村"], "qa_type": "place_origin"}
+{"question": "孙少安在铁匠铺做了什么？", "answer": "帮年轻徒弟添锤，后和老师傅一起打镢头", "doc_chunk_id": "corpus_chunkids_000065", "tool": "keyword_search", "entities": ["孙少安,铁匠铺,打铁"], "qa_type": "character_behavior"}
+{"question": "孙少安和田二是什么关系？", "answer": "孙少安叫田二‘二叔’，二人是叔侄关系", "doc_chunk_id": "corpus_chunkids_000066", "tool": "keyword_search", "entities": ["孙少安,田二"], "qa_type": "character_relation"}
+{"question": "孙少安回双水村后准备把牛吆到哪里？", "answer": "田家圪崂的饲养室", "doc_chunk_id": "corpus_chunkids_000066", "tool": "keyword_search", "entities": ["孙少安,牛,田家圪崂的饲养室"], "qa_type": "place_origin"}
+{"question": "金俊武在三兄弟中的排行是？", "answer": "第二", "doc_chunk_id": "corpus_chunkids_000067", "tool": "keyword_search", "entities": ["金俊武，三兄弟"], "qa_type": "character_identity"}
+{"question": "罐子村的姐夫被公社拉到村里劳教的原因是什么？", "answer": "贩了几包老鼠药", "doc_chunk_id": "corpus_chunkids_000067", "tool": "keyword_search", "entities": ["罐子村姐夫，公社，劳教，贩老鼠药"], "qa_type": "event_cause"}
+{"question": "田万江的身份是什么？", "answer": "饲养员", "doc_chunk_id": "corpus_chunkids_000068", "tool": "keyword_search", "entities": ["田万江"], "qa_type": "character_identity"}
+{"question": "金俊武和孙少安是什么关系？", "answer": "孙少安的姐夫", "doc_chunk_id": "corpus_chunkids_000068", "tool": "keyword_search", "entities": ["金俊武、孙少安"], "qa_type": "character_relation"}
+{"question": "猫蛋和狗蛋是谁的孩子？", "answer": "兰花的孩子", "doc_chunk_id": "corpus_chunkids_000069", "tool": "keyword_search", "entities": ["猫蛋、狗蛋、兰花"], "qa_type": "character_relation"}
+{"question": "孙少安的蛋糕是从哪里买来的？", "answer": "米家镇", "doc_chunk_id": "corpus_chunkids_000069", "tool": "keyword_search", "entities": ["孙少安、蛋糕、米家镇"], "qa_type": "place_origin"}
+{"question": "孙少平手中的白面是哪来的？", "answer": "润叶姐给的", "doc_chunk_id": "corpus_chunkids_000070", "tool": "keyword_search", "entities": ["孙少平,白面,润叶"], "qa_type": "event_cause"}
+{"question": "孙少平让孙少安做什么？", "answer": "去润叶二爸家一趟", "doc_chunk_id": "corpus_chunkids_000070", "tool": "keyword_search", "entities": ["孙少平,孙少安,润叶二爸家"], "qa_type": "character_behavior"}
+{"question": "孙少安和润叶小时候是什么关系？", "answer": "青梅竹马，从小相好得谁也离不开谁", "doc_chunk_id": "corpus_chunkids_000071", "tool": "keyword_search", "entities": ["孙少安", "润叶"], "qa_type": "character_relation"}
+{"question": "孙少安和润叶夏天在哪里耍水？", "answer": "东拉河", "doc_chunk_id": "corpus_chunkids_000071", "tool": "keyword_search", "entities": ["孙少安", "润叶", "东拉河"], "qa_type": "character_behavior"}
+{"question": "润叶和少安是什么关系？", "answer": "一起玩耍的伙伴", "doc_chunk_id": "corpus_chunkids_000072", "tool": "keyword_search", "entities": ["润叶、少安"], "qa_type": "character_relation"}
+{"question": "村里人如何夸赞少安？", "answer": "这娃娃将来是个好受苦人", "doc_chunk_id": "corpus_chunkids_000072", "tool": "keyword_search", "entities": ["村里人、少安"], "qa_type": "event_result"}
+{"question": "少安决定上学的原因是什么？", "answer": "继续砍柴就要一辈子在山里劳动", "doc_chunk_id": "corpus_chunkids_000073", "tool": "keyword_search", "entities": ["少安、砍柴、上学"], "qa_type": "event_cause"}
+{"question": "润叶和少安是什么关系？", "answer": "同班同学", "doc_chunk_id": "corpus_chunkids_000073", "tool": "keyword_search", "entities": ["润叶、少安"], "qa_type": "character_relation"}
+{"question": "润叶当时的年龄是多少？", "answer": "十岁", "doc_chunk_id": "corpus_chunkids_000074", "tool": "keyword_search", "entities": ["润叶"], "qa_type": "character_identity"}
+{"question": "润叶和少平是什么关系？", "answer": "同学（同桌）", "doc_chunk_id": "corpus_chunkids_000074", "tool": "keyword_search", "entities": ["润叶,少平"], "qa_type": "character_relation"}
+{"question": "“他”不能继续上中学的原因是什么？", "answer": "家庭供不起，需供弟弟少平、妹妹兰香读书", "doc_chunk_id": "corpus_chunkids_000075", "tool": "keyword_search", "entities": ["他，上中学，原因，少平，兰香"], "qa_type": "event_cause"}
+{"question": "“他”和润叶是什么关系？", "answer": "童年的朋友", "doc_chunk_id": "corpus_chunkids_000075", "tool": "keyword_search", "entities": ["他，润叶，童年的朋友"], "qa_type": "character_relation"}
+{"question": "孙少安十八岁时被推选担任什么职务？", "answer": "一队队长", "doc_chunk_id": "corpus_chunkids_000076", "tool": "keyword_search", "entities": ["孙少安", "一队队长"], "qa_type": "character_identity"}
+{"question": "孙少安决定去找金俊武的原因是什么？", "answer": "想听听金俊武的高见", "doc_chunk_id": "corpus_chunkids_000076", "tool": "keyword_search", "entities": ["孙少安", "金俊武"], "qa_type": "character_behavior"}
+{"question": "少安决定去县城找润叶的原因是什么？", "answer": "润叶能帮忙且叫他去", "doc_chunk_id": "corpus_chunkids_000077", "tool": "keyword_search", "entities": ["少安,润叶,县城"], "qa_type": "event_cause"}
+{"question": "少安是否决定去县城找润叶？", "answer": "是", "doc_chunk_id": "corpus_chunkids_000077", "tool": "keyword_search", "entities": ["少安,县城"], "qa_type": "character_behavior"}
+{"question": "李向前和润叶是什么关系？", "answer": "李向前是李叔叔家的儿子，中学时比润叶高两个年级，去年秋天起频繁来润叶二爸家并到她窑里东拉西扯", "doc_chunk_id": "corpus_chunkids_000078", "tool": "keyword_search", "entities": ["李向前、润叶"], "qa_type": "character_relation"}
+{"question": "李向前的职业是什么？", "answer": "县贸易经理部的汽车司机", "doc_chunk_id": "corpus_chunkids_000078", "tool": "keyword_search", "entities": ["李向前"], "qa_type": "character_identity"}
+{"question": "她为什么对李向前感到烦？", "answer": "听够了他那些沟里上洼里下的不上串话", "doc_chunk_id": "corpus_chunkids_000079", "tool": "keyword_search", "entities": ["她，李向前"], "qa_type": "event_cause"}
+{"question": "她在电影院看到李向前后做了什么？", "answer": "她转过身就往外走", "doc_chunk_id": "corpus_chunkids_000079", "tool": "keyword_search", "entities": ["她，李向前，电影院"], "qa_type": "character_behavior"}
+{"question": "润叶苦恼的原因是什么？", "answer": "因二妈转达向前家希望她与李向前结婚，而她反感李向前", "doc_chunk_id": "corpus_chunkids_000080", "tool": "keyword_search", "entities": ["润叶", "李向前", "二妈"], "qa_type": "event_cause"}
+{"question": "润叶内心想到的男人是谁？", "answer": "孙少安", "doc_chunk_id": "corpus_chunkids_000080", "tool": "keyword_search", "entities": ["润叶", "孙少安"], "qa_type": "character_relation"}
+{"question": "田润叶和孙少安是什么关系？", "answer": "田润叶想与孙少安结婚", "doc_chunk_id": "corpus_chunkids_000081", "tool": "keyword_search", "entities": ["田润叶,孙少安"], "qa_type": "character_relation"}
+{"question": "田润叶为和孙少安谈事做了什么？", "answer": "让孙少平捎话，到中学找孙少平", "doc_chunk_id": "corpus_chunkids_000081", "tool": "keyword_search", "entities": ["田润叶,孙少平"], "qa_type": "character_behavior"}
+{"question": "田润叶为什么剪自己的辫子？", "answer": "为了让少安看起来不拘束，显得朴实成熟。", "doc_chunk_id": "corpus_chunkids_000082", "tool": "keyword_search", "entities": ["田润叶，少安，剪辫子"], "qa_type": "event_cause"}
+{"question": "田润叶为什么焦急等待少安？", "answer": "因为少平答应这两天来，少安还未到。", "doc_chunk_id": "corpus_chunkids_000082", "tool": "keyword_search", "entities": ["田润叶，少平，少安"], "qa_type": "event_cause"}
+{"question": "晓霞为什么叫润叶回家吃饭？", "answer": "因为今天是晓霞外爷的六十五大寿生日，晓霞妈妈让她叫润叶回去吃饭。", "doc_chunk_id": "corpus_chunkids_000083", "tool": "keyword_search", "entities": ["晓霞, 润叶, 外爷生日"], "qa_type": "event_cause"}
+{"question": "润叶为什么锁门跟晓霞回二妈家？", "answer": "因为徐大爷（晓霞外爷）过生日是吉庆事，润叶认为不回去对老人不尊重，所以决定回去。", "doc_chunk_id": "corpus_chunkids_000083", "tool": "keyword_search", "entities": ["润叶, 晓霞, 二妈家, 徐大爷生日"], "qa_type": "character_behavior"}
+{"question": "田福军今天为什么亲自下厨？", "answer": "老丈人过生日", "doc_chunk_id": "corpus_chunkids_000084", "tool": "keyword_search", "entities": ["田福军，老丈人过生日，下厨"], "qa_type": "event_cause"}
+{"question": "田福军和徐爱云是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000084", "tool": "keyword_search", "entities": ["田福军，徐爱云，夫妻"], "qa_type": "character_relation"}
+{"question": "田福军的大儿子叫什么？", "answer": "晓晨", "doc_chunk_id": "corpus_chunkids_000085", "tool": "keyword_search", "entities": ["田福军,晓晨"], "qa_type": "character_identity"}
+{"question": "李登云中午去田福军家做什么？", "answer": "看望老首长", "doc_chunk_id": "corpus_chunkids_000085", "tool": "keyword_search", "entities": ["李登云,田福军,徐老"], "qa_type": "character_behavior"}
+{"question": "徐爱云与田福军是什么关系？", "answer": "爱人", "doc_chunk_id": "corpus_chunkids_000086", "tool": "keyword_search", "entities": ["徐爱云", "田福军"], "qa_type": "character_relation"}
+{"question": "田福军在厨房做了什么？", "answer": "发现菜没放盐，重新放盐做成回锅肉", "doc_chunk_id": "corpus_chunkids_000086", "tool": "keyword_search", "entities": ["田福军"], "qa_type": "character_behavior"}
+{"question": "田福军在黄原地区担任过哪些职务？", "answer": "专署办公室主任、地委农工部长、地委秘书长兼农村政策研究室主任", "doc_chunk_id": "corpus_chunkids_000087", "tool": "keyword_search", "entities": ["田福军"], "qa_type": "character_identity"}
+{"question": "李登云与徐国强是什么关系？", "answer": "李登云称徐国强‘你老’，并说徐国强栽培了他大半辈子", "doc_chunk_id": "corpus_chunkids_000087", "tool": "keyword_search", "entities": ["李登云、徐国强"], "qa_type": "character_relation"}
+{"question": "举办宴会的原因是什么？", "answer": "庆祝徐国强老汉六十五大寿", "doc_chunk_id": "corpus_chunkids_000088", "tool": "keyword_search", "entities": ["徐国强", "六十五大寿"], "qa_type": "event_cause"}
+{"question": "李登云与田福军是什么关系？", "answer": "朋友（因关系不愿谈工作）", "doc_chunk_id": "corpus_chunkids_000088", "tool": "keyword_search", "entities": ["李登云", "田福军"], "qa_type": "character_relation"}
+{"question": "润叶离开二妈家返回学校的原因是什么？", "answer": "学校有事", "doc_chunk_id": "corpus_chunkids_000089", "tool": "keyword_search", "entities": ["润叶,二妈家,学校"], "qa_type": "event_cause"}
+{"question": "少安在润叶宿舍门口做什么？", "answer": "低着头转来转去", "doc_chunk_id": "corpus_chunkids_000089", "tool": "keyword_search", "entities": ["少安,润叶宿舍门口"], "qa_type": "character_behavior"}
+{"question": "孙少安为什么到城里？", "answer": "家里和队里的事安排停当", "doc_chunk_id": "corpus_chunkids_000090", "tool": "keyword_search", "entities": ["孙少安、城里、家里和队里的事"], "qa_type": "event_cause"}
+{"question": "孙少安和润叶是什么关系？", "answer": "老熟人", "doc_chunk_id": "corpus_chunkids_000090", "tool": "keyword_search", "entities": ["孙少安、润叶"], "qa_type": "character_relation"}
+{"question": "少安如何看待润叶？", "answer": "像看待自己的亲妹妹一样", "doc_chunk_id": "corpus_chunkids_000091", "tool": "keyword_search", "entities": ["少安,润叶"], "qa_type": "character_relation"}
+{"question": "润叶为什么不让少安买饭？", "answer": "因为少安是客人", "doc_chunk_id": "corpus_chunkids_000091", "tool": "keyword_search", "entities": ["润叶,少安"], "qa_type": "event_cause"}
+{"question": "润叶脸色发红的原因是什么？", "answer": "喝了葡萄酒", "doc_chunk_id": "corpus_chunkids_000092", "tool": "keyword_search", "entities": ["润叶、葡萄酒"], "qa_type": "event_cause"}
+{"question": "少安和润叶的关系是什么？", "answer": "老乡、老同学", "doc_chunk_id": "corpus_chunkids_000092", "tool": "keyword_search", "entities": ["少安、润叶"], "qa_type": "character_relation"}
+{"question": "润叶和少安是什么关系？", "answer": "润叶称呼少安为‘少安哥’", "doc_chunk_id": "corpus_chunkids_000093", "tool": "keyword_search", "entities": ["润叶", "少安"], "qa_type": "character_relation"}
+{"question": "润叶找少安的原因是什么？", "answer": "润叶有急人事想对少安说（告知结婚的事）", "doc_chunk_id": "corpus_chunkids_000093", "tool": "keyword_search", "entities": ["润叶", "少安", "急人事"], "qa_type": "event_cause"}
+{"question": "润叶为什么感到难受？", "answer": "有人纠缠她", "doc_chunk_id": "corpus_chunkids_000094", "tool": "keyword_search", "entities": ["润叶、纠缠她的人"], "qa_type": "event_cause"}
+{"question": "少安回忆小时候的事发生在哪个地方？", "answer": "石圪节上高小", "doc_chunk_id": "corpus_chunkids_000094", "tool": "keyword_search", "entities": ["石圪节上高小"], "qa_type": "place_origin"}
+{"question": "少安和润叶是什么关系？", "answer": "少安哥和润叶（表兄妹）", "doc_chunk_id": "corpus_chunkids_000095", "tool": "keyword_search", "entities": ["少安、润叶"], "qa_type": "character_relation"}
+{"question": "少安为什么需要润叶帮忙？", "answer": "少安姐夫贩老鼠药被公社劳教", "doc_chunk_id": "corpus_chunkids_000095", "tool": "keyword_search", "entities": ["少安姐夫、贩老鼠药、公社劳教"], "qa_type": "event_cause"}
+{"question": "润叶如何称呼田福军？", "answer": "二爸", "doc_chunk_id": "corpus_chunkids_000096", "tool": "keyword_search", "entities": ["田福军, 润叶"], "qa_type": "character_relation"}
+{"question": "润叶为什么请求田福军写信？", "answer": "让田福军写信给白叔叔和徐叔叔，放少安的姐夫", "doc_chunk_id": "corpus_chunkids_000096", "tool": "keyword_search", "entities": ["润叶, 田福军, 少安的姐夫"], "qa_type": "event_cause"}
+{"question": "回石圪节的车票是谁买的？", "answer": "润叶", "doc_chunk_id": "corpus_chunkids_000097", "tool": "keyword_search", "entities": ["润叶,少安,车票"], "qa_type": "character_behavior"}
+{"question": "润叶给少安的信中写了什么？", "answer": "少安哥：我愿意一辈子和你好。咱们慢慢再说这事", "doc_chunk_id": "corpus_chunkids_000097", "tool": "keyword_search", "entities": ["润叶,少安,信"], "qa_type": "event_result"}
+{"question": "润叶对孙少安表达了什么情感？", "answer": "愿意一辈子和他好", "doc_chunk_id": "corpus_chunkids_000098", "tool": "keyword_search", "entities": ["润叶、孙少安"], "qa_type": "character_relation"}
+{"question": "润叶消失在哪个地方的后面？", "answer": "供销门市部的后面", "doc_chunk_id": "corpus_chunkids_000098", "tool": "keyword_search", "entities": ["润叶、供销门市部"], "qa_type": "place_origin"}
+{"question": "白明川的身份是什么？", "answer": "公社主任", "doc_chunk_id": "corpus_chunkids_000099", "tool": "keyword_search", "entities": ["白明川,公社主任"], "qa_type": "character_identity"}
+{"question": "牛家沟妇女大出血的结果是什么？", "answer": "正在公社医院抢救", "doc_chunk_id": "corpus_chunkids_000099", "tool": "keyword_search", "entities": ["牛家沟妇女,大出血,公社医院抢救"], "qa_type": "event_result"}
+{"question": "白明川的身份是什么？", "answer": "石圪节公社一把手，原城关公社副主任", "doc_chunk_id": "corpus_chunkids_000100", "tool": "keyword_search", "entities": ["白明川"], "qa_type": "character_identity"}
+{"question": "白明川和徐治功在工作做法上有何不同？", "answer": "白明川对过分伤害农民的做法反感，尽力抗住；徐治功爱用过头加码的做法", "doc_chunk_id": "corpus_chunkids_000100", "tool": "keyword_search", "entities": ["白明川、徐治功"], "qa_type": "character_behavior"}
+{"question": "润叶的二爸是谁？", "answer": "田福军", "doc_chunk_id": "corpus_chunkids_000101", "tool": "keyword_search", "entities": ["润叶", "田福军"], "qa_type": "character_identity"}
+{"question": "王满银被押在双水村公社的原因是什么？", "answer": "贩了几包老鼠药", "doc_chunk_id": "corpus_chunkids_000101", "tool": "keyword_search", "entities": ["王满银", "双水村公社", "老鼠药"], "qa_type": "event_cause"}
+{"question": "润叶要回哪里？", "answer": "县城", "doc_chunk_id": "corpus_chunkids_000102", "tool": "keyword_search", "entities": ["润叶、县城"], "qa_type": "place_origin"}
+{"question": "徐治功为什么不愿去医院？", "answer": "因为他知道她（医院里的人）恨他", "doc_chunk_id": "corpus_chunkids_000102", "tool": "keyword_search", "entities": ["徐治功、医院"], "qa_type": "character_behavior"}
+{"question": "田福堂在双水村的身份是什么？", "answer": "双水村书记", "doc_chunk_id": "corpus_chunkids_000103", "tool": "keyword_search", "entities": ["田福堂,双水村"], "qa_type": "character_identity"}
+{"question": "徐治功让田福堂捎话给高虎和玉亭的原因是什么？", "answer": "公社有些事", "doc_chunk_id": "corpus_chunkids_000103", "tool": "keyword_search", "entities": ["徐治功,田福堂,高虎,玉亭,王满银"], "qa_type": "event_cause"}
+{"question": "田福堂和孙少安是什么关系？", "answer": "从小一起长大", "doc_chunk_id": "corpus_chunkids_000104", "tool": "keyword_search", "entities": ["田福堂,孙少安"], "qa_type": "character_relation"}
+{"question": "孙少安的身份是什么？", "answer": "一队队长", "doc_chunk_id": "corpus_chunkids_000104", "tool": "keyword_search", "entities": ["孙少安"], "qa_type": "character_identity"}
+{"question": "王满银被放的原因是什么？", "answer": "徐主任让捎话放人", "doc_chunk_id": "corpus_chunkids_000105", "tool": "keyword_search", "entities": ["王满银,徐主任"], "qa_type": "event_cause"}
+{"question": "田福堂没找到兰花的原因是什么？", "answer": "兰花去双水村娘家了", "doc_chunk_id": "corpus_chunkids_000105", "tool": "keyword_search", "entities": ["田福堂,兰花,双水村"], "qa_type": "event_cause"}
+{"question": "田福堂的侄女婿是谁？", "answer": "王满银", "doc_chunk_id": "corpus_chunkids_000106", "tool": "keyword_search", "entities": ["田福堂、侄女婿、王满银"], "qa_type": "character_relation"}
+{"question": "王满银被释放后和谁一起回罐子村？", "answer": "兰花和两个娃娃", "doc_chunk_id": "corpus_chunkids_000106", "tool": "keyword_search", "entities": ["王满银、兰花、两个娃娃、罐子村"], "qa_type": "event_result"}
+{"question": "机关干部为什么去城外山上修梯田？", "answer": "农业学大寨任务，完不成挨批评", "doc_chunk_id": "corpus_chunkids_000107", "tool": "keyword_search", "entities": ["机关干部修梯田"], "qa_type": "event_cause"}
+{"question": "各机关干部下午通常做什么？", "answer": "政治学习", "doc_chunk_id": "corpus_chunkids_000107", "tool": "keyword_search", "entities": ["机关干部"], "qa_type": "character_behavior"}
+{"question": "孙少平与郝红梅是什么关系？", "answer": "同学，交交往往，不拘束", "doc_chunk_id": "corpus_chunkids_000108", "tool": "keyword_search", "entities": ["孙少平, 郝红梅"], "qa_type": "character_relation"}
+{"question": "孙少平为什么不忍心中途退学？", "answer": "不忍心退学，且因郝红梅", "doc_chunk_id": "corpus_chunkids_000108", "tool": "keyword_search", "entities": ["孙少平, 郝红梅"], "qa_type": "event_cause"}
+{"question": "孙少平在班上担任什么职务？", "answer": "劳动干事", "doc_chunk_id": "corpus_chunkids_000109", "tool": "keyword_search", "entities": ["孙少平,劳动干事"], "qa_type": "character_identity"}
+{"question": "侯玉英为何向孙少平扔铁锨？", "answer": "她发现孙少平把好铁锨留给郝红梅", "doc_chunk_id": "corpus_chunkids_000109", "tool": "keyword_search", "entities": ["侯玉英,孙少平,郝红梅"], "qa_type": "event_cause"}
+{"question": "跛女子是谁？", "answer": "侯玉英", "doc_chunk_id": "corpus_chunkids_000110", "tool": "keyword_search", "entities": ["侯玉英,跛女子"], "qa_type": "character_identity"}
+{"question": "孙少平与郝红梅的‘关系’公开后，两人有什么反应？", "answer": "不敢频繁接触，感到害臊和怨恨，公开场合不理睬", "doc_chunk_id": "corpus_chunkids_000110", "tool": "keyword_search", "entities": ["孙少平,郝红梅"], "qa_type": "character_behavior"}
+{"question": "郝红梅如何处理孙少平的书？", "answer": "放在路边土台子上", "doc_chunk_id": "corpus_chunkids_000111", "tool": "keyword_search", "entities": ["郝红梅", "孙少平的书"], "qa_type": "character_behavior"}
+{"question": "孙少平重新热爱学校的原因是什么？", "answer": "郝红梅还书并给他白面饼，让他找回友谊和温暖", "doc_chunk_id": "corpus_chunkids_000111", "tool": "keyword_search", "entities": ["孙少平", "学校", "郝红梅", "白面饼", "书"], "qa_type": "event_cause"}
+{"question": "郝红梅的穿着有什么变化？", "answer": "换了半旧红格子布衫、天蓝色裤子和手工方口鞋，衣服无补丁", "doc_chunk_id": "corpus_chunkids_000112", "tool": "keyword_search", "entities": ["郝红梅"], "qa_type": "character_behavior"}
+{"question": "孙少平没能和郝红梅说话的原因是什么？", "answer": "郝红梅有意回避他", "doc_chunk_id": "corpus_chunkids_000112", "tool": "keyword_search", "entities": ["孙少平、郝红梅"], "qa_type": "event_cause"}
+{"question": "孙少平为什么被郝红梅不理？", "answer": "因为郝红梅已经和顾养民好了", "doc_chunk_id": "corpus_chunkids_000113", "tool": "keyword_search", "entities": ["孙少平,郝红梅,顾养民"], "qa_type": "event_cause"}
+{"question": "郝红梅和顾养民是什么时候好的？", "answer": "下半年开学的几个星期里", "doc_chunk_id": "corpus_chunkids_000113", "tool": "keyword_search", "entities": ["郝红梅,顾养民"], "qa_type": "event_cause"}
+{"question": "郝红梅的身份是什么？", "answer": "地主的孙子", "doc_chunk_id": "corpus_chunkids_000114", "tool": "keyword_search", "entities": ["郝红梅"], "qa_type": "character_identity"}
+{"question": "郝红梅和孙少平的关系是什么？", "answer": "同病相怜的同学", "doc_chunk_id": "corpus_chunkids_000114", "tool": "keyword_search", "entities": ["郝红梅,孙少平"], "qa_type": "character_relation"}
+{"question": "郝红梅最初和孙少平接近的原因是什么？", "answer": "怜悯（怜悯别人，也让别人怜悯自己）", "doc_chunk_id": "corpus_chunkids_000115", "tool": "keyword_search", "entities": ["郝红梅,孙少平"], "qa_type": "event_cause"}
+{"question": "郝红梅对孙少平有怨气的原因是什么？", "answer": "孙少平每次劳动给她发一把好工具", "doc_chunk_id": "corpus_chunkids_000115", "tool": "keyword_search", "entities": ["郝红梅,孙少平,好工具"], "qa_type": "event_cause"}
+{"question": "顾养民的身份是什么？", "answer": "他们班的班长", "doc_chunk_id": "corpus_chunkids_000116", "tool": "keyword_search", "entities": ["顾养民"], "qa_type": "character_identity"}
+{"question": "她为什么想把白面饼和书一起送给孙少平？", "answer": "为了弥补没有及时还书的过失", "doc_chunk_id": "corpus_chunkids_000116", "tool": "keyword_search", "entities": ["她、孙少平、还书过失"], "qa_type": "event_cause"}
+{"question": "顾养民的身份是什么？", "answer": "班长", "doc_chunk_id": "corpus_chunkids_000117", "tool": "keyword_search", "entities": ["顾养民"], "qa_type": "character_identity"}
+{"question": "郝红梅对孙少平的行为是什么？", "answer": "回避，故意不给他传球", "doc_chunk_id": "corpus_chunkids_000117", "tool": "keyword_search", "entities": ["郝红梅、孙少平"], "qa_type": "character_behavior"}
+{"question": "金波为什么想捶顾养民？", "answer": "因为顾养民夺走了少平的女朋友", "doc_chunk_id": "corpus_chunkids_000118", "tool": "keyword_search", "entities": ["金波,顾养民,郝红梅,孙少平"], "qa_type": "event_cause"}
+{"question": "金波对孙少平做了什么？", "answer": "给孙少平送了四个玉米面烧饼", "doc_chunk_id": "corpus_chunkids_000118", "tool": "keyword_search", "entities": ["金波,孙少平,玉米面烧饼"], "qa_type": "character_behavior"}
+{"question": "孙少平与金波是什么关系？", "answer": "朋友", "doc_chunk_id": "corpus_chunkids_000119", "tool": "keyword_search", "entities": ["孙少平,金波"], "qa_type": "character_relation"}
+{"question": "顾养民被打后有什么结果？", "answer": "鼻子嘴出血，浑身疼，倒在地上爬不起来", "doc_chunk_id": "corpus_chunkids_000119", "tool": "keyword_search", "entities": ["顾养民,金波"], "qa_type": "event_result"}
+{"question": "金波等人对顾养民做了什么？", "answer": "打了他一顿后，拉起来，洗干净脸和衣服，梳理头发，使其看起来没事。", "doc_chunk_id": "corpus_chunkids_000120", "tool": "keyword_search", "entities": ["金波,顾养民,打,打扮"], "qa_type": "character_behavior"}
+{"question": "顾养民是否向学校告状了？", "answer": "没有，他说“我不告你们”。", "doc_chunk_id": "corpus_chunkids_000120", "tool": "keyword_search", "entities": ["顾养民,学校,告状"], "qa_type": "event_result"}
+{"question": "谁承认让金波打顾养民并要为金波承担罪责？", "answer": "孙少平", "doc_chunk_id": "corpus_chunkids_000121", "tool": "keyword_search", "entities": ["孙少平,金波,顾养民"], "qa_type": "character_behavior"}
+{"question": "郝红梅现在和谁相好？", "answer": "顾养民", "doc_chunk_id": "corpus_chunkids_000121", "tool": "keyword_search", "entities": ["郝红梅,顾养民"], "qa_type": "character_relation"}
+{"question": "顾养民在文艺宣传队中担任什么职务？", "answer": "宣传队副队长", "doc_chunk_id": "corpus_chunkids_000122", "tool": "keyword_search", "entities": ["顾养民、宣传队"], "qa_type": "character_identity"}
+{"question": "孙少平在文艺宣传队中做了什么？", "answer": "参加小戏演出（男主角）和讲故事", "doc_chunk_id": "corpus_chunkids_000122", "tool": "keyword_search", "entities": ["孙少平、文艺宣传队"], "qa_type": "character_behavior"}
+{"question": "田晓霞从小在哪里长大？", "answer": "黄原城", "doc_chunk_id": "corpus_chunkids_000123", "tool": "keyword_search", "entities": ["田晓霞,黄原城"], "qa_type": "place_origin"}
+{"question": "孙少平为什么要回双水村？", "answer": "为解决粮票和服装问题", "doc_chunk_id": "corpus_chunkids_000123", "tool": "keyword_search", "entities": ["孙少平,双水村,粮票,服装"], "qa_type": "event_cause"}
+{"question": "贾冰的身份是什么？", "answer": "诗人", "doc_chunk_id": "corpus_chunkids_000124", "tool": "keyword_search", "entities": ["贾冰"], "qa_type": "character_identity"}
+{"question": "孙少平在故事调讲中获得了什么？", "answer": "二等奖", "doc_chunk_id": "corpus_chunkids_000124", "tool": "keyword_search", "entities": ["孙少平、故事调讲、二等奖"], "qa_type": "event_result"}
+{"question": "他星期六做了什么？", "answer": "回了一趟双水村", "doc_chunk_id": "corpus_chunkids_000125", "tool": "keyword_search", "entities": ["他、星期六、双水村"], "qa_type": "character_behavior"}
+{"question": "他为什么用哥哥给的十元钱给家人买礼物？", "answer": "地区期间伙食补助够吃", "doc_chunk_id": "corpus_chunkids_000125", "tool": "keyword_search", "entities": ["他、哥哥、十元钱、家人"], "qa_type": "event_cause"}
+{"question": "田润叶在石圪节公路上做了什么？", "answer": "把装在信封的纸条塞给孙少安", "doc_chunk_id": "corpus_chunkids_000126", "tool": "keyword_search", "entities": ["田润叶,孙少安,石圪节公路,纸条"], "qa_type": "character_behavior"}
+{"question": "田润叶第二次中午去少安家时少安是否回来？", "answer": "没有", "doc_chunk_id": "corpus_chunkids_000126", "tool": "keyword_search", "entities": ["田润叶,孙少安,少安家"], "qa_type": "event_result"}
+{"question": "少安的身份是什么？", "answer": "队长", "doc_chunk_id": "corpus_chunkids_000127", "tool": "keyword_search", "entities": ["少安"], "qa_type": "character_identity"}
+{"question": "润叶和少安是什么关系？", "answer": "少安哥", "doc_chunk_id": "corpus_chunkids_000127", "tool": "keyword_search", "entities": ["润叶、少安"], "qa_type": "character_relation"}
+{"question": "田润叶让少平做什么？", "answer": "让少平叫少安星期六回城里来", "doc_chunk_id": "corpus_chunkids_000128", "tool": "keyword_search", "entities": ["田润叶，少平，少安，县高中"], "qa_type": "character_behavior"}
+{"question": "田润叶眼睛肿的原因是什么？", "answer": "少平说少安忙来不了，她偷偷哭了一晚上", "doc_chunk_id": "corpus_chunkids_000128", "tool": "keyword_search", "entities": ["田润叶，少平，少安"], "qa_type": "event_cause"}
+{"question": "田润叶为什么要去向前家吃饭？", "answer": "被刘阿姨和向前妈邀请，因长辈邀请且不好拒绝", "doc_chunk_id": "corpus_chunkids_000129", "tool": "keyword_search", "entities": ["田润叶,向前家,刘阿姨,向前妈"], "qa_type": "event_cause"}
+{"question": "李登云的身份是什么？", "answer": "管政工宣传的李主任", "doc_chunk_id": "corpus_chunkids_000129", "tool": "keyword_search", "entities": ["李登云"], "qa_type": "character_identity"}
+{"question": "李主任是谁？", "answer": "管政工宣传的李主任（李登云）", "doc_chunk_id": "corpus_chunkids_000130", "tool": "keyword_search", "entities": ["李主任"], "qa_type": "character_identity"}
+{"question": "田润叶和李向前被传成什么关系？", "answer": "订婚了", "doc_chunk_id": "corpus_chunkids_000130", "tool": "keyword_search", "entities": ["田润叶、李向前"], "qa_type": "character_relation"}
+{"question": "李向前对润叶做了什么？", "answer": "殷勤垛整齐煤块、加工劈柴、建‘艺术’建筑物", "doc_chunk_id": "corpus_chunkids_000131", "tool": "keyword_search", "entities": ["李向前、润叶"], "qa_type": "character_behavior"}
+{"question": "润叶为什么决定回双水村？", "answer": "李向前压力大，她无法忍受", "doc_chunk_id": "corpus_chunkids_000131", "tool": "keyword_search", "entities": ["润叶、李向前、双水村"], "qa_type": "event_cause"}
+{"question": "孙少安和润叶从小是什么关系？", "answer": "青梅竹马", "doc_chunk_id": "corpus_chunkids_000132", "tool": "keyword_search", "entities": ["孙少安,润叶"], "qa_type": "character_relation"}
+{"question": "孙少安认为自己和润叶不可能在一起的主要原因是什么？", "answer": "他是贫困农民，润叶是公家女教师，家境差距大，自家穷没条件", "doc_chunk_id": "corpus_chunkids_000132", "tool": "keyword_search", "entities": ["孙少安,润叶"], "qa_type": "event_cause"}
+{"question": "孙少安不敢娶润叶的原因是什么？", "answer": "他打闹不起上千元的财礼钱", "doc_chunk_id": "corpus_chunkids_000133", "tool": "keyword_search", "entities": ["孙少安,润叶,财礼钱"], "qa_type": "event_cause"}
+{"question": "孙少安天不亮会做哪些事？", "answer": "天不亮爬起来担满家里的两个大水瓮，帮母亲给妹妹兰香做饭，送兰香和金秀到罐子村一段路", "doc_chunk_id": "corpus_chunkids_000133", "tool": "keyword_search", "entities": ["孙少安,担水,做饭,送兰香,金秀,罐子村"], "qa_type": "character_behavior"}
+{"question": "孙少安在队里担任什么职务？", "answer": "一队饲养室负责人（负责安排全队生产）", "doc_chunk_id": "corpus_chunkids_000134", "tool": "keyword_search", "entities": ["孙少安", "一队饲养室"], "qa_type": "character_identity"}
+{"question": "孙少安最近睡不着的原因是什么？", "answer": "润叶托少平捎话让他去城里，他不敢同意没回话，润叶却回村找他，他不知如何是好", "doc_chunk_id": "corpus_chunkids_000134", "tool": "keyword_search", "entities": ["孙少安", "润叶"], "qa_type": "event_cause"}
+{"question": "润叶来找‘他’之后的结果是什么？", "answer": "润叶已经坐汽车回县城去了", "doc_chunk_id": "corpus_chunkids_000135", "tool": "keyword_search", "entities": ["润叶、他、县城"], "qa_type": "event_result"}
+{"question": "‘他’为什么突然跑回家里？", "answer": "他后悔躲起来不见润叶，想回去见她", "doc_chunk_id": "corpus_chunkids_000135", "tool": "keyword_search", "entities": ["他、润叶"], "qa_type": "character_behavior"}
+{"question": "少安的自留地在哪里？", "answer": "去米家镇方向的公路上面", "doc_chunk_id": "corpus_chunkids_000136", "tool": "keyword_search", "entities": ["少安的自留地,米家镇"], "qa_type": "place_origin"}
+{"question": "少安遇到的人是谁？", "answer": "润叶", "doc_chunk_id": "corpus_chunkids_000136", "tool": "keyword_search", "entities": ["少安,润叶"], "qa_type": "character_relation"}
+{"question": "田福堂和润叶是什么关系？", "answer": "父女关系", "doc_chunk_id": "corpus_chunkids_000137", "tool": "keyword_search", "entities": ["田福堂", "润叶"], "qa_type": "character_relation"}
+{"question": "少安和润叶为什么没来得及说什么就分开了？", "answer": "被田福堂的一声喊叫冲散", "doc_chunk_id": "corpus_chunkids_000137", "tool": "keyword_search", "entities": ["少安", "润叶", "田福堂"], "qa_type": "event_cause"}
+{"question": "田福堂的女儿是谁？", "answer": "润叶", "doc_chunk_id": "corpus_chunkids_000138", "tool": "keyword_search", "entities": ["田福堂、润叶"], "qa_type": "character_relation"}
+{"question": "田福堂在哪里买的羊肉？", "answer": "罐子村", "doc_chunk_id": "corpus_chunkids_000138", "tool": "keyword_search", "entities": ["田福堂、羊肉、罐子村"], "qa_type": "place_origin"}
+{"question": "润叶和田福堂是什么关系？", "answer": "父女关系", "doc_chunk_id": "corpus_chunkids_000139", "tool": "keyword_search", "entities": ["润叶,田福堂"], "qa_type": "character_relation"}
+{"question": "田福堂为什么不同意润叶和少安在一起？", "answer": "认为两人条件差距大，孙少安是泥腿把子，怕没面子", "doc_chunk_id": "corpus_chunkids_000139", "tool": "keyword_search", "entities": ["田福堂,润叶,少安"], "qa_type": "event_cause"}
+{"question": "田福堂为什么生气？", "answer": "孙少安想娶润叶且条件差配不上润叶", "doc_chunk_id": "corpus_chunkids_000140", "tool": "keyword_search", "entities": ["田福堂,孙少安,润叶"], "qa_type": "event_cause"}
+{"question": "田福堂决定去城里做什么？", "answer": "找福军和爱云给润叶在城里瞅个人家", "doc_chunk_id": "corpus_chunkids_000140", "tool": "keyword_search", "entities": ["田福堂,福军,爱云,润叶"], "qa_type": "character_behavior"}
+{"question": "田福堂的身份是什么？", "answer": "书记", "doc_chunk_id": "corpus_chunkids_000141", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "田福堂去孙玉亭家做了什么？", "answer": "交代队里的事并给旧鞋", "doc_chunk_id": "corpus_chunkids_000141", "tool": "keyword_search", "entities": ["田福堂，孙玉亭，旧鞋"], "qa_type": "character_behavior"}
+{"question": "田福堂为什么对营务旱烟有兴趣？", "answer": "早年间烟瘾大，纸烟抽不起，经心营务一块旱烟后有了兴趣。", "doc_chunk_id": "corpus_chunkids_000142", "tool": "keyword_search", "entities": ["田福堂,旱烟"], "qa_type": "event_cause"}
+{"question": "田福堂中午打算做什么？", "answer": "去医院找爱云谈润叶的婚事。", "doc_chunk_id": "corpus_chunkids_000142", "tool": "keyword_search", "entities": ["田福堂,爱云,润叶"], "qa_type": "character_behavior"}
+{"question": "徐爱云是田福堂的什么人？", "answer": "弟媳妇", "doc_chunk_id": "corpus_chunkids_000143", "tool": "keyword_search", "entities": ["田福堂,徐爱云"], "qa_type": "character_relation"}
+{"question": "田福堂为什么找徐爱云？", "answer": "润叶的婚事，希望帮忙解决", "doc_chunk_id": "corpus_chunkids_000143", "tool": "keyword_search", "entities": ["田福堂,徐爱云,润叶,婚事"], "qa_type": "event_cause"}
+{"question": "徐爱云与田福堂的关系是什么？", "answer": "弟媳妇", "doc_chunk_id": "corpus_chunkids_000144", "tool": "keyword_search", "entities": ["徐爱云,田福堂"], "qa_type": "character_relation"}
+{"question": "田福堂自认为自己是什么身份？", "answer": "农民", "doc_chunk_id": "corpus_chunkids_000144", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "田福堂的身份是什么？", "answer": "书记", "doc_chunk_id": "corpus_chunkids_000145", "tool": "keyword_search", "entities": ["田福堂、书记"], "qa_type": "character_identity"}
+{"question": "田福高为何在石圪节的小桥上？", "answer": "大庄河姨夫因扩大猪饲料地被公社盘问，他来打听结果", "doc_chunk_id": "corpus_chunkids_000145", "tool": "keyword_search", "entities": ["田福高、大庄河姨夫、扩大猪饲料地、公社盘问"], "qa_type": "event_cause"}
+{"question": "孙玉亭和贺凤英是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000146", "tool": "keyword_search", "entities": ["孙玉亭,贺凤英"], "qa_type": "character_relation"}
+{"question": "解决生猪交售任务落实问题的办法是什么？", "answer": "抓纸蛋", "doc_chunk_id": "corpus_chunkids_000146", "tool": "keyword_search", "entities": ["孙玉亭,抓纸蛋,生猪交售任务"], "qa_type": "event_result"}
+{"question": "孙少安在划分猪饲料地时的想法是什么？", "answer": "把闲地划给社员，不减少队里现耕面积", "doc_chunk_id": "corpus_chunkids_000147", "tool": "keyword_search", "entities": ["孙少安、猪饲料地划分"], "qa_type": "character_behavior"}
+{"question": "生猪交售任务无法完成的原因是什么？", "answer": "国家收购标准提高，补贴高粱后猪仍交售不了", "doc_chunk_id": "corpus_chunkids_000147", "tool": "keyword_search", "entities": ["生猪交售任务、国家收购标准"], "qa_type": "event_cause"}
+{"question": "孙少安如何扩大自留地？", "answer": "用眼睛估量丈量土地", "doc_chunk_id": "corpus_chunkids_000148", "tool": "keyword_search", "entities": ["孙少安,自留地"], "qa_type": "character_behavior"}
+{"question": "田福堂让徐治功查猪饲料地的原因是什么？", "answer": "找让孙少安下不来台的茬口", "doc_chunk_id": "corpus_chunkids_000148", "tool": "keyword_search", "entities": ["田福堂,孙少安,猪饲料地"], "qa_type": "event_cause"}
+{"question": "孙少安的身份是什么？", "answer": "生产队长", "doc_chunk_id": "corpus_chunkids_000149", "tool": "keyword_search", "entities": ["孙少安"], "qa_type": "character_identity"}
+{"question": "批判会后孙少安的结果是什么？", "answer": "成为全公社家喻户晓的人物", "doc_chunk_id": "corpus_chunkids_000149", "tool": "keyword_search", "entities": ["孙少安、批判会"], "qa_type": "event_result"}
+{"question": "刘根民和孙少安是什么关系？", "answer": "同班同学，又是好朋友", "doc_chunk_id": "corpus_chunkids_000150", "tool": "keyword_search", "entities": ["刘根民,孙少安"], "qa_type": "character_relation"}
+{"question": "孙少安临离家时对父亲有什么安顿？", "answer": "一再安顿父亲不要到公社来", "doc_chunk_id": "corpus_chunkids_000150", "tool": "keyword_search", "entities": ["孙少安,父亲"], "qa_type": "character_behavior"}
+{"question": "孙少安被批判的原因是什么？", "answer": "田福堂因他和润叶的事报复，将他推到批判台上", "doc_chunk_id": "corpus_chunkids_000151", "tool": "keyword_search", "entities": ["孙少安,田福堂"], "qa_type": "event_cause"}
+{"question": "田福堂在孙少安眼中是什么样的人？", "answer": "强人", "doc_chunk_id": "corpus_chunkids_000151", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "孙玉厚和孙少安是什么关系？", "answer": "父子关系", "doc_chunk_id": "corpus_chunkids_000152", "tool": "keyword_search", "entities": ["孙玉厚,孙少安"], "qa_type": "character_relation"}
+{"question": "孙少安批判会后去了哪里？", "answer": "石圪节的后街上", "doc_chunk_id": "corpus_chunkids_000152", "tool": "keyword_search", "entities": ["孙少安,石圪节的后街"], "qa_type": "character_behavior"}
+{"question": "孙少安为什么在石圪节街上遛达？", "answer": "因为他难受痛苦，想独自散心。", "doc_chunk_id": "corpus_chunkids_000153", "tool": "keyword_search", "entities": ["孙少安、石圪节街上"], "qa_type": "event_cause"}
+{"question": "孙少安看到双水村的灯火后内心有什么感受？", "answer": "一股温暖的激流刹那间漫过他的心间。", "doc_chunk_id": "corpus_chunkids_000153", "tool": "keyword_search", "entities": ["孙少安、双水村的灯火"], "qa_type": "event_result"}
+{"question": "孙少安和孙玉厚是什么关系？", "answer": "父子", "doc_chunk_id": "corpus_chunkids_000154", "tool": "keyword_search", "entities": ["孙少安", "孙玉厚"], "qa_type": "character_relation"}
+{"question": "孙少安在高粱地遇到了谁？", "answer": "父亲孙玉厚", "doc_chunk_id": "corpus_chunkids_000154", "tool": "keyword_search", "entities": ["孙少安", "高粱地", "孙玉厚"], "qa_type": "event_result"}
+{"question": "孙少安是谁的儿子？", "answer": "孙玉厚", "doc_chunk_id": "corpus_chunkids_000155", "tool": "keyword_search", "entities": ["孙少安、孙玉厚"], "qa_type": "character_relation"}
+{"question": "孙少安如何安慰父亲？", "answer": "劝父亲别难受，称自己婚事不用熬煎，会自己找媳妇，承担家里大事", "doc_chunk_id": "corpus_chunkids_000155", "tool": "keyword_search", "entities": ["孙少安安慰父亲"], "qa_type": "character_behavior"}
+{"question": "孙玉厚是谁的父亲？", "answer": "孙少安的父亲", "doc_chunk_id": "corpus_chunkids_000156", "tool": "keyword_search", "entities": ["孙玉厚,孙少安"], "qa_type": "character_identity"}
+{"question": "孙玉厚为什么去找弟弟孙玉亭？", "answer": "为给孙少安娶媳妇找线索，希望孙玉亭提供合适女娃娃的信息", "doc_chunk_id": "corpus_chunkids_000156", "tool": "keyword_search", "entities": ["孙玉厚,孙少安,孙玉亭"], "qa_type": "event_cause"}
+{"question": "孙玉亭和孙玉厚是什么关系？", "answer": "兄弟", "doc_chunk_id": "corpus_chunkids_000157", "tool": "keyword_search", "entities": ["孙玉亭,孙玉厚"], "qa_type": "character_relation"}
+{"question": "孙玉厚为何询问孙玉亭女娃娃？", "answer": "想给少安说媳妇", "doc_chunk_id": "corpus_chunkids_000157", "tool": "keyword_search", "entities": ["孙玉厚,孙玉亭,少安"], "qa_type": "event_cause"}
+{"question": "贺凤英提到的适合孙少安的女娃娃来自哪里？", "answer": "柳林", "doc_chunk_id": "corpus_chunkids_000158", "tool": "keyword_search", "entities": ["孙少安,女娃娃,柳林"], "qa_type": "place_origin"}
+{"question": "贺凤英与孙玉厚是什么关系？", "answer": "孙玉厚的弟媳妇", "doc_chunk_id": "corpus_chunkids_000158", "tool": "keyword_search", "entities": ["贺凤英,孙玉厚"], "qa_type": "character_relation"}
+{"question": "少安为什么要去山西相亲？", "answer": "对方不要财礼，自家光景不好，不敢错过机会", "doc_chunk_id": "corpus_chunkids_000159", "tool": "keyword_search", "entities": ["孙少安,山西相亲,不要财礼"], "qa_type": "event_cause"}
+{"question": "孙少安和润叶的关系是怎样的？", "answer": "曾有感情但无法结合", "doc_chunk_id": "corpus_chunkids_000159", "tool": "keyword_search", "entities": ["孙少安,润叶"], "qa_type": "character_relation"}
+{"question": "孙少安和润叶是什么关系？", "answer": "恋人（孙少安对润叶有情意）", "doc_chunk_id": "corpus_chunkids_000160", "tool": "keyword_search", "entities": ["孙少安,润叶"], "qa_type": "character_relation"}
+{"question": "孙少安为什么要去山西相亲？", "answer": "答应了父母亲去山西相亲", "doc_chunk_id": "corpus_chunkids_000160", "tool": "keyword_search", "entities": ["孙少安,山西相亲"], "qa_type": "event_cause"}
+{"question": "孙少平现在如何取饭？", "answer": "大大方方站在队列中取饭", "doc_chunk_id": "corpus_chunkids_000161", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "character_behavior"}
+{"question": "郝红梅和顾养民的关系如何？", "answer": "真正的好起来了", "doc_chunk_id": "corpus_chunkids_000161", "tool": "keyword_search", "entities": ["郝红梅、顾养民"], "qa_type": "character_relation"}
+{"question": "孙少平开始养成每天看报习惯的原因是什么？", "answer": "晓霞说她父亲认为中学生应养成每天看报习惯以开阔眼界", "doc_chunk_id": "corpus_chunkids_000162", "tool": "keyword_search", "entities": ["孙少平,田晓霞,看报习惯"], "qa_type": "event_cause"}
+{"question": "田晓霞每天下午在报栏前做什么？", "answer": "看报纸，呆半天直到看完", "doc_chunk_id": "corpus_chunkids_000162", "tool": "keyword_search", "entities": ["田晓霞,报栏"], "qa_type": "character_behavior"}
+{"question": "初澜是谁？", "answer": "常发表‘重要文章’，班主任组织大家学习的人", "doc_chunk_id": "corpus_chunkids_000163", "tool": "keyword_search", "entities": ["初澜"], "qa_type": "character_identity"}
+{"question": "晓霞向少平推荐了哪些书？", "answer": "政治经济学和哲学书籍", "doc_chunk_id": "corpus_chunkids_000163", "tool": "keyword_search", "entities": ["晓霞", "少平", "政治经济学", "哲学书籍"], "qa_type": "character_behavior"}
+{"question": "孙少平精神上得到满足的原因是什么？", "answer": "田晓霞带来读物让他阅读", "doc_chunk_id": "corpus_chunkids_000164", "tool": "keyword_search", "entities": ["孙少平,田晓霞,读物"], "qa_type": "event_cause"}
+{"question": "全校师生吃的忆苦饭是什么样的？", "answer": "一人两个搀和了糠的黑面馍和一碗白开水", "doc_chunk_id": "corpus_chunkids_000164", "tool": "keyword_search", "entities": ["全校师生,忆苦饭"], "qa_type": "event_result"}
+{"question": "孙少平的哥哥是谁？", "answer": "孙少安", "doc_chunk_id": "corpus_chunkids_000165", "tool": "keyword_search", "entities": ["孙少平,孙少安"], "qa_type": "character_relation"}
+{"question": "孙少平父亲找他请假回家的原因是什么？", "answer": "少安去山西看媳妇，家里只有父亲一人应付不来，少平回去补少安的工分", "doc_chunk_id": "corpus_chunkids_000165", "tool": "keyword_search", "entities": ["孙少平父亲,孙少安,请假回家"], "qa_type": "event_cause"}
+{"question": "润叶姐的身份是什么？", "answer": "公派教师", "doc_chunk_id": "corpus_chunkids_000166", "tool": "keyword_search", "entities": ["润叶姐"], "qa_type": "character_identity"}
+{"question": "金波为少平做了什么？", "answer": "买烧饼和猪头肉，交窑洞钥匙及箱子钥匙（含烟钥匙）", "doc_chunk_id": "corpus_chunkids_000166", "tool": "keyword_search", "entities": ["金波、少平"], "qa_type": "character_behavior"}
+{"question": "少平中午会做什么？", "answer": "走到东拉河边柳树下看书，口渴时喝凉水", "doc_chunk_id": "corpus_chunkids_000167", "tool": "keyword_search", "entities": ["少平"], "qa_type": "character_behavior"}
+{"question": "川道的庄稼再不浇水会怎样？", "answer": "不出一个星期就完蛋", "doc_chunk_id": "corpus_chunkids_000167", "tool": "keyword_search", "entities": ["川道庄稼"], "qa_type": "event_result"}
+{"question": "少平如何称呼田万有？", "answer": "五大叔", "doc_chunk_id": "corpus_chunkids_000168", "tool": "keyword_search", "entities": ["少平,田万有"], "qa_type": "character_relation"}
+{"question": "田万有为什么偷偷到水井边？", "answer": "因为天旱，偷偷祈雨", "doc_chunk_id": "corpus_chunkids_000168", "tool": "keyword_search", "entities": ["田万有,祈雨,天旱"], "qa_type": "event_cause"}
+{"question": "双水村人为何愤懑骚动？", "answer": "上游几个村庄拦截了东拉河的水", "doc_chunk_id": "corpus_chunkids_000169", "tool": "keyword_search", "entities": ["双水村人骚动、上游村庄拦截东拉河水"], "qa_type": "event_cause"}
+{"question": "田福堂此刻在做什么？", "answer": "在自家窑里脚地上烦乱来回走，拿烟不点只闻", "doc_chunk_id": "corpus_chunkids_000169", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_behavior"}
+{"question": "田福堂的身份是什么？", "answer": "双水村的村支书（村里的领导人）", "doc_chunk_id": "corpus_chunkids_000170", "tool": "keyword_search", "entities": ["田福堂,双水村"], "qa_type": "character_identity"}
+{"question": "双水村川道庄稼缺水的原因是什么？", "answer": "东拉河上游的几个村庄不放水", "doc_chunk_id": "corpus_chunkids_000170", "tool": "keyword_search", "entities": ["东拉河上游村庄,双水村庄稼"], "qa_type": "event_cause"}
+{"question": "田福堂在村里的身份是什么？", "answer": "一村之主", "doc_chunk_id": "corpus_chunkids_000171", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "田福堂召集队干部开会的原因是什么？", "answer": "解决水的问题以维护自身威信", "doc_chunk_id": "corpus_chunkids_000171", "tool": "keyword_search", "entities": ["田福堂、开会、水的问题"], "qa_type": "event_cause"}
+{"question": "田福堂在片段中的身份是什么？", "answer": "双水村的队干部", "doc_chunk_id": "corpus_chunkids_000172", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "双水村队干部决定豁坝的原因是什么？", "answer": "东拉河上游几个村霸占水源，双水村庄稼面临干死危险", "doc_chunk_id": "corpus_chunkids_000172", "tool": "keyword_search", "entities": ["双水村队干部,豁坝,东拉河上游几个村"], "qa_type": "event_cause"}
+{"question": "金俊武的身份是什么？", "answer": "双水村的精能人之一", "doc_chunk_id": "corpus_chunkids_000173", "tool": "keyword_search", "entities": ["金俊武"], "qa_type": "character_identity"}
+{"question": "孙玉亭在解决水问题的计划中提出了什么行动建议？", "answer": "带人去石圪节，开拖拉机挖口子后返回", "doc_chunk_id": "corpus_chunkids_000173", "tool": "keyword_search", "entities": ["孙玉亭", "石圪节"], "qa_type": "character_behavior"}
+{"question": "田海民的身份是什么？", "answer": "大队会计兼拖拉机手，村里党支部委员之一", "doc_chunk_id": "corpus_chunkids_000174", "tool": "keyword_search", "entities": ["田海民"], "qa_type": "character_identity"}
+{"question": "孙玉亭为行走干练做了什么？", "answer": "脱掉烂布鞋，换上福堂送的黄胶鞋", "doc_chunk_id": "corpus_chunkids_000174", "tool": "keyword_search", "entities": ["孙玉亭"], "qa_type": "character_behavior"}
+{"question": "孙少平为什么没去石圪节放水？", "answer": "因在石圪节熟人多，怕与同学打架，故没答应二爸。", "doc_chunk_id": "corpus_chunkids_000175", "tool": "keyword_search", "entities": ["孙少平, 石圪节"], "qa_type": "event_cause"}
+{"question": "田福堂下达了什么命令？", "answer": "向石圪节“进军”的命令。", "doc_chunk_id": "corpus_chunkids_000175", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_behavior"}
+{"question": "金富和金强的身份是什么？", "answer": "金俊文（俊武他哥）的两个儿子", "doc_chunk_id": "corpus_chunkids_000176", "tool": "keyword_search", "entities": ["金富,金强,金俊文"], "qa_type": "character_identity"}
+{"question": "孙玉亭等人豁坝的原因是什么？", "answer": "觉得水坝的水应该有他们村的一份，被石圪节拦着", "doc_chunk_id": "corpus_chunkids_000176", "tool": "keyword_search", "entities": ["孙玉亭,石圪节,水坝"], "qa_type": "event_cause"}
+{"question": "孙玉亭他们比金俊武他们先一步回到哪里？", "answer": "双水村", "doc_chunk_id": "corpus_chunkids_000177", "tool": "keyword_search", "entities": ["孙玉亭、金俊武、双水村"], "qa_type": "character_behavior"}
+{"question": "金俊武挖豁口后罐子村的水坝会怎样？", "answer": "今晚上盛满水", "doc_chunk_id": "corpus_chunkids_000177", "tool": "keyword_search", "entities": ["金俊武、罐子村、水坝"], "qa_type": "event_result"}
+{"question": "金成和田海民被派去做什么？", "answer": "到后村头照水", "doc_chunk_id": "corpus_chunkids_000178", "tool": "keyword_search", "entities": ["金成、田海民"], "qa_type": "character_behavior"}
+{"question": "田福堂为什么对孙少安更恼火？", "answer": "发现城里教书的女儿和少安有点‘麻糊’", "doc_chunk_id": "corpus_chunkids_000178", "tool": "keyword_search", "entities": ["田福堂、孙少安"], "qa_type": "event_cause"}
+{"question": "水坝即将垮塌的原因是什么？", "answer": "金富和金强在石圪节的坝梁中间豁开了一道口子", "doc_chunk_id": "corpus_chunkids_000179", "tool": "keyword_search", "entities": ["金富,金强,石圪节坝梁口子"], "qa_type": "event_cause"}
+{"question": "双水村的土坝最终结果如何？", "answer": "被汹涌的浪头冲垮了", "doc_chunk_id": "corpus_chunkids_000179", "tool": "keyword_search", "entities": ["双水村土坝"], "qa_type": "event_result"}
+{"question": "王彩娥的外号是什么？", "answer": "盖满村", "doc_chunk_id": "corpus_chunkids_000180", "tool": "keyword_search", "entities": ["王彩娥", "盖满村"], "qa_type": "character_identity"}
+{"question": "金俊斌被洪水卷走的原因是什么？", "answer": "他去前河道大便未及时回来", "doc_chunk_id": "corpus_chunkids_000180", "tool": "keyword_search", "entities": ["金俊斌", "洪水", "前河道大便"], "qa_type": "event_cause"}
+{"question": "王彩娥和金俊斌是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000181", "tool": "keyword_search", "entities": ["王彩娥", "金俊斌"], "qa_type": "character_relation"}
+{"question": "金俊武在金俊斌死后做了什么？", "answer": "吼住哭啼的家人，让分头出去寻俊斌", "doc_chunk_id": "corpus_chunkids_000181", "tool": "keyword_search", "entities": ["金俊武", "金俊斌"], "qa_type": "character_behavior"}
+{"question": "土坝决堤的原因是什么？", "answer": "金富和金强在石圪节坝梁中间豁口且挖得太狠", "doc_chunk_id": "corpus_chunkids_000182", "tool": "keyword_search", "entities": ["土坝决堤", "金富", "金强"], "qa_type": "event_cause"}
+{"question": "金俊斌的结局是什么？", "answer": "被水淹死", "doc_chunk_id": "corpus_chunkids_000182", "tool": "keyword_search", "entities": ["金俊斌"], "qa_type": "event_result"}
+{"question": "金俊山的身份是什么？", "answer": "大队领导人", "doc_chunk_id": "corpus_chunkids_000183", "tool": "keyword_search", "entities": ["金俊山,大队领导人"], "qa_type": "character_identity"}
+{"question": "金俊斌和金俊武是什么关系？", "answer": "兄弟", "doc_chunk_id": "corpus_chunkids_000183", "tool": "keyword_search", "entities": ["金俊斌,金俊武"], "qa_type": "character_relation"}
+{"question": "谁是书记？", "answer": "田福堂", "doc_chunk_id": "corpus_chunkids_000184", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "金俊斌需要处理后事的原因是什么？", "answer": "金俊斌为集体牺牲了", "doc_chunk_id": "corpus_chunkids_000184", "tool": "keyword_search", "entities": ["金俊斌"], "qa_type": "event_cause"}
+{"question": "金俊武和金俊斌是什么关系？", "answer": "亲属", "doc_chunk_id": "corpus_chunkids_000185", "tool": "keyword_search", "entities": ["金俊武", "金俊斌"], "qa_type": "character_relation"}
+{"question": "大队党支部召开会议的原因是什么？", "answer": "金俊斌为革命牺牲，研究办丧事及家属待遇问题", "doc_chunk_id": "corpus_chunkids_000185", "tool": "keyword_search", "entities": ["大队党支部会议", "金俊斌", "办丧事", "家属待遇"], "qa_type": "event_cause"}
+{"question": "孙玉亭为何将金俊斌的追悼会放在破庙前？", "answer": "老人反对放学校，怕俊斌少亡作怪；贺凤英臭骂，拗不过众人", "doc_chunk_id": "corpus_chunkids_000186", "tool": "keyword_search", "entities": ["孙玉亭,金俊斌,追悼会,破庙前"], "qa_type": "event_cause"}
+{"question": "孙玉亭在金俊斌追悼会准备中做了什么？", "answer": "别悼词，指点石匠打墓碑", "doc_chunk_id": "corpus_chunkids_000186", "tool": "keyword_search", "entities": ["孙玉亭,金俊斌追悼会准备,石匠"], "qa_type": "character_behavior"}
+{"question": "田二的身份称呼是什么？", "answer": "半脑壳", "doc_chunk_id": "corpus_chunkids_000187", "tool": "keyword_search", "entities": ["田二"], "qa_type": "character_identity"}
+{"question": "追悼会由谁主持？", "answer": "金俊山", "doc_chunk_id": "corpus_chunkids_000187", "tool": "keyword_search", "entities": ["金俊山、追悼会"], "qa_type": "character_behavior"}
+{"question": "白明川和徐治功对田福堂的处理决定是什么？", "answer": "先把田福堂调到公社，调查清楚后严肃处理", "doc_chunk_id": "corpus_chunkids_000188", "tool": "keyword_search", "entities": ["田福堂,白明川,徐治功"], "qa_type": "event_result"}
+{"question": "金俊山冒雨去石圪节公社的原因是什么？", "answer": "因田福堂病了，刘根民叫他去公社", "doc_chunk_id": "corpus_chunkids_000188", "tool": "keyword_search", "entities": ["金俊山,刘根民,田福堂"], "qa_type": "character_behavior"}
+{"question": "田福堂和双水村为何做出荒唐事？", "answer": "东拉河分水问题，福堂和双水村的人急了", "doc_chunk_id": "corpus_chunkids_000189", "tool": "keyword_search", "entities": ["田福堂,双水村,东拉河,荒唐事"], "qa_type": "event_cause"}
+{"question": "金俊山在公社做了什么？", "answer": "老实交待事情经过，并代表双水村大队党支部做检查", "doc_chunk_id": "corpus_chunkids_000189", "tool": "keyword_search", "entities": ["金俊山,双水村大队党支部,检查"], "qa_type": "character_behavior"}
+{"question": "孙少安带回来的山西姑娘与孙少安是什么关系？", "answer": "孙少安的媳妇", "doc_chunk_id": "corpus_chunkids_000190", "tool": "keyword_search", "entities": ["孙少安,山西姑娘"], "qa_type": "character_relation"}
+{"question": "山西姑娘到少安家后做了什么？", "answer": "帮助做家务，叫家人，不嫌弃", "doc_chunk_id": "corpus_chunkids_000190", "tool": "keyword_search", "entities": ["山西姑娘"], "qa_type": "character_behavior"}
+{"question": "贺秀莲的身份（基本情况）是什么？", "answer": "贺秀莲是贺耀宗的小女儿，二十二岁，在家劳动。", "doc_chunk_id": "corpus_chunkids_000191", "tool": "keyword_search", "entities": ["贺秀莲"], "qa_type": "character_identity"}
+{"question": "孙少安与贺秀莲亲事的结果是什么？", "answer": "三锤两棒就定了音。", "doc_chunk_id": "corpus_chunkids_000191", "tool": "keyword_search", "entities": ["孙少安、贺秀莲、亲事"], "qa_type": "event_result"}
+{"question": "孙少安和贺秀莲是什么关系？", "answer": "秀莲是少安的未婚妻", "doc_chunk_id": "corpus_chunkids_000192", "tool": "keyword_search", "entities": ["孙少安,贺秀莲"], "qa_type": "character_relation"}
+{"question": "少安为什么不想这次就把秀莲引回家？", "answer": "家里没住处", "doc_chunk_id": "corpus_chunkids_000192", "tool": "keyword_search", "entities": ["孙少安,贺秀莲"], "qa_type": "event_cause"}
+{"question": "孙少安的弟弟是谁？", "answer": "孙少平", "doc_chunk_id": "corpus_chunkids_000193", "tool": "keyword_search", "entities": ["孙少安、孙少平"], "qa_type": "character_relation"}
+{"question": "孙少安回家第二天上午做了什么？", "answer": "找副队长田福高问队里生产情况并安排下一段活计", "doc_chunk_id": "corpus_chunkids_000193", "tool": "keyword_search", "entities": ["孙少安、田福高、队里生产情况"], "qa_type": "character_behavior"}
+{"question": "王彩娥是谁的媳妇？", "answer": "俊斌", "doc_chunk_id": "corpus_chunkids_000194", "tool": "keyword_search", "entities": ["王彩娥、俊斌"], "qa_type": "character_relation"}
+{"question": "王彩娥在枣树林做什么？", "answer": "照枣", "doc_chunk_id": "corpus_chunkids_000194", "tool": "keyword_search", "entities": ["王彩娥、枣树林、照枣"], "qa_type": "character_behavior"}
+{"question": "孙少安为什么要给二爸送白面？", "answer": "按乡俗，二爸不请秀莲吃饭会被村里人笑话", "doc_chunk_id": "corpus_chunkids_000195", "tool": "keyword_search", "entities": ["孙少安，二爸，白面，乡俗"], "qa_type": "character_behavior"}
+{"question": "金俊武难过的原因是什么？", "answer": "东拉河水分配问题处理不当，水空人亡还要做检讨", "doc_chunk_id": "corpus_chunkids_000195", "tool": "keyword_search", "entities": ["金俊武，东拉河水分配"], "qa_type": "event_cause"}
+{"question": "少安办婚事的粮食困难如何解决？", "answer": "田福堂同意从大队储备粮里拿", "doc_chunk_id": "corpus_chunkids_000196", "tool": "keyword_search", "entities": ["少安,田福堂,粮食"], "qa_type": "event_result"}
+{"question": "少安回家后打算做什么？", "answer": "瞒着家人，和母亲商量拿出一升白面给二爸家撑门面", "doc_chunk_id": "corpus_chunkids_000196", "tool": "keyword_search", "entities": ["少安,白面,二爸家"], "qa_type": "character_behavior"}
+{"question": "秀莲和少安是什么关系？", "answer": "少安的媳妇", "doc_chunk_id": "corpus_chunkids_000197", "tool": "keyword_search", "entities": ["秀莲,少安"], "qa_type": "character_relation"}
+{"question": "孙玉厚为什么要向金俊海借钱？", "answer": "为儿子少安的婚事（需钱办喜事）", "doc_chunk_id": "corpus_chunkids_000197", "tool": "keyword_search", "entities": ["孙玉厚,金俊海,少安,婚事"], "qa_type": "event_cause"}
+{"question": "孙玉厚夫妇为何决定向金俊海家借钱？", "answer": "因金俊海家曾多帮助他们（如借住、借宿、帮忙做衣服等），且其他人家或交情浅或有仇恨无法开口。", "doc_chunk_id": "corpus_chunkids_000198", "tool": "keyword_search", "entities": ["孙玉厚夫妇", "金俊海家"], "qa_type": "event_cause"}
+{"question": "孙玉厚决定何时去金俊海家借钱？", "answer": "第二天。", "doc_chunk_id": "corpus_chunkids_000198", "tool": "keyword_search", "entities": ["孙玉厚", "金俊海家"], "qa_type": "character_behavior"}
+{"question": "金俊海的身份是什么？", "answer": "司机", "doc_chunk_id": "corpus_chunkids_000199", "tool": "keyword_search", "entities": ["金俊海"], "qa_type": "character_identity"}
+{"question": "孙玉厚找金俊海的原因是什么？", "answer": "少安结婚，手头紧张需借钱", "doc_chunk_id": "corpus_chunkids_000199", "tool": "keyword_search", "entities": ["孙玉厚、少安"], "qa_type": "event_cause"}
+{"question": "金俊山和金俊海是什么关系？", "answer": "叔伯兄弟", "doc_chunk_id": "corpus_chunkids_000200", "tool": "keyword_search", "entities": ["金俊山,金俊海"], "qa_type": "character_relation"}
+{"question": "孙少安春节准备做什么？", "answer": "结婚", "doc_chunk_id": "corpus_chunkids_000200", "tool": "keyword_search", "entities": ["孙少安,春节,结婚"], "qa_type": "event_result"}
+{"question": "孙玉厚向金俊山借粮的原因是什么？", "answer": "少安春节办事缺细粮", "doc_chunk_id": "corpus_chunkids_000201", "tool": "keyword_search", "entities": ["孙玉厚,金俊山,少安"], "qa_type": "event_cause"}
+{"question": "孙玉厚是否借到了粮？", "answer": "借到了，金俊山答应借粮", "doc_chunk_id": "corpus_chunkids_000201", "tool": "keyword_search", "entities": ["孙玉厚,金俊山"], "qa_type": "event_result"}
+{"question": "孙玉厚为何在旱烟地抹眼泪？", "answer": "为少安婚事借了钱，心疼少安，想办称心", "doc_chunk_id": "corpus_chunkids_000202", "tool": "keyword_search", "entities": ["孙玉厚,旱烟地,少安婚事"], "qa_type": "event_cause"}
+{"question": "少安如何解决结婚的粮食问题？", "answer": "从集体储备粮里借", "doc_chunk_id": "corpus_chunkids_000202", "tool": "keyword_search", "entities": ["少安,集体储备粮"], "qa_type": "character_behavior"}
+{"question": "贺秀莲的籍贯是哪里？", "answer": "山西", "doc_chunk_id": "corpus_chunkids_000203", "tool": "keyword_search", "entities": ["贺秀莲"], "qa_type": "place_origin"}
+{"question": "常有林和贺秀莲是什么关系？", "answer": "姐夫", "doc_chunk_id": "corpus_chunkids_000203", "tool": "keyword_search", "entities": ["常有林、贺秀莲"], "qa_type": "character_relation"}
+{"question": "秀莲和孙少安是什么关系？", "answer": "恋人", "doc_chunk_id": "corpus_chunkids_000204", "tool": "keyword_search", "entities": ["秀莲,孙少安"], "qa_type": "character_relation"}
+{"question": "秀莲最初想什么时候办事结婚？", "answer": "最迟春节", "doc_chunk_id": "corpus_chunkids_000204", "tool": "keyword_search", "entities": ["秀莲,办事结婚时间"], "qa_type": "character_behavior"}
+{"question": "田二被村里人怎么称呼？", "answer": "半脑壳", "doc_chunk_id": "corpus_chunkids_000205", "tool": "keyword_search", "entities": ["田二"], "qa_type": "character_identity"}
+{"question": "双水村农历八月十四日的传统活动是什么？", "answer": "打枣节", "doc_chunk_id": "corpus_chunkids_000205", "tool": "keyword_search", "entities": ["双水村、农历八月十四日"], "qa_type": "inference"}
+{"question": "田五是谁？", "answer": "田万有", "doc_chunk_id": "corpus_chunkids_000206", "tool": "keyword_search", "entities": ["田五", "田万有"], "qa_type": "character_identity"}
+{"question": "田二在枣树下做什么？", "answer": "光捡枣子，嚼枣子，往大口袋塞枣", "doc_chunk_id": "corpus_chunkids_000206", "tool": "keyword_search", "entities": ["田二"], "qa_type": "character_behavior"}
+{"question": "秀莲是谁的媳妇？", "answer": "孙少安", "doc_chunk_id": "corpus_chunkids_000207", "tool": "keyword_search", "entities": ["秀莲,孙少安"], "qa_type": "character_relation"}
+{"question": "金老太太今年没参加打枣的原因是什么？", "answer": "俊斌已亡故她不知，没心思参加", "doc_chunk_id": "corpus_chunkids_000207", "tool": "keyword_search", "entities": ["金老太太,俊斌"], "qa_type": "event_cause"}
+{"question": "孙玉亭和金强去山水沟的目的是什么？", "answer": "抓偷枣贼", "doc_chunk_id": "corpus_chunkids_000208", "tool": "keyword_search", "entities": ["孙玉亭,金强,山水沟,偷枣贼"], "qa_type": "character_behavior"}
+{"question": "打完枣后庙坪的状态是怎样的？", "answer": "庙坪衰败，只剩稀稀落落黄叶", "doc_chunk_id": "corpus_chunkids_000208", "tool": "keyword_search", "entities": ["庙坪,打枣"], "qa_type": "event_result"}
+{"question": "孙少安和贺秀莲是什么关系？", "answer": "即将结婚", "doc_chunk_id": "corpus_chunkids_000209", "tool": "keyword_search", "entities": ["孙少安,贺秀莲"], "qa_type": "character_relation"}
+{"question": "秀莲为什么不让少安再给她扯衣服？", "answer": "因为少安家光景不好，钱是借的，不想让他借钱还", "doc_chunk_id": "corpus_chunkids_000209", "tool": "keyword_search", "entities": ["秀莲,少安"], "qa_type": "event_cause"}
+{"question": "秀莲决定回山西的原因是什么？", "answer": "贺耀宗写信催促", "doc_chunk_id": "corpus_chunkids_000210", "tool": "keyword_search", "entities": ["秀莲、贺耀宗、写信"], "qa_type": "event_cause"}
+{"question": "秀莲的老家是哪里？", "answer": "山西", "doc_chunk_id": "corpus_chunkids_000210", "tool": "keyword_search", "entities": ["秀莲、山西"], "qa_type": "place_origin"}
+{"question": "原西县属于哪个地区？", "answer": "黄原地区", "doc_chunk_id": "corpus_chunkids_000211", "tool": "keyword_search", "entities": ["原西县,黄原地区"], "qa_type": "place_origin"}
+{"question": "农村劳动者在严寒天气下进行什么行为？", "answer": "进行农田基建（打坝、修梯田、垫河滩、炸山修‘人造小平原’等）", "doc_chunk_id": "corpus_chunkids_000211", "tool": "keyword_search", "entities": ["农村劳动者,农田基建"], "qa_type": "character_behavior"}
+{"question": "周文龙的身份是什么？", "answer": "柳岔公社主任", "doc_chunk_id": "corpus_chunkids_000212", "tool": "keyword_search", "entities": ["周文龙"], "qa_type": "character_identity"}
+{"question": "田福军和张有智检查工作的重点公社是哪两个？", "answer": "柳岔和石圪节", "doc_chunk_id": "corpus_chunkids_000212", "tool": "keyword_search", "entities": ["田福军、张有智、柳岔、石圪节"], "qa_type": "place_origin"}
+{"question": "周文龙的身份是什么？", "answer": "保持农民身份，同时担任柳岔公社革委会主任", "doc_chunk_id": "corpus_chunkids_000213", "tool": "keyword_search", "entities": ["周文龙"], "qa_type": "character_identity"}
+{"question": "民工偷跑的原因是什么？", "answer": "受不了会战工地上的王法", "doc_chunk_id": "corpus_chunkids_000213", "tool": "keyword_search", "entities": ["民工偷跑"], "qa_type": "event_cause"}
+{"question": "为什么有人被拉去劳教？", "answer": "因做小生意或发牢骚被认为是严重阶级斗争", "doc_chunk_id": "corpus_chunkids_000214", "tool": "keyword_search", "entities": ["劳教的人"], "qa_type": "event_cause"}
+{"question": "田福军计划如何处理被劳教的人？", "answer": "放了他们，民兵撤到柳岔街堵资本主义，等文龙回来再谈", "doc_chunk_id": "corpus_chunkids_000214", "tool": "keyword_search", "entities": ["田福军，被劳教的人"], "qa_type": "character_behavior"}
+{"question": "穿黑棉衣的农民是谁的父亲？", "answer": "周文龙", "doc_chunk_id": "corpus_chunkids_000215", "tool": "keyword_search", "entities": ["周文龙的父亲"], "qa_type": "character_identity"}
+{"question": "周文龙的父亲在公社灶上有什么行为？", "answer": "挖肉片子、抓蒸馍，昂头出去", "doc_chunk_id": "corpus_chunkids_000215", "tool": "keyword_search", "entities": ["周文龙的父亲"], "qa_type": "character_behavior"}
+{"question": "穿黑棉袄的‘太上皇’是谁？", "answer": "周文龙", "doc_chunk_id": "corpus_chunkids_000216", "tool": "keyword_search", "entities": ["穿黑棉袄的‘太上皇’、周文龙"], "qa_type": "character_identity"}
+{"question": "田福军和张有智在工地做了什么决定？", "answer": "决定释放被劳教的民工，让他们回各村民工连，不准搞劳教名堂", "doc_chunk_id": "corpus_chunkids_000216", "tool": "keyword_search", "entities": ["田福军、张有智、被劳教民工"], "qa_type": "character_behavior"}
+{"question": "田福军和张有智准备返回哪里？", "answer": "柳岔", "doc_chunk_id": "corpus_chunkids_000217", "tool": "keyword_search", "entities": ["田福军,张有智,柳岔"], "qa_type": "place_origin"}
+{"question": "田福军让刘志祥转告周文龙什么？", "answer": "放掉捉回来的那两个农民", "doc_chunk_id": "corpus_chunkids_000217", "tool": "keyword_search", "entities": ["田福军,刘志祥,周文龙"], "qa_type": "character_behavior"}
+{"question": "周文龙在公社中的职务是什么？", "answer": "公社主任", "doc_chunk_id": "corpus_chunkids_000218", "tool": "keyword_search", "entities": ["周文龙"], "qa_type": "character_identity"}
+{"question": "田主任对周文龙有什么指示？", "answer": "叫周文龙把捉回来的那两个人放了", "doc_chunk_id": "corpus_chunkids_000218", "tool": "keyword_search", "entities": ["田主任、周文龙"], "qa_type": "character_behavior"}
+{"question": "周文龙做了什么？", "answer": "打电话向冯主任汇报田福军和张有智在柳岔的活动", "doc_chunk_id": "corpus_chunkids_000219", "tool": "keyword_search", "entities": ["周文龙,田福军,张有智,柳岔"], "qa_type": "character_behavior"}
+{"question": "冯世宽为何生气？", "answer": "田福军和张有智拆台，影响原西县现场会", "doc_chunk_id": "corpus_chunkids_000219", "tool": "keyword_search", "entities": ["田福军,张有智,冯世宽,原西县现场会"], "qa_type": "event_cause"}
+{"question": "白明川的身份是什么？", "answer": "石圪节公社主任", "doc_chunk_id": "corpus_chunkids_000220", "tool": "keyword_search", "entities": ["白明川"], "qa_type": "character_identity"}
+{"question": "冯世宽决定开紧急常委会的原因是什么？", "answer": "田福军打击周文龙可能影响现场会，需解决县领导班子问题", "doc_chunk_id": "corpus_chunkids_000220", "tool": "keyword_search", "entities": ["冯世宽，紧急常委会，田福军，周文龙，现场会"], "qa_type": "event_cause"}
+{"question": "田福军和张有智的身份是什么？", "answer": "主任", "doc_chunk_id": "corpus_chunkids_000221", "tool": "keyword_search", "entities": ["田福军,张有智"], "qa_type": "character_identity"}
+{"question": "第二天白明川带田福军和张有智返回公社后发生了什么？", "answer": "接到县革委会通知，七号返回县城参加紧急会议", "doc_chunk_id": "corpus_chunkids_000221", "tool": "keyword_search", "entities": ["白明川,田福军,张有智,县革委会,紧急会议"], "qa_type": "event_result"}
+{"question": "冯世宽指责田福军和张有智的原因是什么？", "answer": "在柳岔打击周文龙同志的革命积极性", "doc_chunk_id": "corpus_chunkids_000222", "tool": "keyword_search", "entities": ["田福军,张有智,冯世宽,周文龙"], "qa_type": "event_cause"}
+{"question": "田福军在会议上对冯世宽说了什么？", "answer": "我们不能用棍棒和枪杆子来维持先进呀！", "doc_chunk_id": "corpus_chunkids_000222", "tool": "keyword_search", "entities": ["田福军,冯世宽"], "qa_type": "character_behavior"}
+{"question": "李登云的身份是什么？", "answer": "原西县副主任", "doc_chunk_id": "corpus_chunkids_000223", "tool": "keyword_search", "entities": ["李登云"], "qa_type": "character_identity"}
+{"question": "周总理逝世后会议室众人有何反应？", "answer": "惊得呆坐，随后一片抽泣和呜咽", "doc_chunk_id": "corpus_chunkids_000223", "tool": "keyword_search", "entities": ["周总理、会议室众人"], "qa_type": "character_behavior"}
+{"question": "周恩来同志的职务有哪些？", "answer": "中央政治局常委、副主席、国务院总理、政协全国委员会主席", "doc_chunk_id": "corpus_chunkids_000224", "tool": "keyword_search", "entities": ["周恩来"], "qa_type": "character_identity"}
+{"question": "田福军和冯世宽听到讣告后的行为是什么？", "answer": "泪流满面", "doc_chunk_id": "corpus_chunkids_000224", "tool": "keyword_search", "entities": ["田福军、冯世宽"], "qa_type": "character_behavior"}
+{"question": "秀莲要去的地方是哪里？", "answer": "双水村", "doc_chunk_id": "corpus_chunkids_000225", "tool": "keyword_search", "entities": ["秀莲、双水村"], "qa_type": "place_origin"}
+{"question": "孙玉厚一家面临的最大问题是什么？", "answer": "少安结婚后住哪里", "doc_chunk_id": "corpus_chunkids_000225", "tool": "keyword_search", "entities": ["孙玉厚一家、少安、住处"], "qa_type": "event_cause"}
+{"question": "生猪把式是谁？", "answer": "金俊文", "doc_chunk_id": "corpus_chunkids_000226", "tool": "keyword_search", "entities": ["生猪把式,金俊文"], "qa_type": "character_identity"}
+{"question": "孙玉厚让少安做什么准备？", "answer": "刷窑洞、糊窗户、剃头发", "doc_chunk_id": "corpus_chunkids_000226", "tool": "keyword_search", "entities": ["孙玉厚,少安,准备"], "qa_type": "character_behavior"}
+{"question": "金波和金秀如何称呼孙少安？", "answer": "少安哥", "doc_chunk_id": "corpus_chunkids_000227", "tool": "keyword_search", "entities": ["金波、金秀、孙少安"], "qa_type": "character_relation"}
+{"question": "孙少安和金波兄妹帮忙整理窑洞后，窑洞看起来像什么？", "answer": "新房", "doc_chunk_id": "corpus_chunkids_000227", "tool": "keyword_search", "entities": ["孙少安、金波兄妹、窑洞"], "qa_type": "event_result"}
+{"question": "王满银和孙少安是什么关系？", "answer": "姐夫和小舅子", "doc_chunk_id": "corpus_chunkids_000228", "tool": "keyword_search", "entities": ["王满银,孙少安"], "qa_type": "character_relation"}
+{"question": "王满银在路边土圪崂打瞌睡的原因是什么？", "answer": "家里没柴烧，窑里冷，去晒太阳", "doc_chunk_id": "corpus_chunkids_000228", "tool": "keyword_search", "entities": ["王满银,打瞌睡"], "qa_type": "event_cause"}
+{"question": "孙少安为什么决定去理发店理发？", "answer": "因为他要当新女婿，想把头发理体面一些", "doc_chunk_id": "corpus_chunkids_000229", "tool": "keyword_search", "entities": ["孙少安,理发店"], "qa_type": "event_cause"}
+{"question": "胡得禄的身份是什么？", "answer": "石圪节公社的专业理发师", "doc_chunk_id": "corpus_chunkids_000229", "tool": "keyword_search", "entities": ["胡得禄"], "qa_type": "character_identity"}
+{"question": "孙少安和贺秀莲是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000230", "tool": "keyword_search", "entities": ["孙少安,贺秀莲"], "qa_type": "character_relation"}
+{"question": "孙少安和贺秀莲何时何地举行婚礼？", "answer": "临近春节时，在自己家举行了简朴的婚礼", "doc_chunk_id": "corpus_chunkids_000230", "tool": "keyword_search", "entities": ["孙少安,贺秀莲,婚礼,春节"], "qa_type": "event_result"}
+{"question": "田二在村里红、白喜事上的身份是什么？", "answer": "本村人，不请自到", "doc_chunk_id": "corpus_chunkids_000231", "tool": "keyword_search", "entities": ["田二"], "qa_type": "character_identity"}
+{"question": "王满银在孙少安婚礼上做了什么？", "answer": "自己撑圆肚子后往炕上端盘子", "doc_chunk_id": "corpus_chunkids_000231", "tool": "keyword_search", "entities": ["王满银,孙少安婚礼"], "qa_type": "character_behavior"}
+{"question": "润叶的身份是什么？", "answer": "干部，在县城工作", "doc_chunk_id": "corpus_chunkids_000232", "tool": "keyword_search", "entities": ["润叶"], "qa_type": "character_identity"}
+{"question": "秀莲为什么吃醋？", "answer": "因为润叶送贵重礼物且少安承认与润叶相好过", "doc_chunk_id": "corpus_chunkids_000232", "tool": "keyword_search", "entities": ["秀莲、润叶、少安"], "qa_type": "event_cause"}
+{"question": "田润叶的职业是什么？", "answer": "教师", "doc_chunk_id": "corpus_chunkids_000233", "tool": "keyword_search", "entities": ["田润叶"], "qa_type": "character_identity"}
+{"question": "田润叶心情悲伤的原因是什么？", "answer": "心爱的人已结婚，生活梦想破灭", "doc_chunk_id": "corpus_chunkids_000233", "tool": "keyword_search", "entities": ["田润叶、心爱的人"], "qa_type": "event_cause"}
+{"question": "田润叶和孙少安是什么关系？", "answer": "青梅竹马，两小无猜", "doc_chunk_id": "corpus_chunkids_000234", "tool": "keyword_search", "entities": ["田润叶,孙少安"], "qa_type": "character_relation"}
+{"question": "田润叶内心痛苦的原因是什么？", "answer": "少安突然结婚，向前追求，徐爱云、刘志英、徐国强轮番围困", "doc_chunk_id": "corpus_chunkids_000234", "tool": "keyword_search", "entities": ["田润叶,少安结婚,向前追求,徐爱云,刘志英,徐国强"], "qa_type": "event_cause"}
+{"question": "田润叶的身份是什么？", "answer": "教师", "doc_chunk_id": "corpus_chunkids_000235", "tool": "keyword_search", "entities": ["田润叶"], "qa_type": "character_identity"}
+{"question": "田润叶绝望的原因是什么？", "answer": "孙少安要和山西姑娘结婚", "doc_chunk_id": "corpus_chunkids_000235", "tool": "keyword_search", "entities": ["田润叶、孙少安、山西姑娘"], "qa_type": "event_cause"}
+{"question": "润叶在清明节前做了什么？", "answer": "独自到原西河畔坐着，拿着马兰花怀念。", "doc_chunk_id": "corpus_chunkids_000236", "tool": "keyword_search", "entities": ["润叶、原西河畔、马兰花"], "qa_type": "character_behavior"}
+{"question": "润叶去原西河畔的原因是什么？", "answer": "对已被埋葬的爱情梦想的祭奠。", "doc_chunk_id": "corpus_chunkids_000236", "tool": "keyword_search", "entities": ["润叶、原西河畔、爱情梦想"], "qa_type": "event_cause"}
+{"question": "田润叶和杜莉莉是什么关系？", "answer": "初中到高中同班同学，关系像亲姐妹", "doc_chunk_id": "corpus_chunkids_000237", "tool": "keyword_search", "entities": ["田润叶,杜莉莉"], "qa_type": "character_relation"}
+{"question": "田润叶如何避免去向前家吃饭？", "answer": "谎称杜莉莉生病住院，要去黄原看望她", "doc_chunk_id": "corpus_chunkids_000237", "tool": "keyword_search", "entities": ["田润叶,向前,二妈,杜莉莉,黄原"], "qa_type": "character_behavior"}
+{"question": "杜莉莉的男朋友是谁？", "answer": "武惠良", "doc_chunk_id": "corpus_chunkids_000238", "tool": "keyword_search", "entities": ["杜莉莉,武惠良"], "qa_type": "character_relation"}
+{"question": "田润叶去黄原的原因是什么？", "answer": "看望生病住院的同学杜莉莉", "doc_chunk_id": "corpus_chunkids_000238", "tool": "keyword_search", "entities": ["田润叶,杜莉莉,杜莉莉生病住院"], "qa_type": "event_cause"}
+{"question": "贾冰的身份是什么？", "answer": "大诗人、主编", "doc_chunk_id": "corpus_chunkids_000239", "tool": "keyword_search", "entities": ["贾冰"], "qa_type": "character_identity"}
+{"question": "润叶和莉莉是什么关系？", "answer": "好朋友", "doc_chunk_id": "corpus_chunkids_000239", "tool": "keyword_search", "entities": ["润叶、莉莉"], "qa_type": "character_relation"}
+{"question": "贾冰的身份是什么？", "answer": "诗人、主编", "doc_chunk_id": "corpus_chunkids_000240", "tool": "keyword_search", "entities": ["贾冰"], "qa_type": "character_identity"}
+{"question": "田润叶和莉莉的关系是什么？", "answer": "老同学，最要好的朋友", "doc_chunk_id": "corpus_chunkids_000240", "tool": "keyword_search", "entities": ["田润叶、莉莉"], "qa_type": "character_relation"}
+{"question": "孙少平的身份是什么？", "answer": "高中生", "doc_chunk_id": "corpus_chunkids_000241", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "character_identity"}
+{"question": "孙少平在哪所学校度过了一年半时光？", "answer": "原西中学", "doc_chunk_id": "corpus_chunkids_000241", "tool": "keyword_search", "entities": ["孙少平,原西中学"], "qa_type": "place_origin"}
+{"question": "孙少平跟着田晓霞去了哪里？", "answer": "一个小山沟里", "doc_chunk_id": "corpus_chunkids_000242", "tool": "keyword_search", "entities": ["孙少平、田晓霞、小山沟"], "qa_type": "place_origin"}
+{"question": "孙少平认为今年国家发生了哪些灾难？", "answer": "周总理逝世、四月五日‘事件’、撤销邓小平职务、朱德委员长逝世、唐山大地震", "doc_chunk_id": "corpus_chunkids_000242", "tool": "keyword_search", "entities": ["孙少平、国家、灾难事件"], "qa_type": "event_result"}
+{"question": "孙少平晚上抄写诗歌的地点是哪里？", "answer": "教室", "doc_chunk_id": "corpus_chunkids_000243", "tool": "keyword_search", "entities": ["孙少平,抄写诗歌,教室"], "qa_type": "character_behavior"}
+{"question": "顾养民为什么会看孙少平的诗歌笔记本？", "answer": "出来解手，见教室灯亮，以为有人忘关灯，进来准备关灯时发现了诗", "doc_chunk_id": "corpus_chunkids_000243", "tool": "keyword_search", "entities": ["顾养民,孙少平,诗歌笔记本,教室灯亮"], "qa_type": "event_cause"}
+{"question": "顾养民的家庭背景是什么？", "answer": "知识分子家庭出身", "doc_chunk_id": "corpus_chunkids_000244", "tool": "keyword_search", "entities": ["顾养民"], "qa_type": "character_identity"}
+{"question": "全班在哪里锄高粱地？", "answer": "原西城外的一条山沟", "doc_chunk_id": "corpus_chunkids_000244", "tool": "keyword_search", "entities": ["全班、原西城外山沟"], "qa_type": "place_origin"}
+{"question": "跛女子是谁？", "answer": "侯玉英", "doc_chunk_id": "corpus_chunkids_000245", "tool": "keyword_search", "entities": ["跛女子,侯玉英"], "qa_type": "character_identity"}
+{"question": "侯玉英陷入洪水危险的原因是什么？", "answer": "不听劝阻去石崖下", "doc_chunk_id": "corpus_chunkids_000245", "tool": "keyword_search", "entities": ["侯玉英,洪水危险"], "qa_type": "event_cause"}
+{"question": "侯玉英的父亲侯生才的身份是什么？", "answer": "县百货公司第二门市部主任", "doc_chunk_id": "corpus_chunkids_000246", "tool": "keyword_search", "entities": ["侯玉英父亲、侯生才、县百货公司第二门市部主任"], "qa_type": "character_identity"}
+{"question": "孙少平做了什么事让侯玉英感激？", "answer": "在洪水中救了侯玉英", "doc_chunk_id": "corpus_chunkids_000246", "tool": "keyword_search", "entities": ["孙少平、侯玉英"], "qa_type": "character_behavior"}
+{"question": "金光明的身份是什么？", "answer": "二门市的售货员", "doc_chunk_id": "corpus_chunkids_000247", "tool": "keyword_search", "entities": ["金光明,二门市售货员"], "qa_type": "character_identity"}
+{"question": "主任两口子为什么请少平吃饭？", "answer": "少平是主任女儿的救命恩人", "doc_chunk_id": "corpus_chunkids_000247", "tool": "keyword_search", "entities": ["主任夫妇,少平,主任女儿,救命恩人"], "qa_type": "event_cause"}
+{"question": "兰香的父亲是谁？", "answer": "孙玉厚", "doc_chunk_id": "corpus_chunkids_000248", "tool": "keyword_search", "entities": ["兰香", "孙玉厚"], "qa_type": "character_identity"}
+{"question": "兰香和金秀是什么关系？", "answer": "好朋友", "doc_chunk_id": "corpus_chunkids_000248", "tool": "keyword_search", "entities": ["兰香", "金秀"], "qa_type": "character_relation"}
+{"question": "孙兰香和金秀是什么关系？", "answer": "好朋友", "doc_chunk_id": "corpus_chunkids_000249", "tool": "keyword_search", "entities": ["孙兰香,金秀"], "qa_type": "character_relation"}
+{"question": "孙兰香为什么心里着急？", "answer": "县上文件要求初中毕业生延长半年毕业", "doc_chunk_id": "corpus_chunkids_000249", "tool": "keyword_search", "entities": ["孙兰香,县上文件"], "qa_type": "event_cause"}
+{"question": "金秀和孙兰香是什么关系？", "answer": "好朋友", "doc_chunk_id": "corpus_chunkids_000250", "tool": "keyword_search", "entities": ["金秀,孙兰香"], "qa_type": "character_relation"}
+{"question": "孙兰香决定退学的原因是什么？", "answer": "觉得毕业证无用且想节省家庭开支、挣工分", "doc_chunk_id": "corpus_chunkids_000250", "tool": "keyword_search", "entities": ["孙兰香,退学原因"], "qa_type": "event_cause"}
+{"question": "大哥指的是谁？", "answer": "孙少安", "doc_chunk_id": "corpus_chunkids_000251", "tool": "keyword_search", "entities": ["大哥,孙少安"], "qa_type": "character_identity"}
+{"question": "孙兰香为什么放弃回家劳动的打算？", "answer": "家人劝说她好好念书，她决定不丢脸", "doc_chunk_id": "corpus_chunkids_000251", "tool": "keyword_search", "entities": ["孙兰香,放弃回家劳动"], "qa_type": "event_cause"}
+{"question": "金波和金秀是什么关系？", "answer": "金波是金秀的哥哥", "doc_chunk_id": "corpus_chunkids_000252", "tool": "keyword_search", "entities": ["金波,金秀"], "qa_type": "character_relation"}
+{"question": "金波为什么能参军？", "answer": "有特殊专长（笛子吹得好，唱歌不错）", "doc_chunk_id": "corpus_chunkids_000252", "tool": "keyword_search", "entities": ["金波,参军"], "qa_type": "event_cause"}
+{"question": "孙兰香在石圪节公社追悼会中心会场的行为是什么？", "answer": "哭着", "doc_chunk_id": "corpus_chunkids_000253", "tool": "keyword_search", "entities": ["孙兰香、石圪节公社追悼会中心会场"], "qa_type": "character_behavior"}
+{"question": "中国传来“四人帮”被抓的爆炸性消息的时间是什么时候？", "answer": "十月二十一日", "doc_chunk_id": "corpus_chunkids_000253", "tool": "keyword_search", "entities": ["四人帮、十月二十一日"], "qa_type": "event_result"}
+{"question": "徐国强和徐爱云是什么关系？", "answer": "父女", "doc_chunk_id": "corpus_chunkids_000254", "tool": "keyword_search", "entities": ["徐国强,徐爱云"], "qa_type": "character_relation"}
+{"question": "徐国强在下午做什么？", "answer": "从窑里出来，蹲在墙角抽旱烟", "doc_chunk_id": "corpus_chunkids_000254", "tool": "keyword_search", "entities": ["徐国强,下午"], "qa_type": "character_behavior"}
+{"question": "徐国强认为自己和润叶是什么关系？", "answer": "自己家里的人", "doc_chunk_id": "corpus_chunkids_000255", "tool": "keyword_search", "entities": ["徐国强, 润叶"], "qa_type": "character_relation"}
+{"question": "润叶没答应向前亲事的原因是什么？", "answer": "她还小，先不想考虑这事", "doc_chunk_id": "corpus_chunkids_000255", "tool": "keyword_search", "entities": ["润叶, 向前"], "qa_type": "event_cause"}
+{"question": "李登云与徐国强是什么关系？", "answer": "徐国强一手栽培起来的人", "doc_chunk_id": "corpus_chunkids_000256", "tool": "keyword_search", "entities": ["李登云,徐国强"], "qa_type": "character_relation"}
+{"question": "福军处境困难的原因是什么？", "answer": "主要领导中冯世宽、李登云、马国雄三人占优势，福军和张有智两人难以抗衡", "doc_chunk_id": "corpus_chunkids_000256", "tool": "keyword_search", "entities": ["福军,冯世宽,李登云,马国雄,张有智"], "qa_type": "event_cause"}
+{"question": "徐国强撮合田润叶和李向前婚事的原因是什么？", "answer": "为让李登云（登云叔）与二爸（田福军）成亲戚，缓和关系，让二爸日子好过。", "doc_chunk_id": "corpus_chunkids_000257", "tool": "keyword_search", "entities": ["徐国强,田润叶,李向前,李登云,田福军"], "qa_type": "event_cause"}
+{"question": "田润叶对与李向前结婚的态度如何？", "answer": "还没考虑好，感到痛苦，不愿接受。", "doc_chunk_id": "corpus_chunkids_000257", "tool": "keyword_search", "entities": ["田润叶,李向前"], "qa_type": "character_behavior"}
+{"question": "徐国强劝说润叶接受与向前婚事的原因是什么？", "answer": "向前的父亲（登云叔）和二爸作对，成亲戚后二爸日子好过", "doc_chunk_id": "corpus_chunkids_000258", "tool": "keyword_search", "entities": ["徐国强,润叶,向前,登云叔,二爸"], "qa_type": "event_cause"}
+{"question": "润叶和二爸的关系是怎样的？", "answer": "二爸爱护润叶，供她上学、找工作，润叶尊敬爱戴二爸", "doc_chunk_id": "corpus_chunkids_000258", "tool": "keyword_search", "entities": ["润叶,二爸"], "qa_type": "character_relation"}
+{"question": "润叶为什么答应和向前结婚？", "answer": "对爱情的绝望，加上对二爸的热爱", "doc_chunk_id": "corpus_chunkids_000259", "tool": "keyword_search", "entities": ["润叶,向前"], "qa_type": "event_cause"}
+{"question": "徐爱云为备办润叶婚事做了哪些事？", "answer": "准备装备，发信给田福堂，让润生来帮忙", "doc_chunk_id": "corpus_chunkids_000259", "tool": "keyword_search", "entities": ["徐爱云,润叶,田福堂,润生"], "qa_type": "character_behavior"}
+{"question": "田润叶和李向前的关系是什么？", "answer": "即将举行婚礼的夫妻", "doc_chunk_id": "corpus_chunkids_000260", "tool": "keyword_search", "entities": ["田润叶、李向前"], "qa_type": "character_relation"}
+{"question": "田润叶婚礼举行的地点是哪里？", "answer": "县招待所大餐厅", "doc_chunk_id": "corpus_chunkids_000260", "tool": "keyword_search", "entities": ["田润叶婚礼、县招待所大餐厅"], "qa_type": "place_origin"}
+{"question": "胡得福的身份是什么？", "answer": "石圪节食堂的胖炉头（厨师）", "doc_chunk_id": "corpus_chunkids_000261", "tool": "keyword_search", "entities": ["胡得福"], "qa_type": "character_identity"}
+{"question": "刘根民和润叶是什么关系？", "answer": "同学", "doc_chunk_id": "corpus_chunkids_000261", "tool": "keyword_search", "entities": ["刘根民、润叶"], "qa_type": "character_relation"}
+{"question": "润叶为什么没来参加婚礼？", "answer": "她说‘狗肉上不了筵席’，让丈夫一人来参加。", "doc_chunk_id": "corpus_chunkids_000262", "tool": "keyword_search", "entities": ["润叶，婚礼"], "qa_type": "character_behavior"}
+{"question": "田福堂为什么感到腰杆子更硬了？", "answer": "他弟弟是县副主任，又有了副主任亲家。", "doc_chunk_id": "corpus_chunkids_000262", "tool": "keyword_search", "entities": ["田福堂，腰杆子硬"], "qa_type": "event_result"}
+{"question": "少平为什么不想参加婚礼？", "answer": "因润叶本该是他哥的媳妇，他心里难受不想目睹", "doc_chunk_id": "corpus_chunkids_000263", "tool": "keyword_search", "entities": ["少平,婚礼"], "qa_type": "event_cause"}
+{"question": "润叶和少安是什么关系？", "answer": "他们曾相爱，因家庭贫富差别未能在一起", "doc_chunk_id": "corpus_chunkids_000263", "tool": "keyword_search", "entities": ["润叶,少安"], "qa_type": "character_relation"}
+{"question": "田福堂和李登云是什么关系？", "answer": "亲家", "doc_chunk_id": "corpus_chunkids_000264", "tool": "keyword_search", "entities": ["田福堂,李登云"], "qa_type": "character_relation"}
+{"question": "谁是婚礼的主婚人？", "answer": "冯世宽", "doc_chunk_id": "corpus_chunkids_000264", "tool": "keyword_search", "entities": ["冯世宽"], "qa_type": "character_identity"}
+{"question": "孙少安和贺秀莲是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000265", "tool": "keyword_search", "entities": ["孙少安、贺秀莲"], "qa_type": "character_relation"}
+{"question": "贺秀莲晚上会做什么？", "answer": "晚上放火暖炕，烧洗脸洗脚水，用体温暖被窝，还会缀补衣服、做鞋袜", "doc_chunk_id": "corpus_chunkids_000265", "tool": "keyword_search", "entities": ["贺秀莲"], "qa_type": "character_behavior"}
+{"question": "秀莲对少安有哪些特别的照顾行为？", "answer": "吃饭给少安碗里捞稠的，给他擦火柴点烟，自己饿肚子也不让少安吃不饱", "doc_chunk_id": "corpus_chunkids_000266", "tool": "keyword_search", "entities": ["秀莲,少安"], "qa_type": "character_behavior"}
+{"question": "少安为什么提醒秀莲不要总给他捞稠饭？", "answer": "家贫，应先敬老后让小，秀莲捞稠饭会让家人吃稀的", "doc_chunk_id": "corpus_chunkids_000266", "tool": "keyword_search", "entities": ["少安,秀莲,少安提醒秀莲"], "qa_type": "event_cause"}
+{"question": "秀莲忍受饥饿和贫穷的原因是什么？", "answer": "因为她和丈夫火热的爱情生活", "doc_chunk_id": "corpus_chunkids_000267", "tool": "keyword_search", "entities": ["秀莲,饥饿贫穷,火热爱情生活"], "qa_type": "event_cause"}
+{"question": "秀莲怎样照顾少安？", "answer": "每顿从盆底给少安碗里捞稠的", "doc_chunk_id": "corpus_chunkids_000267", "tool": "keyword_search", "entities": ["秀莲,少安,捞稠饭"], "qa_type": "character_behavior"}
+{"question": "孙少安和润叶是什么关系？", "answer": "小时候一块耍大的", "doc_chunk_id": "corpus_chunkids_000268", "tool": "keyword_search", "entities": ["孙少安, 润叶"], "qa_type": "character_relation"}
+{"question": "孙少安给润叶送了什么礼物？", "answer": "一块黄原出的羊毛毯", "doc_chunk_id": "corpus_chunkids_000268", "tool": "keyword_search", "entities": ["孙少安, 润叶, 黄原羊毛毯"], "qa_type": "character_behavior"}
+{"question": "少安为什么生气？", "answer": "秀莲拿了奶奶的白面馍给他吃，少安认为这是过分的。", "doc_chunk_id": "corpus_chunkids_000269", "tool": "keyword_search", "entities": ["秀莲,少安,白面馍,奶奶"], "qa_type": "event_cause"}
+{"question": "秀莲对少安做了什么行为？", "answer": "秀莲从自己碗里拿出一个白面馍放在少安碗里。", "doc_chunk_id": "corpus_chunkids_000269", "tool": "keyword_search", "entities": ["秀莲,少安,白面馍"], "qa_type": "character_behavior"}
+{"question": "秀莲和少安是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000270", "tool": "keyword_search", "entities": ["秀莲,少安"], "qa_type": "character_relation"}
+{"question": "少安生气的原因是什么？", "answer": "秀莲拿奶奶的白面馍，少安认为过分", "doc_chunk_id": "corpus_chunkids_000270", "tool": "keyword_search", "entities": ["少安,秀莲,奶奶,白面馍"], "qa_type": "event_cause"}
+{"question": "少安动手打秀莲的原因是什么？", "answer": "秀莲送馍的方式让少安觉得不懂事，少安失去理智", "doc_chunk_id": "corpus_chunkids_000271", "tool": "keyword_search", "entities": ["孙少安,秀莲"], "qa_type": "event_cause"}
+{"question": "秀莲被打后发生了什么？", "answer": "秀莲伏在土脚地痛哭呕吐，后上炕与少安和解", "doc_chunk_id": "corpus_chunkids_000271", "tool": "keyword_search", "entities": ["秀莲,孙少安"], "qa_type": "event_result"}
+{"question": "孙少平毕业后要回哪里？", "answer": "双水村", "doc_chunk_id": "corpus_chunkids_000272", "tool": "keyword_search", "entities": ["孙少平,双水村"], "qa_type": "place_origin"}
+{"question": "孙少平为什么不情愿回村子劳动？", "answer": "觉得熟悉的地方没意思，渴望陌生世界", "doc_chunk_id": "corpus_chunkids_000272", "tool": "keyword_search", "entities": ["孙少平,回村子劳动"], "qa_type": "event_cause"}
+{"question": "兰香是谁的妹妹？", "answer": "他的妹妹", "doc_chunk_id": "corpus_chunkids_000273", "tool": "keyword_search", "entities": ["兰香", "他"], "qa_type": "character_relation"}
+{"question": "他原本的世界局限于哪里？", "answer": "双水村和石圪节", "doc_chunk_id": "corpus_chunkids_000273", "tool": "keyword_search", "entities": ["双水村", "石圪节"], "qa_type": "place_origin"}
+{"question": "金波去了哪里当兵？", "answer": "青海", "doc_chunk_id": "corpus_chunkids_000274", "tool": "keyword_search", "entities": ["金波,青海"], "qa_type": "place_origin"}
+{"question": "孙少平下午做了什么？", "answer": "回溯两年历程，回学校", "doc_chunk_id": "corpus_chunkids_000274", "tool": "keyword_search", "entities": ["孙少平,下午"], "qa_type": "character_behavior"}
+{"question": "田晓霞请孙少平吃饭的原因是什么？", "answer": "因为他们即将分别", "doc_chunk_id": "corpus_chunkids_000275", "tool": "keyword_search", "entities": ["田晓霞", "孙少平", "吃饭", "分别"], "qa_type": "event_cause"}
+{"question": "孙少平毕业后想做什么？", "answer": "到更艰苦的地方去", "doc_chunk_id": "corpus_chunkids_000275", "tool": "keyword_search", "entities": ["孙少平", "毕业后", "艰苦地方"], "qa_type": "character_behavior"}
+{"question": "跛女子是谁？", "answer": "侯玉英", "doc_chunk_id": "corpus_chunkids_000276", "tool": "keyword_search", "entities": ["跛女子"], "qa_type": "character_identity"}
+{"question": "田晓霞要回哪个地方？", "answer": "双水村", "doc_chunk_id": "corpus_chunkids_000276", "tool": "keyword_search", "entities": ["田晓霞、双水村"], "qa_type": "place_origin"}
+{"question": "郝红梅为什么偷手帕？", "answer": "穷得给同学送不起毕业礼物，买手帕时偷拿", "doc_chunk_id": "corpus_chunkids_000277", "tool": "keyword_search", "entities": ["郝红梅,偷手帕"], "qa_type": "event_cause"}
+{"question": "孙少平对侯玉英提出了什么要求？", "answer": "不能找领导，不能对任何人及顾养民说，否则掐死她", "doc_chunk_id": "corpus_chunkids_000277", "tool": "keyword_search", "entities": ["孙少平,侯玉英"], "qa_type": "character_behavior"}
+{"question": "郝红梅的身份是什么？", "answer": "高中生", "doc_chunk_id": "corpus_chunkids_000278", "tool": "keyword_search", "entities": ["郝红梅"], "qa_type": "character_identity"}
+{"question": "郝红梅和顾养民是什么关系？", "answer": "即将成为恋人（关系眼看快要成功）", "doc_chunk_id": "corpus_chunkids_000278", "tool": "keyword_search", "entities": ["郝红梅、顾养民"], "qa_type": "character_relation"}
+{"question": "片段中的‘她’是什么身份？", "answer": "高中生", "doc_chunk_id": "corpus_chunkids_000279", "tool": "keyword_search", "entities": ["她（郝红梅）"], "qa_type": "character_identity"}
+{"question": "郝红梅偷手帕后被谁发现并交给了谁？", "answer": "被售货员金光明发现并交给主任侯生才", "doc_chunk_id": "corpus_chunkids_000279", "tool": "keyword_search", "entities": ["郝红梅、金光明、侯生才"], "qa_type": "event_result"}
+{"question": "金光明的身份是什么？", "answer": "售货员", "doc_chunk_id": "corpus_chunkids_000280", "tool": "keyword_search", "entities": ["金光明"], "qa_type": "character_identity"}
+{"question": "郝红梅和侯生才的关系是什么？", "answer": "侯生才女儿的同班同学", "doc_chunk_id": "corpus_chunkids_000280", "tool": "keyword_search", "entities": ["郝红梅", "侯生才"], "qa_type": "character_relation"}
+{"question": "孙少平与郝红梅是什么关系？", "answer": "同学", "doc_chunk_id": "corpus_chunkids_000281", "tool": "keyword_search", "entities": ["孙少平、郝红梅"], "qa_type": "character_relation"}
+{"question": "郝红梅犯错误的原因是什么？", "answer": "家穷，给同学送不起礼物", "doc_chunk_id": "corpus_chunkids_000281", "tool": "keyword_search", "entities": ["郝红梅"], "qa_type": "event_cause"}
+{"question": "孙少平与红梅是什么关系？", "answer": "同学", "doc_chunk_id": "corpus_chunkids_000282", "tool": "keyword_search", "entities": ["孙少平,红梅"], "qa_type": "character_relation"}
+{"question": "红梅最终的结果是什么？", "answer": "离开", "doc_chunk_id": "corpus_chunkids_000282", "tool": "keyword_search", "entities": ["红梅,离开"], "qa_type": "event_result"}
+{"question": "侯玉英为什么送孙少平笔记本？", "answer": "因为即将分别", "doc_chunk_id": "corpus_chunkids_000283", "tool": "keyword_search", "entities": ["侯玉英", "孙少平"], "qa_type": "event_cause"}
+{"question": "孙少平目送红梅离开后做了什么？", "answer": "长长地叹了一口气，一个人慢慢向学校走去", "doc_chunk_id": "corpus_chunkids_000283", "tool": "keyword_search", "entities": ["孙少平", "红梅"], "qa_type": "character_behavior"}
+{"question": "孙少平收到的信是谁写的？", "answer": "侯玉英", "doc_chunk_id": "corpus_chunkids_000284", "tool": "keyword_search", "entities": ["孙少平、侯玉英"], "qa_type": "character_relation"}
+{"question": "孙少平看完信后准备做什么？", "answer": "准备明天一早回家", "doc_chunk_id": "corpus_chunkids_000284", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "event_result"}
+{"question": "田福堂的身份是什么？", "answer": "双水村大队书记", "doc_chunk_id": "corpus_chunkids_000285", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "润生是谁的儿子？", "answer": "田福堂的儿子", "doc_chunk_id": "corpus_chunkids_000285", "tool": "keyword_search", "entities": ["润生，田福堂"], "qa_type": "character_relation"}
+{"question": "润生在家做什么？", "answer": "在家走里走出，抽纸烟", "doc_chunk_id": "corpus_chunkids_000286", "tool": "keyword_search", "entities": ["润生"], "qa_type": "character_behavior"}
+{"question": "田福堂为什么让润生出山劳动？", "answer": "为大队推荐时润生能通过，不劳动不好通过，影响工作学习机会", "doc_chunk_id": "corpus_chunkids_000286", "tool": "keyword_search", "entities": ["田福堂、润生、大队推荐"], "qa_type": "event_cause"}
+{"question": "润生是谁的儿子？", "answer": "田福堂的儿子", "doc_chunk_id": "corpus_chunkids_000287", "tool": "keyword_search", "entities": ["润生,田福堂"], "qa_type": "character_identity"}
+{"question": "孙玉亭建议让润生教书的原因是什么？", "answer": "润生身体不好，参加劳动吃不消", "doc_chunk_id": "corpus_chunkids_000287", "tool": "keyword_search", "entities": ["孙玉亭,润生,教书"], "qa_type": "event_cause"}
+{"question": "孙玉亭的身份是什么？", "answer": "双水村学校的贫管会主任", "doc_chunk_id": "corpus_chunkids_000288", "tool": "keyword_search", "entities": ["孙玉亭,贫管会主任"], "qa_type": "character_identity"}
+{"question": "孙少平是谁的侄子？", "answer": "孙玉亭的侄子", "doc_chunk_id": "corpus_chunkids_000288", "tool": "keyword_search", "entities": ["孙少平,孙玉亭"], "qa_type": "character_relation"}
+{"question": "孙玉亭的身份是什么？", "answer": "贫管会主任，贫农成份", "doc_chunk_id": "corpus_chunkids_000289", "tool": "keyword_search", "entities": ["孙玉亭"], "qa_type": "character_identity"}
+{"question": "孙玉亭和少平是什么关系？", "answer": "叔侄关系", "doc_chunk_id": "corpus_chunkids_000289", "tool": "keyword_search", "entities": ["孙玉亭，少平"], "qa_type": "character_relation"}
+{"question": "孙玉亭在报告消息后做了什么？", "answer": "心安理得在大哥家吃了一顿中午饭", "doc_chunk_id": "corpus_chunkids_000290", "tool": "keyword_search", "entities": ["孙玉亭、大哥家"], "qa_type": "character_behavior"}
+{"question": "孙少平因什么而激动？", "answer": "教书能有时间看书看报，能顶全劳力挣工分，一年有七十二元补助费可还账债", "doc_chunk_id": "corpus_chunkids_000290", "tool": "keyword_search", "entities": ["孙少平、教书"], "qa_type": "character_behavior"}
+{"question": "双水村什么时候办起了初中班？", "answer": "春天开学以后", "doc_chunk_id": "corpus_chunkids_000291", "tool": "keyword_search", "entities": ["双水村,初中班"], "qa_type": "event_result"}
+{"question": "孙玉亭晚饭以后做了什么？", "answer": "把其余几个贫管会委员找到自己家里研究办初中班的事", "doc_chunk_id": "corpus_chunkids_000291", "tool": "keyword_search", "entities": ["孙玉亭,贫管会委员,办初中班"], "qa_type": "character_behavior"}
+{"question": "李向前和润叶是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000292", "tool": "keyword_search", "entities": ["李向前、润叶"], "qa_type": "character_relation"}
+{"question": "李向前的职业是什么？", "answer": "司机", "doc_chunk_id": "corpus_chunkids_000292", "tool": "keyword_search", "entities": ["李向前"], "qa_type": "character_identity"}
+{"question": "李向前本质上是个什么样的人？", "answer": "本份人", "doc_chunk_id": "corpus_chunkids_000293", "tool": "keyword_search", "entities": ["李向前"], "qa_type": "character_identity"}
+{"question": "李向前和润叶是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000293", "tool": "keyword_search", "entities": ["李向前、润叶"], "qa_type": "character_relation"}
+{"question": "润叶是李向前的什么人？", "answer": "妻子", "doc_chunk_id": "corpus_chunkids_000294", "tool": "keyword_search", "entities": ["李向前, 润叶"], "qa_type": "character_relation"}
+{"question": "李向前在北京做了什么？", "answer": "买了一整天东西（给润叶和老人）", "doc_chunk_id": "corpus_chunkids_000294", "tool": "keyword_search", "entities": ["李向前, 北京, 润叶, 老人"], "qa_type": "character_behavior"}
+{"question": "李向前和润叶是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000295", "tool": "keyword_search", "entities": ["李向前,润叶"], "qa_type": "character_relation"}
+{"question": "李向前最终有没有等到润叶来接他？", "answer": "没有，润叶未到，他自己提箱回家", "doc_chunk_id": "corpus_chunkids_000295", "tool": "keyword_search", "entities": ["李向前,润叶"], "qa_type": "event_result"}
+{"question": "李向前为何情绪崩溃？", "answer": "回家发现家里空无一人", "doc_chunk_id": "corpus_chunkids_000296", "tool": "keyword_search", "entities": ["李向前,家里空无一人"], "qa_type": "event_cause"}
+{"question": "李向前对妻子做了什么？", "answer": "揭开被子撕其衣服裤子，发生搏斗后强奸未遂", "doc_chunk_id": "corpus_chunkids_000296", "tool": "keyword_search", "entities": ["李向前,妻子"], "qa_type": "character_behavior"}
+{"question": "田润叶和李向前是什么关系？", "answer": "夫妻", "doc_chunk_id": "corpus_chunkids_000297", "tool": "keyword_search", "entities": ["田润叶,李向前"], "qa_type": "character_relation"}
+{"question": "田润叶对醉倒在门外的李向前做了什么？", "answer": "拖他进屋并照顾他", "doc_chunk_id": "corpus_chunkids_000297", "tool": "keyword_search", "entities": ["田润叶,李向前"], "qa_type": "character_behavior"}
+{"question": "田福军做了什么？", "answer": "临时决定造访三个‘死角’村子", "doc_chunk_id": "corpus_chunkids_000298", "tool": "keyword_search", "entities": ["田福军,死角村子"], "qa_type": "character_behavior"}
+{"question": "‘死角’村子位于哪里？", "answer": "黄土高原的深山老沟里", "doc_chunk_id": "corpus_chunkids_000298", "tool": "keyword_search", "entities": ["死角村子,黄土高原"], "qa_type": "place_origin"}
+{"question": "‘死角’村子属于哪个公社？", "answer": "后子头公社", "doc_chunk_id": "corpus_chunkids_000299", "tool": "keyword_search", "entities": ["死角村子,后子头公社"], "qa_type": "place_origin"}
+{"question": "田福军为何决定独自步行前往‘死角’村子？", "answer": "自己临时决定，独自步行前往", "doc_chunk_id": "corpus_chunkids_000299", "tool": "keyword_search", "entities": ["田福军,死角村子"], "qa_type": "character_behavior"}
+{"question": "田福军的身份是什么？", "answer": "基层领导干部", "doc_chunk_id": "corpus_chunkids_000300", "tool": "keyword_search", "entities": ["田福军"], "qa_type": "character_identity"}
+{"question": "田福军在土崖凹小村子的午饭时发现了什么？", "answer": "锅里只有两个玉米面馍，其它都是糠团子", "doc_chunk_id": "corpus_chunkids_000300", "tool": "keyword_search", "entities": ["田福军、土崖凹、玉米面馍、糠团子"], "qa_type": "character_behavior"}
+{"question": "老汉家四天没吃五谷的原因是什么？", "answer": "儿子出门盲流，口粮被公社和大队扣下", "doc_chunk_id": "corpus_chunkids_000301", "tool": "keyword_search", "entities": ["老汉家、口粮被扣"], "qa_type": "event_cause"}
+{"question": "田福军看到老汉家惨状后做了什么？", "answer": "让队长去盘粮食，并亲自扛粮食给老汉家", "doc_chunk_id": "corpus_chunkids_000301", "tool": "keyword_search", "entities": ["田福军、老汉家、盘粮食"], "qa_type": "character_behavior"}
+{"question": "田福军发现后子头公社缺粮后做了什么决定？", "answer": "决定打开各队粮库，尽快分粮给缺粮户。", "doc_chunk_id": "corpus_chunkids_000302", "tool": "keyword_search", "entities": ["田福军、后子头公社、粮库、缺粮户"], "qa_type": "character_behavior"}
+{"question": "后子头公社大部分村子的缺粮情况是怎样的？", "answer": "大部分村子有许多缺粮户，有的能维持一两个月，有的当下揭不开锅。", "doc_chunk_id": "corpus_chunkids_000302", "tool": "keyword_search", "entities": ["后子头公社、缺粮户"], "qa_type": "event_cause"}
+{"question": "润叶与田福军是什么关系？", "answer": "侄女与二爸", "doc_chunk_id": "corpus_chunkids_000303", "tool": "keyword_search", "entities": ["润叶,田福军"], "qa_type": "character_relation"}
+{"question": "润叶哭着让二爸在外地找工作的原因是什么？", "answer": "不愿意和李向前在一起", "doc_chunk_id": "corpus_chunkids_000303", "tool": "keyword_search", "entities": ["润叶,李向前"], "qa_type": "event_cause"}
+{"question": "田福军和润叶是什么关系？", "answer": "二爸和侄女", "doc_chunk_id": "corpus_chunkids_000304", "tool": "keyword_search", "entities": ["田福军", "润叶"], "qa_type": "character_relation"}
+{"question": "润叶当初为什么和李向前结婚？", "answer": "因为徐大爷劝说", "doc_chunk_id": "corpus_chunkids_000304", "tool": "keyword_search", "entities": ["润叶", "李向前", "徐大爷"], "qa_type": "event_cause"}
+{"question": "冯世宽的身份是什么？", "answer": "主任", "doc_chunk_id": "corpus_chunkids_000305", "tool": "keyword_search", "entities": ["冯世宽"], "qa_type": "character_identity"}
+{"question": "润叶如何称呼田福军？", "answer": "二爸", "doc_chunk_id": "corpus_chunkids_000305", "tool": "keyword_search", "entities": ["润叶、田福军"], "qa_type": "character_relation"}
+{"question": "高老的身份是什么？", "answer": "红军和解放军高级指挥员，中央部级领导", "doc_chunk_id": "corpus_chunkids_000306", "tool": "keyword_search", "entities": ["高老"], "qa_type": "character_identity"}
+{"question": "原西县常委们为什么开会？", "answer": "讨论如何接待中央的高老", "doc_chunk_id": "corpus_chunkids_000306", "tool": "keyword_search", "entities": ["原西县常委会议、高老"], "qa_type": "event_cause"}
+{"question": "高老的身份是什么？", "answer": "老首长，原西闹过革命的老红军、老赤卫队员（座谈会召集人）", "doc_chunk_id": "corpus_chunkids_000307", "tool": "keyword_search", "entities": ["高老"], "qa_type": "character_identity"}
+{"question": "苗凯亲自到原西县的主要原因是什么？", "answer": "高老要召开老红军、老赤卫队员座谈会了解农村状况，苗凯担心座谈会成诉苦会影响自己", "doc_chunk_id": "corpus_chunkids_000307", "tool": "keyword_search", "entities": ["苗凯、原西县、高老、座谈会"], "qa_type": "event_cause"}
+{"question": "吴克俭的身份是什么？", "answer": "民政方面的负责人", "doc_chunk_id": "corpus_chunkids_000308", "tool": "keyword_search", "entities": ["吴克俭"], "qa_type": "character_identity"}
+{"question": "冯世宽在常委会上做了什么？", "answer": "发言提出让老革命战士换衣服并让吴克俭安排，谈其他办法，发完言请苗主任指示", "doc_chunk_id": "corpus_chunkids_000308", "tool": "keyword_search", "entities": ["冯世宽"], "qa_type": "character_behavior"}
+{"question": "会议结束后苗凯说了什么？", "answer": "我今天才领教了这田福军！", "doc_chunk_id": "corpus_chunkids_000309", "tool": "keyword_search", "entities": ["苗凯"], "qa_type": "character_behavior"}
+{"question": "田福军在会议上对高老座谈会的看法是什么？", "answer": "不应弄虚作假、欺下瞒上", "doc_chunk_id": "corpus_chunkids_000309", "tool": "keyword_search", "entities": ["田福军,高老座谈会"], "qa_type": "character_behavior"}
+{"question": "谁是原西县的副主任？", "answer": "马国雄", "doc_chunk_id": "corpus_chunkids_000310", "tool": "keyword_search", "entities": ["马国雄、原西县"], "qa_type": "character_identity"}
+{"question": "马国雄在爱国卫生运动中做了什么？", "answer": "穿一身旧军装，戴一副墨镜，到处奔跑着检查和指挥", "doc_chunk_id": "corpus_chunkids_000310", "tool": "keyword_search", "entities": ["马国雄、爱国卫生运动"], "qa_type": "character_behavior"}
+{"question": "高老为什么生气？", "answer": "因为有人搞了铺张的酒席", "doc_chunk_id": "corpus_chunkids_000311", "tool": "keyword_search", "entities": ["高老、铺张酒席"], "qa_type": "event_cause"}
+{"question": "高老要求如何处理铺张的酒席？", "answer": "撤掉酒菜，换本地风味小吃", "doc_chunk_id": "corpus_chunkids_000311", "tool": "keyword_search", "entities": ["高老、铺张酒席、撤掉酒菜、本地风味小吃"], "qa_type": "character_behavior"}
+{"question": "高老被地县领导称为什么？", "answer": "老首长", "doc_chunk_id": "corpus_chunkids_000312", "tool": "keyword_search", "entities": ["高老、地县领导"], "qa_type": "character_identity"}
+{"question": "高老和顾健翎是什么关系？", "answer": "老朋友，顾健翎曾治愈高老的伤", "doc_chunk_id": "corpus_chunkids_000312", "tool": "keyword_search", "entities": ["高老、顾健翎"], "qa_type": "character_relation"}
+{"question": "苗凯和冯世宽对老首长的意见持什么态度？", "answer": "完全同意", "doc_chunk_id": "corpus_chunkids_000313", "tool": "keyword_search", "entities": ["苗凯、冯世宽、老首长"], "qa_type": "character_behavior"}
+{"question": "老首长认为现在最主要的问题是什么？", "answer": "'四人帮'的那一套做法还在作怪", "doc_chunk_id": "corpus_chunkids_000313", "tool": "keyword_search", "entities": ["老首长、四人帮做法"], "qa_type": "event_cause"}
+{"question": "田福堂被称为什么？", "answer": "农村的土政治家", "doc_chunk_id": "corpus_chunkids_000314", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "田福堂计划如何改造农田？", "answer": "用炸药炸神仙山和庙坪山拦坝，改造哭咽河为米粮川", "doc_chunk_id": "corpus_chunkids_000314", "tool": "keyword_search", "entities": ["田福堂, 神仙山, 庙坪山, 哭咽河, 炸山拦坝"], "qa_type": "character_behavior"}
+{"question": "田福堂的身份是什么？", "answer": "书记", "doc_chunk_id": "corpus_chunkids_000315", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "孙玉亭对金家湾几家人搬家问题的建议是什么？", "answer": "在金家湾北头给他们几家箍新窑洞", "doc_chunk_id": "corpus_chunkids_000315", "tool": "keyword_search", "entities": ["孙玉亭,金家湾几家人,搬家问题"], "qa_type": "character_behavior"}
+{"question": "金俊武的身份是什么？", "answer": "大队党支部委员（党员）", "doc_chunk_id": "corpus_chunkids_000316", "tool": "keyword_search", "entities": ["金俊武"], "qa_type": "character_identity"}
+{"question": "田福堂和孙玉亭在双水村干部会上做了什么？", "answer": "田福堂谈宏伟设想，孙玉亭赞叹并借题发挥，二人演‘双簧’", "doc_chunk_id": "corpus_chunkids_000316", "tool": "keyword_search", "entities": ["田福堂、孙玉亭、双水村干部会"], "qa_type": "character_behavior"}
+{"question": "金光明的身份是什么？", "answer": "原西城百货二门市当售货员", "doc_chunk_id": "corpus_chunkids_000317", "tool": "keyword_search", "entities": ["金光明"], "qa_type": "character_identity"}
+{"question": "田福堂为什么不愿意强行实行计划？", "answer": "不想与金家结仇太深，要与金家共处", "doc_chunk_id": "corpus_chunkids_000317", "tool": "keyword_search", "entities": ["田福堂、金家"], "qa_type": "event_cause"}
+{"question": "金光明回到家后做了什么决定？", "answer": "放弃找田福堂评理，返回原西县城。", "doc_chunk_id": "corpus_chunkids_000318", "tool": "keyword_search", "entities": ["金光明"], "qa_type": "character_behavior"}
+{"question": "搬家的原因是什么？", "answer": "队里让他们搬家。", "doc_chunk_id": "corpus_chunkids_000318", "tool": "keyword_search", "entities": ["搬家、队里"], "qa_type": "event_cause"}
+{"question": "金俊山的身份是什么？", "answer": "副书记", "doc_chunk_id": "corpus_chunkids_000319", "tool": "keyword_search", "entities": ["金俊山"], "qa_type": "character_identity"}
+{"question": "田福堂准备做什么？", "answer": "召开社员大会动员搬迁，在金家湾北头箍新窑", "doc_chunk_id": "corpus_chunkids_000319", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_behavior"}
+{"question": "金俊山在队里的身份是什么？", "answer": "队里领导", "doc_chunk_id": "corpus_chunkids_000320", "tool": "keyword_search", "entities": ["金俊山"], "qa_type": "character_identity"}
+{"question": "双水村准备干的惊天动地的大事是什么？", "answer": "炸山打坝", "doc_chunk_id": "corpus_chunkids_000320", "tool": "keyword_search", "entities": ["双水村"], "qa_type": "inference"}
+{"question": "金俊武同意从老家里搬出来的原因是什么？", "answer": "大势压迫", "doc_chunk_id": "corpus_chunkids_000321", "tool": "keyword_search", "entities": ["金俊武,搬家,大势压迫"], "qa_type": "event_cause"}
+{"question": "金俊武在搬家前做了什么？", "answer": "在庙坪后山犁完麦地，扛着柴草从庙坪山走下来到哭咽河岸边土台子", "doc_chunk_id": "corpus_chunkids_000321", "tool": "keyword_search", "entities": ["金俊武,犁麦地,扛柴草,下山,哭咽河岸边土台子"], "qa_type": "character_behavior"}
+{"question": "金俊武的身份是什么？", "answer": "四十出头，强壮得像头犍牛一样的庄稼人", "doc_chunk_id": "corpus_chunkids_000322", "tool": "keyword_search", "entities": ["金俊武"], "qa_type": "character_identity"}
+{"question": "金俊文和金俊武是什么关系？", "answer": "兄弟（金俊文是金俊武的哥哥）", "doc_chunk_id": "corpus_chunkids_000322", "tool": "keyword_search", "entities": ["金俊文、金俊武"], "qa_type": "character_relation"}
+{"question": "王彩娥和孙玉亭是什么关系？", "answer": "勾搭在一起", "doc_chunk_id": "corpus_chunkids_000323", "tool": "keyword_search", "entities": ["王彩娥、孙玉亭"], "qa_type": "character_relation"}
+{"question": "金家兄弟气愤的原因是什么？", "answer": "王彩娥在俊斌死后与孙玉亭勾搭且同意搬迁家庭", "doc_chunk_id": "corpus_chunkids_000323", "tool": "keyword_search", "entities": ["王彩娥、孙玉亭、金家兄弟、俊斌"], "qa_type": "event_cause"}
+{"question": "金俊武的哥哥是谁？", "answer": "金俊文", "doc_chunk_id": "corpus_chunkids_000324", "tool": "keyword_search", "entities": ["金俊文,金俊武"], "qa_type": "character_relation"}
+{"question": "金富和金强对孙玉亭做了什么？", "answer": "把孙玉亭扣在俊斌家里了", "doc_chunk_id": "corpus_chunkids_000324", "tool": "keyword_search", "entities": ["金富,金强,孙玉亭"], "qa_type": "event_result"}
+{"question": "谁是村里的民兵队长？", "answer": "田海民", "doc_chunk_id": "corpus_chunkids_000325", "tool": "keyword_search", "entities": ["田海民"], "qa_type": "character_identity"}
+{"question": "金俊武让金富做什么？", "answer": "去叫田海民处理孙玉亭的事", "doc_chunk_id": "corpus_chunkids_000325", "tool": "keyword_search", "entities": ["金俊武,金富,田海民,孙玉亭"], "qa_type": "character_behavior"}
+{"question": "田海民的身份是什么？", "answer": "民兵队长", "doc_chunk_id": "corpus_chunkids_000326", "tool": "keyword_search", "entities": ["田海民"], "qa_type": "character_identity"}
+{"question": "金富在田海民家门前做了什么？", "answer": "用拳头捣门板，大声嚷着二爸教他的话", "doc_chunk_id": "corpus_chunkids_000326", "tool": "keyword_search", "entities": ["金富、田海民家"], "qa_type": "character_behavior"}
+{"question": "田海民在做什么？", "answer": "脱光衣服，搂着银花蒙头大睡", "doc_chunk_id": "corpus_chunkids_000327", "tool": "keyword_search", "entities": ["田海民,银花"], "qa_type": "character_behavior"}
+{"question": "金俊文和金俊武在院子里做什么？", "answer": "焦急地等待田海民到来", "doc_chunk_id": "corpus_chunkids_000327", "tool": "keyword_search", "entities": ["金俊文,金俊武,田海民"], "qa_type": "character_behavior"}
+{"question": "孙玉亭和王彩娥是什么关系？", "answer": "相好", "doc_chunk_id": "corpus_chunkids_000328", "tool": "keyword_search", "entities": ["孙玉亭、王彩娥"], "qa_type": "character_relation"}
+{"question": "王彩娥在窑里做了什么？", "answer": "破口臭骂金俊武一家人", "doc_chunk_id": "corpus_chunkids_000328", "tool": "keyword_search", "entities": ["王彩娥、金俊武"], "qa_type": "character_behavior"}
+{"question": "田福堂的身份是什么？", "answer": "一队队长", "doc_chunk_id": "corpus_chunkids_000329", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "孙玉亭在窑里嘟囔了什么话？", "answer": "总有个组织哩", "doc_chunk_id": "corpus_chunkids_000329", "tool": "keyword_search", "entities": ["孙玉亭"], "qa_type": "character_behavior"}
+{"question": "孙玉厚为什么不让少安去石圪节找公社领导？", "answer": "孙玉厚认为自家不应扯进孙玉亭的是非，觉得‘他们愿意死哩，和咱没相干’", "doc_chunk_id": "corpus_chunkids_000330", "tool": "keyword_search", "entities": ["孙玉厚,少安,石圪节,孙玉亭"], "qa_type": "event_cause"}
+{"question": "谁向王彩娥娘家报信让其户族赶来？", "answer": "刘玉升", "doc_chunk_id": "corpus_chunkids_000330", "tool": "keyword_search", "entities": ["刘玉升,王彩娥娘家"], "qa_type": "event_cause"}
+{"question": "王家庄的人为何停止攻击金家院子？", "answer": "有人称门是田福堂让关的，王家庄人信以为真。", "doc_chunk_id": "corpus_chunkids_000331", "tool": "keyword_search", "entities": ["王家庄人，田福堂"], "qa_type": "event_result"}
+{"question": "田牛在混战中的行为是怎样的？", "answer": "不分敌我，见谁打谁，还打了金俊武家的猪娃子和老母鸡。", "doc_chunk_id": "corpus_chunkids_000331", "tool": "keyword_search", "entities": ["田牛"], "qa_type": "character_behavior"}
+{"question": "王家庄的人为什么去田家圪崂找田福堂？", "answer": "有人散布谣言称门是田福堂让关的，王家庄人信以为真。", "doc_chunk_id": "corpus_chunkids_000332", "tool": "keyword_search", "entities": ["王家庄的人，田福堂，谣言"], "qa_type": "event_cause"}
+{"question": "田福堂在面对王家庄人时做了什么？", "answer": "让老婆儿子避难，锁门，吼叫田福高等人保卫家庭。", "doc_chunk_id": "corpus_chunkids_000332", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_behavior"}
+{"question": "金俊山的身份是什么？", "answer": "大队副书记", "doc_chunk_id": "corpus_chunkids_000333", "tool": "keyword_search", "entities": ["金俊山"], "qa_type": "character_identity"}
+{"question": "公社派人到双水村后对参与打架的人做了什么？", "answer": "把参与打架的人捆起来", "doc_chunk_id": "corpus_chunkids_000333", "tool": "keyword_search", "entities": ["公社、双水村、参与打架的人"], "qa_type": "event_result"}
+{"question": "谁主持召开了双水村和王家庄两个大队领导人的紧急联席会议？", "answer": "徐治功", "doc_chunk_id": "corpus_chunkids_000334", "tool": "keyword_search", "entities": ["徐治功、双水村、王家庄、紧急联席会议"], "qa_type": "character_identity"}
+{"question": "孙玉亭和王彩娥的男女关系问题如何处理？", "answer": "因两人不承认，不予追究", "doc_chunk_id": "corpus_chunkids_000334", "tool": "keyword_search", "entities": ["孙玉亭、王彩娥、男女关系问题"], "qa_type": "event_result"}
+{"question": "孙玉亭为工程做了什么准备？", "answer": "组织人力卖掉大队几万斤储备高粱，买回几千斤炸药", "doc_chunk_id": "corpus_chunkids_000335", "tool": "keyword_search", "entities": ["孙玉亭,工程"], "qa_type": "character_behavior"}
+{"question": "金家湾北头搬迁户的新窑洞是否完工？", "answer": "不久前全部完工", "doc_chunk_id": "corpus_chunkids_000335", "tool": "keyword_search", "entities": ["金家湾北头,新窑洞"], "qa_type": "event_result"}
+{"question": "王彩娥为何对搬迁新居无比高兴？", "answer": "厌烦现在的三孔窑洞，此地曾因她和孙玉亭关系爆发武斗，且常梦见俊斌", "doc_chunk_id": "corpus_chunkids_000336", "tool": "keyword_search", "entities": ["王彩娥,搬迁新居"], "qa_type": "event_cause"}
+{"question": "谁不愿意搬家？", "answer": "金俊文的老母亲", "doc_chunk_id": "corpus_chunkids_000336", "tool": "keyword_search", "entities": ["金俊文的老母亲"], "qa_type": "character_behavior"}
+{"question": "金俊文的老母亲是谁？", "answer": "金先生遗孀，金家族老寿星", "doc_chunk_id": "corpus_chunkids_000337", "tool": "keyword_search", "entities": ["金俊文的老母亲"], "qa_type": "character_identity"}
+{"question": "金老太太为什么不肯离开旧窑洞？", "answer": "留恋丈夫留下的窑洞及与丈夫共度的回忆", "doc_chunk_id": "corpus_chunkids_000337", "tool": "keyword_search", "entities": ["金老太太不肯离开旧窑洞"], "qa_type": "event_cause"}
+{"question": "田福堂与金老太太是什么关系？", "answer": "干妈", "doc_chunk_id": "corpus_chunkids_000338", "tool": "keyword_search", "entities": ["田福堂,金老太太"], "qa_type": "character_relation"}
+{"question": "金老太太为何需要挪窝？", "answer": "田福堂计划炸山腾地方", "doc_chunk_id": "corpus_chunkids_000338", "tool": "keyword_search", "entities": ["金老太太挪窝,炸山"], "qa_type": "event_cause"}
+{"question": "金老太太不愿搬家的原因是什么？", "answer": "双水村要建大坝，金老太太的院子会被拆除，她不愿离开老院子", "doc_chunk_id": "corpus_chunkids_000339", "tool": "keyword_search", "entities": ["金老太太、大坝、院子"], "qa_type": "event_cause"}
+{"question": "田福堂为劝说金老太太做了什么？", "answer": "田福堂给金老太太双膝下跪道歉，诚恳劝说她接受大坝建设", "doc_chunk_id": "corpus_chunkids_000339", "tool": "keyword_search", "entities": ["田福堂、金老太太、下跪、劝说"], "qa_type": "character_behavior"}
+{"question": "田福堂的身份是什么？", "answer": "双水村的一村之主", "doc_chunk_id": "corpus_chunkids_000340", "tool": "keyword_search", "entities": ["田福堂"], "qa_type": "character_identity"}
+{"question": "田福堂和金老太太是什么关系？", "answer": "干母子", "doc_chunk_id": "corpus_chunkids_000340", "tool": "keyword_search", "entities": ["田福堂,金老太太"], "qa_type": "character_relation"}
+{"question": "秀莲要被送到哪里去？", "answer": "石圪节医院", "doc_chunk_id": "corpus_chunkids_000341", "tool": "keyword_search", "entities": ["秀莲,石圪节医院"], "qa_type": "place_origin"}
+{"question": "少安为什么坚持要送秀莲去石圪节医院？", "answer": "认为在家接生不卫生，担心有危险", "doc_chunk_id": "corpus_chunkids_000341", "tool": "keyword_search", "entities": ["少安,秀莲,石圪节医院"], "qa_type": "event_cause"}
+{"question": "田二是什么样的人？", "answer": "是个‘半脑壳’老汉。", "doc_chunk_id": "corpus_chunkids_000342", "tool": "keyword_search", "entities": ["田二"], "qa_type": "character_identity"}
+{"question": "秀莲生产的结果是什么？", "answer": "是个胖小子。", "doc_chunk_id": "corpus_chunkids_000342", "tool": "keyword_search", "entities": ["秀莲生产"], "qa_type": "event_result"}
+{"question": "孙少平在村里担任什么职务？", "answer": "双水村学校教师", "doc_chunk_id": "corpus_chunkids_000343", "tool": "keyword_search", "entities": ["孙少平,双水村学校教师"], "qa_type": "character_identity"}
+{"question": "田润生和孙少平是什么关系？", "answer": "同班同学，从小一起长大", "doc_chunk_id": "corpus_chunkids_000343", "tool": "keyword_search", "entities": ["孙少平,田润生,同班同学"], "qa_type": "character_relation"}
+{"question": "田润生和孙少平是什么关系？", "answer": "同班同学，从小一起长大、一起上学但交往不密切", "doc_chunk_id": "corpus_chunkids_000344", "tool": "keyword_search", "entities": ["田润生、孙少平"], "qa_type": "character_relation"}
+{"question": "孙少平收到侯玉英的恋爱信后做了什么？", "answer": "看完就烧了，也不给她回信", "doc_chunk_id": "corpus_chunkids_000344", "tool": "keyword_search", "entities": ["孙少平、侯玉英"], "qa_type": "character_behavior"}
+{"question": "孙少平与田晓霞是什么关系？", "answer": "另一个层次上的朋友", "doc_chunk_id": "corpus_chunkids_000345", "tool": "keyword_search", "entities": ["孙少平, 田晓霞"], "qa_type": "character_relation"}
+{"question": "孙少平对二爸的态度如何？", "answer": "抱有一种嘲笑的态度，常讥讽他那‘心爱的空忙’", "doc_chunk_id": "corpus_chunkids_000345", "tool": "keyword_search", "entities": ["孙少平, 二爸"], "qa_type": "character_behavior"}
+{"question": "孙少平的成长背景是哪里？", "answer": "在农村长大", "doc_chunk_id": "corpus_chunkids_000346", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "character_identity"}
+{"question": "金波复员后出现在哪里？", "answer": "双水村", "doc_chunk_id": "corpus_chunkids_000346", "tool": "keyword_search", "entities": ["金波,双水村"], "qa_type": "place_origin"}
+{"question": "金波复员的原因是什么？", "answer": "传闻他在青海和藏民女子谈恋爱，被部队打发回来", "doc_chunk_id": "corpus_chunkids_000347", "tool": "keyword_search", "entities": ["金波,藏民女子,部队打发"], "qa_type": "event_cause"}
+{"question": "金波复员后黄昏时会做什么？", "answer": "独自穿军大衣爬上金家湾后面的神仙山游荡并唱青海民歌", "doc_chunk_id": "corpus_chunkids_000347", "tool": "keyword_search", "entities": ["金波,黄昏,神仙山,青海民歌"], "qa_type": "character_behavior"}
+{"question": "金波坐顺车去了哪里？", "answer": "黄原", "doc_chunk_id": "corpus_chunkids_000348", "tool": "keyword_search", "entities": ["金波,黄原"], "qa_type": "character_behavior"}
+{"question": "少平为什么去金光亮家？", "answer": "辅导金光亮的孩子（金三锤）的作文", "doc_chunk_id": "corpus_chunkids_000348", "tool": "keyword_search", "entities": ["少平,金光亮家,金三锤"], "qa_type": "event_cause"}
+{"question": "孙少平去金光亮家做什么？", "answer": "给金三锤辅导写记叙文", "doc_chunk_id": "corpus_chunkids_000349", "tool": "keyword_search", "entities": ["孙少平,金三锤,金光亮家"], "qa_type": "character_behavior"}
+{"question": "孙少平去金光亮家辅导作文这件事传开后村里有什么反应？", "answer": "人们惊讶之余议论一阵子，孙玉亭最为恼火", "doc_chunk_id": "corpus_chunkids_000349", "tool": "keyword_search", "entities": ["孙少平,金光亮家,村里"], "qa_type": "event_result"}
+{"question": "孙玉厚的两个儿子是谁？", "answer": "孙少安、孙少平", "doc_chunk_id": "corpus_chunkids_000350", "tool": "keyword_search", "entities": ["孙玉厚的两个儿子"], "qa_type": "character_identity"}
+{"question": "少平准备用什么招待晓霞？", "answer": "饺子和羊肉", "doc_chunk_id": "corpus_chunkids_000350", "tool": "keyword_search", "entities": ["少平、晓霞"], "qa_type": "character_behavior"}
+{"question": "孙少安为什么感到生活沉重？", "answer": "儿子出生后，穷得连饭都不能吃饱，养不起妻儿，觉得没尊严。", "doc_chunk_id": "corpus_chunkids_000351", "tool": "keyword_search", "entities": ["孙少安", "儿子", "生活沉重"], "qa_type": "event_cause"}
+{"question": "孙少安亲吻儿子时被秀莲如何对待？", "answer": "秀莲掀他的头，嗔怒说他亲得娃娃疼。", "doc_chunk_id": "corpus_chunkids_000351", "tool": "keyword_search", "entities": ["孙少安", "秀莲", "儿子"], "qa_type": "character_behavior"}
+{"question": "孙少安的身份是什么？", "answer": "农民，高小文化程度", "doc_chunk_id": "corpus_chunkids_000352", "tool": "keyword_search", "entities": ["孙少安"], "qa_type": "character_identity"}
+{"question": "孙少安想搞承包责任组的原因是什么？", "answer": "大锅饭导致干多干少一样，大家不出力，一年受穷", "doc_chunk_id": "corpus_chunkids_000352", "tool": "keyword_search", "entities": ["孙少安搞承包责任组"], "qa_type": "event_cause"}
+{"question": "一队的‘会议室’在哪里？", "answer": "饲养员田万江的窑洞", "doc_chunk_id": "corpus_chunkids_000353", "tool": "keyword_search", "entities": ["一队会议室,饲养员田万江的窑洞"], "qa_type": "place_origin"}
+{"question": "社员们开会后做了什么？", "answer": "支持孙少安的设想并弄出合同", "doc_chunk_id": "corpus_chunkids_000353", "tool": "keyword_search", "entities": ["社员们,孙少安,合同"], "qa_type": "event_result"}
+{"question": "孙少安的身份是什么？", "answer": "一队队长", "doc_chunk_id": "corpus_chunkids_000354", "tool": "keyword_search", "entities": ["孙少安、一队队长"], "qa_type": "character_identity"}
+{"question": "孙少安第二天上午做了什么？", "answer": "拿着文件进田福堂家汇报一队新打算和开会情况", "doc_chunk_id": "corpus_chunkids_000354", "tool": "keyword_search", "entities": ["孙少安、田福堂家、一队新打算、开会情况"], "qa_type": "character_behavior"}
+{"question": "田福堂骑单车去石圪节公社的目的是什么？", "answer": "找白明川和徐治功汇报孙少安的情况。", "doc_chunk_id": "corpus_chunkids_000355", "tool": "keyword_search", "entities": ["田福堂,石圪节公社,白明川,徐治功,孙少安"], "qa_type": "character_behavior"}
+{"question": "孙玉亭与孙少安是什么关系？", "answer": "孙玉亭是孙少安的叔叔（孙玉亭是孙少安父亲孙玉厚的弟弟）。", "doc_chunk_id": "corpus_chunkids_000355", "tool": "keyword_search", "entities": ["孙玉亭,孙少安"], "qa_type": "character_relation"}
+{"question": "田福军的职务是什么？", "answer": "县革委会副主任", "doc_chunk_id": "corpus_chunkids_000356", "tool": "keyword_search", "entities": ["田福军"], "qa_type": "character_identity"}
+{"question": "孙少安对孙玉亭和孙玉厚让他投案的劝说有何反应？", "answer": "拒绝投案，称自己承担责任", "doc_chunk_id": "corpus_chunkids_000356", "tool": "keyword_search", "entities": ["孙少安、孙玉亭、孙玉厚"], "qa_type": "character_behavior"}
+{"question": "常委会的决定是什么？", "answer": "通知石圪节公社制止双水村资本主义复辟倾向，批评教育孙少安，县革委会发文件", "doc_chunk_id": "corpus_chunkids_000357", "tool": "keyword_search", "entities": ["常委会、石圪节公社、双水村、孙少安、县革委会"], "qa_type": "event_result"}
+{"question": "冯世宽在会议期间做了什么？", "answer": "出去打电话汇报双水村情况，回来传达地区革委会主任苗凯坚决制止的指示", "doc_chunk_id": "corpus_chunkids_000357", "tool": "keyword_search", "entities": ["冯世宽、双水村、地区革委会主任苗凯"], "qa_type": "character_behavior"}
+{"question": "孙少安的身份是什么？", "answer": "生产队长", "doc_chunk_id": "corpus_chunkids_000358", "tool": "keyword_search", "entities": ["孙少安"], "qa_type": "character_identity"}
+{"question": "这次自发性改革尝试的结果是什么？", "answer": "以失败而结束", "doc_chunk_id": "corpus_chunkids_000358", "tool": "keyword_search", "entities": ["自发性改革尝试"], "qa_type": "event_result"}
+{"question": "谁接替冯世宽任原西县革委会主任？", "answer": "李登云", "doc_chunk_id": "corpus_chunkids_000359", "tool": "keyword_search", "entities": ["李登云,冯世宽,原西县革委会主任"], "qa_type": "character_identity"}
+{"question": "田福军被调回地区后为什么暂时没安排工作？", "answer": "苗凯对他不感兴趣，呼正文反对苗凯安排，其他常委支持呼正文，苗凯暂时不安排", "doc_chunk_id": "corpus_chunkids_000359", "tool": "keyword_search", "entities": ["田福军,苗凯,呼正文,安排工作"], "qa_type": "event_cause"}
+{"question": "石钟同志文革前和现在的职务分别是什么？", "answer": "文革前是省农工部部长，现在任省革委会副主任", "doc_chunk_id": "corpus_chunkids_000360", "tool": "keyword_search", "entities": ["石钟"], "qa_type": "character_identity"}
+{"question": "双水村为什么恢复闹秧歌？", "answer": "政策松动了", "doc_chunk_id": "corpus_chunkids_000360", "tool": "keyword_search", "entities": ["双水村、闹秧歌"], "qa_type": "event_cause"}
+{"question": "大秧歌队在哪里排练？", "answer": "金家湾那面的小学院子里", "doc_chunk_id": "corpus_chunkids_000361", "tool": "keyword_search", "entities": ["大秧歌队,金家湾小学院子"], "qa_type": "place_origin"}
+{"question": "田五的身份是什么？", "answer": "伞头", "doc_chunk_id": "corpus_chunkids_000361", "tool": "keyword_search", "entities": ["田五"], "qa_type": "character_identity"}
+{"question": "双水村大秧歌和小戏的总导演是谁？", "answer": "孙少平", "doc_chunk_id": "corpus_chunkids_000362", "tool": "keyword_search", "entities": ["孙少平"], "qa_type": "character_identity"}
+{"question": "田润叶现在在哪里？", "answer": "黄原她的同学杜莉莉那里", "doc_chunk_id": "corpus_chunkids_000362", "tool": "keyword_search", "entities": ["田润叶"], "qa_type": "character_behavior"}
+{"question": "王明清的身份是什么？", "answer": "罐子村的伞头", "doc_chunk_id": "corpus_chunkids_000363", "tool": "keyword_search", "entities": ["王明清,罐子村,伞头"], "qa_type": "character_identity"}
+{"question": "田五在秧歌表演中做了什么？", "answer": "将秧歌和‘链子嘴’串在一起演唱", "doc_chunk_id": "corpus_chunkids_000363", "tool": "keyword_search", "entities": ["田五,秧歌,链子嘴,演唱"], "qa_type": "character_behavior"}
+{"question": "孙少安在小土坡上做了什么？", "answer": "卷旱烟、抽烟、望着村庄和山野", "doc_chunk_id": "corpus_chunkids_000364", "tool": "keyword_search", "entities": ["孙少安、小土坡"], "qa_type": "character_behavior"}
+{"question": "秧歌队向哪里涌去？", "answer": "金家湾小学院子", "doc_chunk_id": "corpus_chunkids_000364", "tool": "keyword_search", "entities": ["秧歌队、金家湾小学院子"], "qa_type": "event_result"}
+{"question": "作者的身份是什么？", "answer": "农民的儿子", "doc_chunk_id": "corpus_chunkids_000365", "tool": "keyword_search", "entities": ["作者,农民的儿子"], "qa_type": "character_identity"}
+{"question": "五卷集出版的原因是什么？", "answer": "得益于陕西人民出版社和本书编选者陈泽顺、刑良俊同志的热情帮助", "doc_chunk_id": "corpus_chunkids_000365", "tool": "keyword_search", "entities": ["五卷集出版,陕西人民出版社,陈泽顺,刑良俊"], "qa_type": "event_cause"}
+{"question": "片段中提到的被要求的对象是什么身份？", "answer": "作家", "doc_chunk_id": "corpus_chunkids_000366", "tool": "keyword_search", "entities": ["作家"], "qa_type": "character_identity"}
+{"question": "这段文字的写作地点是哪里？", "answer": "西安", "doc_chunk_id": "corpus_chunkids_000366", "tool": "keyword_search", "entities": ["西安"], "qa_type": "place_origin"}

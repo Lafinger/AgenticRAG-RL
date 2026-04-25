@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from agentic_rag_rl.llm_client import DoubaoLLMClient, create_llm_client, get_doubao_base_url, get_doubao_model
+from agentic_rag_rl.llm_client import (
+    DoubaoLLMClient,
+    create_llm_client,
+    get_doubao_base_url,
+    get_doubao_model,
+    get_doubao_thinking_model,
+)
 
 
 def test_doubao_llm_client_uses_transport() -> None:
@@ -39,7 +45,9 @@ def test_doubao_llm_client_requires_api_key_for_real_transport(monkeypatch) -> N
 
 def test_doubao_defaults_can_come_from_environment(monkeypatch) -> None:
     monkeypatch.setenv("DOUBAO_MODEL", "env-model")
+    monkeypatch.setenv("DOUBAO_THINKING_MODEL", "env-thinking-model")
     monkeypatch.setenv("DOUBAO_BASE_URL", "https://env.example/api/v3")
 
     assert get_doubao_model() == "env-model"
+    assert get_doubao_thinking_model() == "env-thinking-model"
     assert get_doubao_base_url() == "https://env.example/api/v3"

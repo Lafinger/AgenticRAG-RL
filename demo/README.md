@@ -282,23 +282,32 @@ uv run python .\scripts\gen_seed_qa.py `
 
 ## Step 4: 合成多跳 QA
 
-**目标**：把 seed QA 组合成需要多次检索才能回答的问题，形成 RL/SFT 共享的阅读问答任务。
+**目标**：参考原项目的“逐跳扩展”思路，从单跳 seed QA 出发，逐步检索相关 chunk 并扩展成 2-hop / 3-hop 阅读问答任务。
 
 **详细说明**：
 
-- `domain_multihop_synthesis.py` 加载 seed QA 和 corpus，然后按人物、地点、事件关系组合问题。
-- 合成时会把多个单跳 seed 放进 `hops[]`，再生成一个需要综合多个 hop 的 `final_question`。
-- 每个 hop 都保留原始 `question/answer/doc_chunk_id/qa_type`，用于构造 Oracle trace 和计算 `gold_chunks`。
+- `domain_multihop_synthesis.py` 加载 seed QA 和 corpus，并在内存中创建 `HybridRetriever`。
+- 每条 seed QA 会先作为 hop1；扩展下一跳时，主查询使用当前 hop 的 `question`，辅查询使用当前 hop 的 `answer`。
+- 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`，从新的 chunk 中选择已有 seed QA 作为下一跳。
+- 当前实现复现“逐跳扩展”的数据流：`seed -> 检索候选 chunk -> 选择候选 QA -> 豆包 thinking 模型合并为多跳样本`。
+- 多跳合并默认使用 `doubao-seed-1-6-thinking-250715`，只负责生成自然的 `final_question/final_answer/answer_aliases`；逐跳检索和候选 QA 选择仍由规则流程完成。
+- 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并。
+- 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，用于构造 Oracle trace、计算 `gold_chunks` 和诊断检索路径。
 - `answer_aliases` 会记录可接受答案变体，降低训练和评测中因表述不同造成的误判。
 - `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
 
 ```mermaid
-flowchart LR
-    A["seeds.jsonl"] --> B["按人物 / 地点 / 事件组合"]
-    B --> C["构造 final_question"]
-    B --> D["构造 hops"]
-    C --> E["qa_pairs.jsonl"]
-    D --> E
+flowchart TD
+    A["seed QA hop1"] --> B["主查询: hop.question"]
+    A --> C["辅查询: hop.answer"]
+    B --> D["HybridRetriever"]
+    C --> D
+    D --> E["候选 chunk 去重"]
+    E --> F["选择候选 chunk 的 seed QA"]
+    F --> G["追加 hop2 / hop3"]
+    G --> H["doubao-seed-1-6-thinking-250715 合并"]
+    H --> I["构造 final_question / final_answer"]
+    I --> J["qa_pairs.jsonl"]
 ```
 
 **需要**：
@@ -306,6 +315,9 @@ flowchart LR
 - 输入：`data/novel_eval/seeds.jsonl`
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/domain_multihop_synthesis.py`
+- 环境文件：`.env` 中填写 `ARK_API_KEY`
+- 默认 Provider：`doubao`
+- 默认合并模型：`doubao-seed-1-6-thinking-250715`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
 
 **怎么做**：
@@ -334,7 +346,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 | `hop_count` | 需要的推理跳数 | reward 搜索充分性、hop-aware 指标 |
 | `qa_type` | 多跳题型 | 评测分桶、错误诊断 |
 | `subset` | 样本子集标签 | train/test 统计、实验对比 |
-| `hops[]` | 每跳 question/answer/doc_chunk_id/qa_type | Oracle traces、`gold_chunks`、hop recall |
+| `hops[]` | 每跳 question/answer/doc_chunk_id/qa_type/search_tools | Oracle traces、`gold_chunks`、hop recall |
 | `answer_aliases` | 可接受答案别名 | reward correctness、Judge 打分 |
 
 ## Step 5: 清洗、划分和 answer aliases 增强
