@@ -3,7 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from agentic_rag_rl.io import load_chunks
-from agentic_rag_rl.synthesis import clean_multihop_examples, generate_seed_questions, synthesize_multihop_examples
+from agentic_rag_rl.synthesis import (
+    clean_multihop_examples,
+    generate_seed_questions,
+    iter_seed_question_batches,
+    synthesize_multihop_examples,
+)
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_novel"
@@ -45,6 +50,15 @@ def test_generate_seed_questions_uses_llm_client() -> None:
             "qa_type": "character_behavior",
         }
     ]
+
+
+def test_iter_seed_question_batches_yields_per_chunk() -> None:
+    chunks = load_chunks(DATA_DIR / "corpus.jsonl")[:2]
+    client = FakeLLMClient()
+    batches = list(iter_seed_question_batches(chunks, client, max_per_chunk=1))
+
+    assert len(batches) == 2
+    assert [batch[0]["doc_chunk_id"] for batch in batches] == [chunk.chunk_id for chunk in chunks]
 
 
 def test_synthesize_and_clean_multihop_examples() -> None:

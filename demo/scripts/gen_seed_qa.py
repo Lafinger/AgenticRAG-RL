@@ -8,10 +8,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from agentic_rag_rl.io import load_chunks, write_jsonl
 from agentic_rag_rl.env import load_env_file
+from agentic_rag_rl.io import load_chunks, write_jsonl_record
 from agentic_rag_rl.llm_client import DEFAULT_LLM_PROVIDER, create_llm_client, get_doubao_base_url, get_doubao_model
-from agentic_rag_rl.synthesis import generate_seed_questions
+from agentic_rag_rl.synthesis import iter_seed_question_batches
 
 
 def _configure_logging(level: str) -> None:
@@ -61,10 +61,18 @@ def main() -> None:
         model=get_doubao_model(args.model),
         base_url=get_doubao_base_url(args.base_url),
     )
-    seeds = generate_seed_questions(chunks, llm_client, max_per_chunk=args.max_per_chunk)
-    write_jsonl(seeds, args.output)
-    logging.info("gen_seed_qa.done output=%s seed_count=%s", args.output, len(seeds))
-    print(f"seed_count={len(seeds)}")
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    seed_count = 0
+    with output_path.open("w", encoding="utf-8", newline="") as handle:
+        for seed_batch in iter_seed_question_batches(chunks, llm_client, max_per_chunk=args.max_per_chunk):
+            for seed in seed_batch:
+                write_jsonl_record(handle, seed)
+                seed_count += 1
+            handle.flush()
+            logging.info("gen_seed_qa.appended batch_count=%s total_seed_count=%s", len(seed_batch), seed_count)
+    logging.info("gen_seed_qa.done output=%s seed_count=%s", args.output, seed_count)
+    print(f"seed_count={seed_count}")
 
 
 if __name__ == "__main__":

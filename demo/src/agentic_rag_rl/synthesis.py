@@ -18,6 +18,17 @@ def _first_sentence(text: str, max_chars: int = 80) -> str:
 
 
 def generate_seed_questions(chunks: Iterable[Chunk], llm_client: LLMClient, max_per_chunk: int = 2) -> list[dict[str, Any]]:
+    seeds: list[dict[str, Any]] = []
+    for seed_batch in iter_seed_question_batches(chunks, llm_client, max_per_chunk=max_per_chunk):
+        seeds.extend(seed_batch)
+    return seeds
+
+
+def iter_seed_question_batches(
+    chunks: Iterable[Chunk],
+    llm_client: LLMClient,
+    max_per_chunk: int = 2,
+) -> Iterable[list[dict[str, Any]]]:
     chunk_list = list(chunks)
     seeds: list[dict[str, Any]] = []
     logger.info("seed_qa_generation.start chunk_count=%s max_per_chunk=%s", len(chunk_list), max_per_chunk)
@@ -40,17 +51,18 @@ def generate_seed_questions(chunks: Iterable[Chunk], llm_client: LLMClient, max_
                 chunk.chunk_id,
             )
             raise
+        batch: list[dict[str, Any]] = []
         for item in items:
-            seeds.append(
-                {
-                    "question": item["question"],
-                    "answer": item["answer"],
-                    "doc_chunk_id": chunk.chunk_id,
-                    "tool": "keyword_search",
-                    "entities": item.get("entities", []),
-                    "qa_type": item.get("qa_type", "inference"),
-                }
-            )
+            seed = {
+                "question": item["question"],
+                "answer": item["answer"],
+                "doc_chunk_id": chunk.chunk_id,
+                "tool": "keyword_search",
+                "entities": item.get("entities", []),
+                "qa_type": item.get("qa_type", "inference"),
+            }
+            batch.append(seed)
+            seeds.append(seed)
         logger.info(
             "seed_qa_generation.chunk_done index=%s/%s chunk_id=%s generated_count=%s total_seed_count=%s",
             index,
@@ -59,8 +71,8 @@ def generate_seed_questions(chunks: Iterable[Chunk], llm_client: LLMClient, max_
             len(items),
             len(seeds),
         )
+        yield batch
     logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
-    return seeds
 
 
 def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int) -> list[dict[str, Any]]:
