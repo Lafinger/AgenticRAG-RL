@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from agentic_rag_rl.io import load_chunks, write_jsonl
+from agentic_rag_rl.llm_client import DEFAULT_DOUBAO_BASE_URL, DEFAULT_DOUBAO_MODEL, DoubaoSeedQAClient
 from agentic_rag_rl.synthesis import generate_seed_questions
 
 
@@ -16,10 +17,17 @@ def main() -> None:
     parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     parser.add_argument("--output", default=str(ROOT / "data" / "novel_eval" / "seeds.jsonl"))
     parser.add_argument("--max-per-chunk", type=int, default=2)
+    parser.add_argument("--max-chunks", type=int)
+    parser.add_argument("--model", default=DEFAULT_DOUBAO_MODEL)
+    parser.add_argument("--base-url", default=DEFAULT_DOUBAO_BASE_URL)
+    parser.add_argument("--api-key")
     args = parser.parse_args()
 
     chunks = load_chunks(args.corpus)
-    seeds = generate_seed_questions(chunks, max_per_chunk=args.max_per_chunk)
+    if args.max_chunks is not None:
+        chunks = chunks[: args.max_chunks]
+    client = DoubaoSeedQAClient(api_key=args.api_key, model=args.model, base_url=args.base_url)
+    seeds = generate_seed_questions(chunks, client, max_per_chunk=args.max_per_chunk)
     write_jsonl(seeds, args.output)
     print(f"seed_count={len(seeds)}")
 

@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable
+from typing import Any, Protocol
 
 from .types import Chunk
 
 
-NOVEL_ENTITIES = ["孙少平", "郝红梅", "双水村", "孙少安", "田润叶", "田晓霞", "金波", "孙玉厚", "王满银", "兰花", "田福堂"]
-
-
-def _contains_all(text: str, terms: Iterable[str]) -> bool:
-    return all(term in text for term in terms)
+class SeedQAClient(Protocol):
+    def generate_seed_qa(self, chunk_text: str, *, max_items: int) -> list[dict[str, Any]]:
+        ...
 
 
 def _first_sentence(text: str, max_chars: int = 80) -> str:
@@ -18,45 +16,20 @@ def _first_sentence(text: str, max_chars: int = 80) -> str:
     return sentence[:max_chars].strip(" ，,；;") or text[:max_chars]
 
 
-def _seed(question: str, answer: str, chunk: Chunk, qa_type: str) -> dict[str, Any]:
-    aliases = chunk.metadata.get("character_aliases", [])
-    return {
-        "question": question,
-        "answer": answer,
-        "doc_chunk_id": chunk.chunk_id,
-        "tool": "keyword_search",
-        "entities": [alias for alias in aliases if alias in question or alias in answer],
-        "qa_type": qa_type,
-    }
-
-
-def generate_seed_questions(chunks: Iterable[Chunk], max_per_chunk: int = 2) -> list[dict[str, Any]]:
+def generate_seed_questions(chunks: Iterable[Chunk], llm_client: SeedQAClient, max_per_chunk: int = 2) -> list[dict[str, Any]]:
     seeds: list[dict[str, Any]] = []
     for chunk in chunks:
-        generated = 0
-        text = chunk.text
-
-        if _contains_all(text, ["孙少平", "郝红梅"]) and generated < max_per_chunk:
-            answer = "他们都很贫穷，常常最后去取黑高粱面馍。"
-            seeds.append(_seed("孙少平和郝红梅在学校有什么共同处境？", answer, chunk, "character_relation"))
-            generated += 1
-
-        if "孙少平" in text and ("艰难" in text or "高粱面馍" in text or "贫穷" in text) and generated < max_per_chunk:
-            seeds.append(_seed("孙少平在学校生活艰难的表现是什么？", "每顿饭常常最后才去取两个黑高粱面馍。", chunk, "character_behavior"))
-            generated += 1
-
-        if _contains_all(text, ["双水村", "东拉河", "哭咽河"]) and generated < max_per_chunk:
-            seeds.append(_seed("双水村为什么叫双水村？", "因为有东拉河和哭咽河。", chunk, "place_origin"))
-            generated += 1
-
-        if _contains_all(text, ["孙少安", "田润叶"]) and generated < max_per_chunk:
-            seeds.append(_seed("孙少安和田润叶是什么关系？", "小时候是同班同学。", chunk, "character_relation"))
-            generated += 1
-
-        aliases = [alias for alias in NOVEL_ENTITIES if alias in text]
-        if aliases and generated < max_per_chunk:
-            entity = aliases[0]
-            seeds.append(_seed(f"这段文字主要写到了谁？", entity, chunk, "character_identity"))
+        for item in llm_client.generate_seed_qa(chunk.text, max_items=max_per_chunk):
+            seeds.append(
+                {
+                    "question": item["question"],
+                    "answer": item["answer"],
+                    "doc_chunk_id": chunk.chunk_id,
+                    "tool": "keyword_search",
+                    "entities": item.get("entities", []),
+                    "qa_type": item.get("qa_type", "inference"),
+                }
+            )
     return seeds
 
 

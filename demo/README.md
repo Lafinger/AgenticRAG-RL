@@ -225,30 +225,33 @@ uv run python .\scripts\build_index.py `
 
 ## Step 3: 生成小说域 seed QA
 
-**目标**：从 chunk 中规则化抽取基础问答，覆盖人物身份、人物关系、地点归属、事件原因、事件结果和人物行为。
+**目标**：通过豆包大模型 `doubao-seed-2-0-pro-260215` 从 chunk 中生成基础问答，覆盖人物身份、人物关系、地点归属、事件原因、事件结果和人物行为。
 
 **详细说明**：
 
-- `gen_seed_qa.py` 逐条读取 corpus chunk，并调用 `generate_seed_questions` 做规则抽取。
-- 抽取逻辑会优先识别已知人物、地点和关键事件模式，例如孙少平、郝红梅、双水村、东拉河、哭咽河。
+- `gen_seed_qa.py` 逐条读取 corpus chunk，并把 chunk 文本发送给豆包模型生成 seed QA。
+- 模型必须只基于当前 chunk 生成问题，输出 JSON 数组，字段为 `question/answer/qa_type/entities`。
+- 脚本会把模型输出规范化，并补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
 - 每条 seed QA 都绑定一个 `doc_chunk_id`，表示这个问题的答案可以从哪个 chunk 中获得。
-- seed QA 是低成本的单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
+- seed QA 是单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
 
 ```mermaid
 flowchart TD
-    A["novel corpus chunks"] --> B["实体匹配"]
-    B --> C["人物关系 seed"]
-    B --> D["地点由来 seed"]
-    B --> E["人物行为 seed"]
-    C --> F["seeds.jsonl"]
-    D --> F
-    E --> F
+    A["novel corpus chunks"] --> B["gen_seed_qa.py"]
+    B --> C["DoubaoSeedQAClient"]
+    C --> D["doubao-seed-2-0-pro-260215"]
+    D --> E["JSON seed QA"]
+    E --> F["补充 doc_chunk_id / tool"]
+    F --> G["seeds.jsonl"]
 ```
 
 **需要**：
 
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/gen_seed_qa.py`
+- API Key：环境变量 `ARK_API_KEY` 或 `DOUBAO_API_KEY`
+- 默认模型：`doubao-seed-2-0-pro-260215`
+- 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
 
 **怎么做**：
@@ -256,14 +259,15 @@ flowchart TD
 ```powershell
 uv run python .\scripts\gen_seed_qa.py `
   --corpus .\data\novel\corpus.jsonl `
-  --output .\data\novel_eval\seeds.jsonl
+  --output .\data\novel_eval\seeds.jsonl `
+  --model doubao-seed-2-0-pro-260215
 ```
 
 **能拿到的结果**：
 
 - `data/novel_eval/seeds.jsonl`
 - 每条 seed 包含 `question/answer/doc_chunk_id/tool/entities/qa_type`
-- 样例实体会覆盖 `孙少平`、`郝红梅`、`双水村`、`孙少安`、`田润叶`
+- 每条 seed 的 `question/answer/qa_type/entities` 来自豆包模型，`doc_chunk_id/tool` 由脚本补齐
 
 **数据结构与字段用途**：
 
@@ -899,12 +903,18 @@ uv run python .\scripts\run_cloud_eval.py `
 
 如果只想验证本机闭环，按下面顺序执行即可：
 
+执行到 `gen_seed_qa.py` 前，需要先在当前 PowerShell 会话中设置豆包 API Key：
+
+```powershell
+$env:ARK_API_KEY = "你的火山方舟 API Key"
+```
+
 ```powershell
 Set-Location C:\Workspace\AI\Learning\AgenticRAG-RL\demo
 uv run python -m pytest
 uv run python .\scripts\parse_text_corpus.py --input .\data\original_data\平凡的世界utf8.txt --output .\data\novel\corpus.jsonl
 uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes
-uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
+uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl --model doubao-seed-2-0-pro-260215
 uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50
 uv run python .\scripts\build_oracle_traces.py --qa .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\traces_oracle_zh.jsonl --use-zh
 uv run python .\scripts\trace_to_sft.py --input .\data\novel_eval\traces_oracle_zh.jsonl --output-dir .\data\novel_eval\sft --lang zh
