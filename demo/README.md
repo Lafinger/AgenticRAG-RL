@@ -238,6 +238,8 @@ uv run python .\scripts\build_index.py `
 - 脚本会把模型输出规范化，并补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
 - 如果模型返回旧类型，脚本会映射到新的 5 类，例如 `character_relation -> relation`、`object_reference -> object`、`character_behavior -> action_result`。
 - 每条 seed QA 都绑定一个 `doc_chunk_id`，表示这个问题的答案可以从哪个 chunk 中获得。
+- 脚本默认启用断点续写：如果 `seeds.jsonl` 已存在，会读取已有 `doc_chunk_id`，跳过已经生成过 seed 的 chunk，只处理剩余 chunk。
+- 如果要清空旧结果重新生成，需要显式添加 `--overwrite`。
 - seed QA 是单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
 
 ```mermaid
@@ -266,6 +268,15 @@ flowchart TD
 uv run python .\scripts\gen_seed_qa.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\seeds.jsonl
+```
+
+失败后继续执行同一条命令即可续写；如果确认要从头生成，执行：
+
+```powershell
+uv run python .\scripts\gen_seed_qa.py `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\seeds.jsonl `
+  --overwrite
 ```
 
 **能拿到的结果**：
@@ -310,6 +321,8 @@ uv run python .\scripts\gen_seed_qa.py `
 - 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 `qa_type` 继承 seed QA 的 5 类类型，用于构造 Oracle trace、计算 `gold_chunks` 和诊断检索路径。
 - `answer_aliases` 会记录可接受答案变体，降低训练和评测中因表述不同造成的误判。
 - `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
+- 脚本默认启用断点续写：如果 `qa_pairs.jsonl` 已存在，会读取已有样本数量和 hop 链路签名，只补齐到 `--target-count`，并在调用豆包合并模型前跳过已经生成过的链路。
+- 如果要清空旧结果重新合成，需要显式添加 `--overwrite`。
 
 ```mermaid
 flowchart TD
@@ -343,6 +356,17 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50
+```
+
+失败后继续执行同一条命令即可续写；如果确认要从头合成，执行：
+
+```powershell
+uv run python .\scripts\domain_multihop_synthesis.py `
+  --seeds .\data\novel_eval\seeds.jsonl `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\qa_pairs.jsonl `
+  --target-count 50 `
+  --overwrite
 ```
 
 **能拿到的结果**：

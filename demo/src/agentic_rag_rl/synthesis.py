@@ -206,25 +206,48 @@ def synthesize_multihop_examples(
     chunks: list[Chunk],
     target_count: int = 100,
     merge_llm_client: LLMClient | None = None,
+    skip_chain_keys: set[str] | None = None,
+    existing_questions: set[str] | None = None,
 ) -> list[dict[str, Any]]:
+    return list(
+        iter_synthesize_multihop_examples(
+            seeds,
+            chunks,
+            target_count=target_count,
+            merge_llm_client=merge_llm_client,
+            skip_chain_keys=skip_chain_keys,
+            existing_questions=existing_questions,
+        )
+    )
+
+
+def iter_synthesize_multihop_examples(
+    seeds: list[dict[str, Any]],
+    chunks: list[Chunk],
+    target_count: int = 100,
+    merge_llm_client: LLMClient | None = None,
+    skip_chain_keys: set[str] | None = None,
+    existing_questions: set[str] | None = None,
+) -> Iterable[dict[str, Any]]:
     logger.info(
         "multihop_synthesis.start seed_count=%s chunk_count=%s target_count=%s",
         len(seeds),
         len(chunks),
         target_count,
     )
-    examples: list[dict[str, Any]] = []
     retriever = HybridRetriever(chunks)
     seeds_by_chunk = _group_seeds_by_chunk(seeds)
-    seen_questions: set[str] = set()
+    seen_questions = set(existing_questions or set())
+    seen_chain_keys = set(skip_chain_keys or set())
+    generated_count = 0
     extension_attempt_count = 0
 
     for seed in seeds:
-        if len(examples) >= target_count:
+        if generated_count >= target_count:
             break
         chain = [_seed_to_hop(seed, hop_idx=1)]
         for hop_idx in range(2, 4):
-            if len(examples) >= target_count:
+            if generated_count >= target_count:
                 break
             extension_attempt_count += 1
             next_seed = _select_next_seed(chain, seeds_by_chunk, retriever)
@@ -236,25 +259,34 @@ def synthesize_multihop_examples(
                 )
                 break
             chain.append(_seed_to_hop(next_seed, hop_idx=hop_idx))
+            chain_key = multihop_chain_key(chain)
+            if chain_key in seen_chain_keys:
+                logger.info(
+                    "multihop_synthesis.skip_existing_chain hop_count=%s chain_key=%s",
+                    len(chain),
+                    chain_key,
+                )
+                continue
+            seen_chain_keys.add(chain_key)
             example = _build_stepwise_example(chain, merge_llm_client=merge_llm_client)
             if example["final_question"] in seen_questions:
                 continue
             seen_questions.add(example["final_question"])
-            examples.append(example)
+            generated_count += 1
             logger.info(
                 "multihop_synthesis.added subset=%s total_count=%s target_count=%s",
                 example["subset"],
-                len(examples),
+                generated_count,
                 target_count,
             )
+            yield example
 
     logger.info(
         "multihop_synthesis.done generated_count=%s target_count=%s extension_attempt_count=%s",
-        len(examples),
+        generated_count,
         target_count,
         extension_attempt_count,
     )
-    return examples
 
 
 def _group_seeds_by_chunk(seeds: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
@@ -321,6 +353,10 @@ def _result_search_tools(result: RetrievalResult) -> list[str]:
     if "dense" in result.source:
         tools.append("dense_search")
     return tools or ["hybrid_search"]
+
+
+def multihop_chain_key(hops: Iterable[dict[str, Any]]) -> str:
+    return "|".join(f"{hop.get('doc_chunk_id', '')}::{hop.get('question', '')}" for hop in hops)
 
 
 def _build_stepwise_example(chain: list[dict[str, Any]], merge_llm_client: LLMClient | None = None) -> dict[str, Any]:

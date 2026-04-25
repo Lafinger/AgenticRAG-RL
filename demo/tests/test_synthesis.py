@@ -7,9 +7,12 @@ from agentic_rag_rl.synthesis import (
     _build_seed_qa_messages,
     clean_multihop_examples,
     generate_seed_questions,
+    iter_synthesize_multihop_examples,
     iter_seed_question_batches,
+    multihop_chain_key,
     synthesize_multihop_examples,
 )
+from agentic_rag_rl.types import Chunk
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_novel"
@@ -102,3 +105,54 @@ def test_synthesize_and_clean_multihop_examples() -> None:
     assert cleaned[0]["hop_count"] >= 2
     assert all(hop["doc_chunk_id"] for hop in cleaned[0]["hops"])
     assert all(hop["qa_type"] == "action_result" for hop in cleaned[0]["hops"])
+
+
+def test_multihop_resume_skips_existing_chain_before_llm_call() -> None:
+    chunks = [
+        Chunk(chunk_id="c1", title="1", text="孙少平在学校取黑高粱面馍。"),
+        Chunk(chunk_id="c2", title="2", text="孙少平在学校生活艰难。"),
+    ]
+    seeds = [
+        {
+            "question": "孙少平取了什么？",
+            "answer": "黑高粱面馍",
+            "doc_chunk_id": "c1",
+            "tool": "keyword_search",
+            "qa_type": "object",
+        },
+        {
+            "question": "孙少平在哪里生活艰难？",
+            "answer": "学校",
+            "doc_chunk_id": "c2",
+            "tool": "keyword_search",
+            "qa_type": "place",
+        },
+    ]
+    skip_chain_keys = {
+        multihop_chain_key(
+            [
+                {"doc_chunk_id": "c1", "question": "孙少平取了什么？"},
+                {"doc_chunk_id": "c2", "question": "孙少平在哪里生活艰难？"},
+            ]
+        ),
+        multihop_chain_key(
+            [
+                {"doc_chunk_id": "c2", "question": "孙少平在哪里生活艰难？"},
+                {"doc_chunk_id": "c1", "question": "孙少平取了什么？"},
+            ]
+        ),
+    }
+    merge_client = FakeMergeLLMClient()
+
+    examples = list(
+        iter_synthesize_multihop_examples(
+            seeds,
+            chunks,
+            target_count=1,
+            merge_llm_client=merge_client,
+            skip_chain_keys=skip_chain_keys,
+        )
+    )
+
+    assert examples == []
+    assert merge_client.calls == []
