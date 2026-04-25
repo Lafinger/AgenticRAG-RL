@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from agentic_rag_rl.io import load_chunks, write_jsonl
 from agentic_rag_rl.env import load_env_file
-from agentic_rag_rl.llm_client import DoubaoSeedQAClient, get_doubao_base_url, get_doubao_model
+from agentic_rag_rl.llm_client import DEFAULT_LLM_PROVIDER, create_llm_client, get_doubao_base_url, get_doubao_model
 from agentic_rag_rl.synthesis import generate_seed_questions
 
 
@@ -29,6 +29,7 @@ def main() -> None:
     parser.add_argument("--max-per-chunk", type=int, default=2)
     parser.add_argument("--max-chunks", type=int)
     parser.add_argument("--env-file", default=str(ROOT / ".env"))
+    parser.add_argument("--llm-provider", default=DEFAULT_LLM_PROVIDER, choices=["doubao"])
     parser.add_argument("--model")
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
@@ -48,17 +49,19 @@ def main() -> None:
     if args.max_chunks is not None:
         chunks = chunks[: args.max_chunks]
     logging.info(
-        "gen_seed_qa.loaded_chunks chunk_count=%s model=%s base_url=%s",
+        "gen_seed_qa.loaded_chunks chunk_count=%s provider=%s model=%s base_url=%s",
         len(chunks),
+        args.llm_provider,
         get_doubao_model(args.model),
         get_doubao_base_url(args.base_url),
     )
-    client = DoubaoSeedQAClient(
+    llm_client = create_llm_client(
+        args.llm_provider,
         api_key=args.api_key,
         model=get_doubao_model(args.model),
         base_url=get_doubao_base_url(args.base_url),
     )
-    seeds = generate_seed_questions(chunks, client, max_per_chunk=args.max_per_chunk)
+    seeds = generate_seed_questions(chunks, llm_client, max_per_chunk=args.max_per_chunk)
     write_jsonl(seeds, args.output)
     logging.info("gen_seed_qa.done output=%s seed_count=%s", args.output, len(seeds))
     print(f"seed_count={len(seeds)}")

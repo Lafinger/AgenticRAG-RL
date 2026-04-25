@@ -1,18 +1,15 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
 from collections.abc import Iterable
-from typing import Any, Protocol
+from typing import Any
 
+from .llm_client import ChatMessage, LLMClient
 from .types import Chunk
 
 logger = logging.getLogger(__name__)
-
-
-class SeedQAClient(Protocol):
-    def generate_seed_qa(self, chunk_text: str, *, max_items: int) -> list[dict[str, Any]]:
-        ...
 
 
 def _first_sentence(text: str, max_chars: int = 80) -> str:
@@ -20,7 +17,7 @@ def _first_sentence(text: str, max_chars: int = 80) -> str:
     return sentence[:max_chars].strip(" ，,；;") or text[:max_chars]
 
 
-def generate_seed_questions(chunks: Iterable[Chunk], llm_client: SeedQAClient, max_per_chunk: int = 2) -> list[dict[str, Any]]:
+def generate_seed_questions(chunks: Iterable[Chunk], llm_client: LLMClient, max_per_chunk: int = 2) -> list[dict[str, Any]]:
     chunk_list = list(chunks)
     seeds: list[dict[str, Any]] = []
     logger.info("seed_qa_generation.start chunk_count=%s max_per_chunk=%s", len(chunk_list), max_per_chunk)
@@ -34,7 +31,7 @@ def generate_seed_questions(chunks: Iterable[Chunk], llm_client: SeedQAClient, m
             len(chunk.text),
         )
         try:
-            items = llm_client.generate_seed_qa(chunk.text, max_items=max_per_chunk)
+            items = generate_seed_qa(llm_client, chunk.text, max_items=max_per_chunk)
         except Exception:
             logger.exception(
                 "seed_qa_generation.chunk_failed index=%s/%s chunk_id=%s",
@@ -64,6 +61,81 @@ def generate_seed_questions(chunks: Iterable[Chunk], llm_client: SeedQAClient, m
         )
     logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
     return seeds
+
+
+def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int) -> list[dict[str, Any]]:
+    logger.info("seed_qa.start max_items=%s chunk_chars=%s", max_items, len(chunk_text))
+    content = llm_client.chat(_build_seed_qa_messages(chunk_text, max_items=max_items), temperature=0.2)
+    records = _extract_json_array(content)
+    normalized_records = [
+        _normalize_seed_qa_record(record) for record in records[:max_items] if _is_usable_seed_qa_record(record)
+    ]
+    logger.info(
+        "seed_qa.done raw_count=%s returned_count=%s response_chars=%s",
+        len(records),
+        len(normalized_records),
+        len(content),
+    )
+    return normalized_records
+
+
+def _build_seed_qa_messages(chunk_text: str, *, max_items: int) -> list[ChatMessage]:
+    system_prompt = (
+        "你是中文小说阅读问答数据构造专家。"
+        "请只基于给定片段生成可由该片段直接回答的 seed QA。"
+        "问题类型应覆盖人物身份、人物关系、地点归属、事件原因、事件结果、人物行为。"
+        "只能输出 JSON 数组，不要输出解释。"
+    )
+    user_prompt = f"""请为下面《平凡的世界》片段生成最多 {max_items} 条 seed QA。
+
+要求：
+1. 每条必须能从片段中直接找到证据。
+2. answer 要短，避免长段摘抄。
+3. qa_type 只能取 character_identity、character_relation、place_origin、event_cause、event_result、character_behavior、inference。
+4. entities 写出问题涉及的人物、地点或事件关键词。
+5. 输出 JSON 数组，字段为 question、answer、qa_type、entities。
+
+片段：
+{chunk_text}
+"""
+    return [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
+
+
+def _extract_json_array(text: str) -> list[dict[str, Any]]:
+    cleaned = text.strip()
+    fenced = re.search(r"```(?:json)?\s*(\[.*?\])\s*```", cleaned, flags=re.DOTALL)
+    if fenced:
+        cleaned = fenced.group(1)
+    else:
+        start = cleaned.find("[")
+        end = cleaned.rfind("]")
+        if start >= 0 and end > start:
+            cleaned = cleaned[start : end + 1]
+
+    payload = json.loads(cleaned)
+    if not isinstance(payload, list):
+        raise ValueError("LLM seed QA response must be a JSON array.")
+    if not all(isinstance(item, dict) for item in payload):
+        raise ValueError("Every seed QA item must be a JSON object.")
+    return payload
+
+
+def _is_usable_seed_qa_record(record: dict[str, Any]) -> bool:
+    return bool(str(record.get("question", "")).strip()) and bool(str(record.get("answer", "")).strip())
+
+
+def _normalize_seed_qa_record(record: dict[str, Any]) -> dict[str, Any]:
+    entities = record.get("entities", [])
+    if isinstance(entities, str):
+        entities = [entities]
+    if not isinstance(entities, list):
+        entities = []
+    return {
+        "question": str(record.get("question", "")).strip(),
+        "answer": str(record.get("answer", "")).strip(),
+        "qa_type": str(record.get("qa_type", "inference")).strip() or "inference",
+        "entities": [str(entity).strip() for entity in entities if str(entity).strip()],
+    }
 
 
 def synthesize_multihop_examples(seeds: list[dict[str, Any]], chunks: list[Chunk], target_count: int = 100) -> list[dict[str, Any]]:

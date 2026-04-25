@@ -250,6 +250,7 @@ flowchart TD
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/gen_seed_qa.py`
 - 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY`
+- 默认 Provider：`doubao`
 - 默认模型：`doubao-seed-2-0-pro-260215`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`

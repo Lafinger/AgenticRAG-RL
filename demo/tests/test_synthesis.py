@@ -9,28 +9,32 @@ from agentic_rag_rl.synthesis import clean_multihop_examples, generate_seed_ques
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "smoke_novel"
 
 
-class FakeSeedQAClient:
+class FakeLLMClient:
     def __init__(self) -> None:
-        self.calls: list[str] = []
+        self.calls: list[list[dict[str, str]]] = []
 
-    def generate_seed_qa(self, chunk_text: str, *, max_items: int) -> list[dict[str, object]]:
-        self.calls.append(chunk_text)
-        return [
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del temperature
+        self.calls.append(messages)
+        return """```json
+[
             {
                 "question": "孙少平在学校生活艰难的表现是什么？",
                 "answer": "最后去取黑高粱面馍。",
                 "qa_type": "character_behavior",
-                "entities": ["孙少平"],
+                "entities": ["孙少平"]
             }
-        ][:max_items]
+]
+```"""
 
 
 def test_generate_seed_questions_uses_llm_client() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
-    client = FakeSeedQAClient()
+    client = FakeLLMClient()
     seeds = generate_seed_questions(chunks[:1], client, max_per_chunk=1)
 
     assert len(client.calls) == 1
+    assert "平凡的世界" in client.calls[0][1]["content"]
     assert seeds == [
         {
             "question": "孙少平在学校生活艰难的表现是什么？",
@@ -45,7 +49,7 @@ def test_generate_seed_questions_uses_llm_client() -> None:
 
 def test_synthesize_and_clean_multihop_examples() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
-    seeds = generate_seed_questions(chunks, FakeSeedQAClient(), max_per_chunk=1)
+    seeds = generate_seed_questions(chunks, FakeLLMClient(), max_per_chunk=1)
     examples = synthesize_multihop_examples(seeds, chunks, target_count=2)
     cleaned = clean_multihop_examples(examples, {chunk.chunk_id for chunk in chunks})
 
