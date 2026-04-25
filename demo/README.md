@@ -391,6 +391,17 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 | `hops[]` | 每跳 question/answer/doc_chunk_id/qa_type/search_tools，hop 级 `qa_type` 继承 seed QA 的 5 类类型 | Oracle traces、`gold_chunks`、hop recall |
 | `answer_aliases` | 可接受答案别名 | reward correctness、Judge 打分 |
 
+**多跳合并 Prompt 核心要求**：
+
+| 约束 | 小说域标准 |
+| --- | --- |
+| 自然性 | `final_question` 必须是自然中文问题，不能直接暴露“第 1 步 / 第 2 步 / hop”这类合成痕迹 |
+| 多跳必要性 | `final_question` 必须需要全部 hop 才能回答，不能退化为只看最后一跳即可回答的单跳题 |
+| 答案短化 | `final_answer` 默认使用最后一跳 `answer`，除非链路逻辑要求更准确的短答案 |
+| 类型固定 | 合并后的多跳样本 `qa_type` 固定为 `inference`，hop 级类型仍继承 seed QA 的 5 类 |
+| 别名约束 | `answer_aliases` 给出 1-3 个可接受短答案，不能引入与标准答案冲突的新事实 |
+| 输出格式 | 只能输出 JSON 对象，字段为 `final_question/final_answer/qa_type/answer_aliases`，不能输出解释文本 |
+
 ## Step 5: 清洗、划分和 answer aliases 增强
 
 **目标**：清理非法样本，按 train/test 划分，并增强答案别名，减少评测和 reward 对表述差异的误判。
@@ -400,6 +411,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 - `clean_synthesis.py` 会检查每条多跳样本是否至少包含两个 hop，并确认每个 `doc_chunk_id` 都能在 corpus 中找到。
 - `split_train_test.py` 会把清洗后的样本固定划分为训练集和测试集，便于后续重复实验对比。
 - `gen_enhanced_aliases.py` 会基于标准答案和已有别名生成增强别名集合。
+- `gen_enhanced_aliases.py` 当前是规则处理，不调用豆包或其他大模型，因此没有独立 Prompt。
 - 该步骤的核心作用是把“能生成”的样本变成“适合训练和评测”的样本。
 
 ```mermaid
@@ -509,6 +521,17 @@ uv run python .\scripts\build_oracle_traces.py `
 | `<tool_response>` | 检索证据返回 | 训练模型 grounded answer |
 | `<answer>` | 最终答案标签 | reward 抽取答案、评测抽取答案 |
 
+**Oracle Trace Prompt / 协议核心要求**：
+
+| 约束 | 标准 |
+| --- | --- |
+| Agent 角色 | system prompt 固定为“中文小说阅读问答 Agent”，任务是逐步搜索人物、地点、事件和关系证据 |
+| 工具调用 | assistant 使用 Hermes 风格 `<tool_call>{"name": "...", "arguments": {"query": "..."}}</tool_call>` |
+| 工具名称 | 只能使用 `keyword_search`、`dense_search`、`hybrid_search` 三类检索工具 |
+| 工具响应 | tool 消息使用 `<tool_response>...</tool_response>` 包装检索到的 chunk 文本 |
+| 逐跳顺序 | Oracle trace 按 `hops[]` 的 gold 顺序调用工具，保证每跳都有可追溯证据 |
+| 最终答案 | 最后一条 assistant 消息必须用 `<answer>...</answer>` 包裹最终答案 |
+
 ## Step 7: 转换 SFT 训练数据
 
 **目标**：把 Oracle traces 转换成 ReAct/SFT 记录和 ShareGPT 格式，供 LLaMA-Factory 使用。
@@ -559,6 +582,16 @@ uv run python .\scripts\trace_to_sft.py `
 | `lf_react.jsonl` | ShareGPT 兼容副本 | 兼容不同数据入口命名 | SFT 训练 |
 | `messages[].role` | system/user/assistant | 标识对话角色 | tokenizer / template |
 | `messages[].content` | 消息正文 | 包含工具调用和答案标签 | SFT loss |
+
+**SFT Prompt / 模板核心要求**：
+
+| 约束 | 标准 |
+| --- | --- |
+| 模板一致 | SFT 使用 `qwen3_nothink` 模板，和后续 GRPO 共用同一套 chat / tool calling 协议 |
+| System prompt | 保留中文小说阅读问答 Agent system prompt，不在转换中改写任务角色 |
+| 工具协议 | 保留 `<tool_call>`、`<tool_response>` 原文，避免训练和 rollout 协议不一致 |
+| 答案协议 | 保留 `<answer>...</answer>`，后续 reward 和 eval 都依赖该标签抽取最终答案 |
+| 消息角色 | 只保留训练框架可消费的 `system/user/assistant` 消息结构，工具返回会转换成用户侧上下文 |
 
 ## Step 8: 导出 LLaMA-Factory 数据目录
 
@@ -669,6 +702,16 @@ uv run python .\scripts\prepare_agentic_grpo_data.py `
 | `reward_model.ground_truth.gold_chunks` | 标准证据 chunk | hop recall / faithfulness |
 | `reward_model.ground_truth.hop_count` | 标准跳数 | 搜索充分性约束 |
 
+**GRPO Prompt 核心要求**：
+
+| 约束 | 标准 |
+| --- | --- |
+| Raw chat | `prompt` 必须保留原始 chat 结构，包含 system prompt 和用户最终问题 |
+| Agent 路由 | `agent_name` 固定为 `tool_agent`，让 `verl` 使用带工具调用的 agent loop |
+| System prompt | 与 SFT 一致：模型必须通过文本检索工具逐步搜索证据，最后用 `<answer>` 输出 |
+| 监督目标 | `reward_model.ground_truth` 必须包含 `target/question/answer_aliases/gold_chunks/hop_count` |
+| 训练边界 | prompt 不直接泄露 gold chunks；gold chunks 只进入 reward ground truth，不进入用户问题 |
+
 ## Step 10: 启动小说检索服务
 
 **目标**：为 Agentic rollout / GRPO 多轮工具调用提供 HTTP 检索工具服务。
@@ -723,6 +766,16 @@ uv run python .\training\tools\retrieval_server.py `
 | `results[].chunk_id` | corpus chunk ID | 证据 ID | hop recall、reward |
 | `results[].text` | 证据文本 | 回答依据 | faithfulness、Judge |
 | `novel_tool_config.yaml` | tool name / endpoint / payload | `verl` 工具配置 | GRPO Stage1/2/3 |
+
+**Tool Calling Prompt / 工具约束**：
+
+| 约束 | 标准 |
+| --- | --- |
+| `keyword_search` | 用于精确匹配人物、地点、事件关键词 |
+| `dense_search` | 用于语义匹配小说片段 |
+| `hybrid_search` | 用于同时结合关键词和语义检索，并做融合排序 |
+| 参数格式 | 每个工具只接收 `{"query": "..."}`，避免训练和服务端 schema 漂移 |
+| 返回证据 | 工具返回必须包含 `chunk_id/title/text/score/metadata`，供模型回答和 reward 诊断使用 |
 
 ## Step 11: 本机 smoke 评测
 
@@ -889,6 +942,16 @@ flowchart TD
 | `reward_agentic_rag.py` | `compute_score` | 自定义 reward 入口 | `verl` reward function |
 | `AGENTIC_RAG_REWARD_VERSION` | `v6a/v5a/v9a` | 切换 reward 公式 | Stage1/2/3 |
 | `novel_tool_config.yaml` | tool endpoint | 多轮检索工具配置 | rollout 工具调用 |
+
+**Rollout Prompt 核心要求**：
+
+| 约束 | 标准 |
+| --- | --- |
+| 多轮检索 | 模型应先调用检索工具获取证据，不应直接凭参数记忆回答 |
+| 证据优先 | 回答必须基于 tool response 中的小说片段，避免编造人物关系或事件 |
+| 工具 JSON | 工具调用必须符合 Hermes JSON 格式，字段为 `name` 和 `arguments` |
+| 答案标签 | 最终输出必须包含且只依赖 `<answer>...</answer>` 中的短答案 |
+| Reward 对齐 | prompt 行为目标和 reward 分量一致：正确性、faithfulness、hop recall、合理工具调用 |
 
 ## Step 14: 评测与诊断
 
