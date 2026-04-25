@@ -225,7 +225,7 @@ uv run python .\scripts\build_index.py `
 
 ## Step 3: 生成小说域 seed QA
 
-**目标**：通过豆包大模型 `doubao-seed-2-0-pro-260215` 从 chunk 中生成基础问答，覆盖人物身份、人物关系、地点归属、事件原因、事件结果和人物行为。
+**目标**：通过豆包大模型 `doubao-seed-1-6-flash-250828` 从 chunk 中生成基础问答，覆盖人物身份、人物关系、地点归属、事件原因、事件结果和人物行为。
 
 **详细说明**：
 
@@ -239,7 +239,7 @@ uv run python .\scripts\build_index.py `
 flowchart TD
     A["novel corpus chunks"] --> B["gen_seed_qa.py"]
     B --> C["DoubaoSeedQAClient"]
-    C --> D["doubao-seed-2-0-pro-260215"]
+    C --> D["doubao-seed-1-6-flash-250828"]
     D --> E["JSON seed QA"]
     E --> F["补充 doc_chunk_id / tool"]
     F --> G["seeds.jsonl"]
@@ -251,7 +251,7 @@ flowchart TD
 - 脚本：`scripts/gen_seed_qa.py`
 - 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY`
 - 默认 Provider：`doubao`
-- 默认模型：`doubao-seed-2-0-pro-260215`
+- 默认模型：`doubao-seed-1-6-flash-250828`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
 
