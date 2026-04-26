@@ -53,6 +53,16 @@ class FakeMergeLLMClient:
 }"""
 
 
+class BrokenMergeLLMClient:
+    def __init__(self) -> None:
+        self.calls: list[list[dict[str, str]]] = []
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del temperature
+        self.calls.append(messages)
+        raise TimeoutError("merge timeout")
+
+
 class FlakySeedLLMClient:
     def __init__(self) -> None:
         self.calls = 0
@@ -165,6 +175,19 @@ def test_synthesize_and_clean_multihop_examples() -> None:
     assert cleaned[0]["hop_count"] >= 2
     assert all(hop["doc_chunk_id"] for hop in cleaned[0]["hops"])
     assert all(hop["qa_type"] == "action_result" for hop in cleaned[0]["hops"])
+
+
+def test_multihop_merge_failure_falls_back_to_rule_template() -> None:
+    chunks = load_chunks(DATA_DIR / "corpus.jsonl")
+    seeds = generate_seed_questions(chunks, FakeLLMClient(), max_per_chunk=1)
+    merge_client = BrokenMergeLLMClient()
+
+    examples = synthesize_multihop_examples(seeds, chunks, target_count=1, merge_llm_client=merge_client)
+
+    assert merge_client.calls
+    assert len(examples) == 1
+    assert examples[0]["final_question"].startswith("第1步回答")
+    assert examples[0]["final_answer"]
 
 
 def test_multihop_resume_skips_existing_chain_before_llm_call() -> None:

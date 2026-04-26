@@ -38,6 +38,7 @@ def main() -> None:
     parser.add_argument("--merge-model")
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
+    parser.add_argument("--timeout-seconds", type=float, help="Doubao request timeout for LLM merge.")
     parser.add_argument("--disable-llm-merge", action="store_true")
     parser.add_argument("--overwrite", action="store_true", help="Clear output and regenerate from the beginning.")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
@@ -84,6 +85,7 @@ def main() -> None:
             api_key=args.api_key,
             model=get_doubao_thinking_model(args.merge_model),
             base_url=get_doubao_base_url(args.base_url),
+            timeout_seconds=args.timeout_seconds,
         )
     generated_count = 0
     mode = "w" if args.overwrite else "a"

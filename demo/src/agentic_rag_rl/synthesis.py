@@ -404,11 +404,15 @@ def _build_stepwise_example(chain: list[dict[str, Any]], merge_llm_client: LLMCl
 
 def _merge_stepwise_question_with_llm(chain: list[dict[str, Any]], llm_client: LLMClient) -> dict[str, Any]:
     logger.info("multihop_merge.start hop_count=%s", len(chain))
-    content = llm_client.chat(_build_multihop_merge_messages(chain), temperature=0.2)
+    try:
+        content = llm_client.chat(_build_multihop_merge_messages(chain), temperature=0.2)
+    except Exception:
+        logger.exception("multihop_merge.failed fallback=rule hop_count=%s", len(chain))
+        return {}
     try:
         payload = _extract_json_object(content)
     except Exception:
-        logger.exception("multihop_merge.invalid_json response_chars=%s", len(content))
+        logger.exception("multihop_merge.invalid_json fallback=rule response_chars=%s", len(content))
         return {}
     final_question = str(payload.get("final_question", "")).strip()
     final_answer = str(payload.get("final_answer", "")).strip()
