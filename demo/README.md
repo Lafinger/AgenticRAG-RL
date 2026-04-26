@@ -441,8 +441,7 @@ uv run python .\scripts\clean_synthesis.py `
 
 uv run python .\scripts\split_train_test.py `
   --input .\data\novel_eval\qa_pairs_clean.jsonl `
-  --train-output .\data\novel_eval\train.jsonl `
-  --test-output .\data\novel_eval\test.jsonl
+  --output .\data\novel_eval
 
 uv run python .\scripts\gen_enhanced_aliases.py `
   --input .\data\novel_eval\qa_pairs_clean.jsonl `

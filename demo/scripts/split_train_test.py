@@ -14,7 +14,7 @@ from agentic_rag_rl.io import load_jsonl, write_jsonl
 def main() -> None:
     parser = argparse.ArgumentParser(description="Split multihop dataset into train and test sets.")
     parser.add_argument("--input", required=True)
-    parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--output", required=True, help="Output directory for train.jsonl and test.jsonl.")
     parser.add_argument("--test-size", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
@@ -26,7 +26,7 @@ def main() -> None:
     test_records = records[:test_size]
     train_records = records[test_size:]
 
-    output_dir = Path(args.output_dir)
+    output_dir = Path(args.output)
     write_jsonl(train_records, output_dir / "train.jsonl")
     write_jsonl(test_records, output_dir / "test.jsonl")
     print(f"train_count={len(train_records)}")
