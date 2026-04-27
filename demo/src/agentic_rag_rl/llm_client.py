@@ -12,6 +12,7 @@ import httpx
 DEFAULT_LLM_PROVIDER = "doubao"
 DEFAULT_DOUBAO_MODEL = "doubao-seed-1-6-flash-250828"
 DEFAULT_DOUBAO_THINKING_MODEL = "doubao-seed-2-0-pro-260215"
+DEFAULT_DOUBAO_JUDGE_MODEL = DEFAULT_DOUBAO_THINKING_MODEL
 DEFAULT_DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,10 @@ def get_doubao_model(explicit_model: str | None = None) -> str:
 
 def get_doubao_thinking_model(explicit_model: str | None = None) -> str:
     return explicit_model or os.getenv("DOUBAO_THINKING_MODEL") or DEFAULT_DOUBAO_THINKING_MODEL
+
+
+def get_doubao_judge_model(explicit_model: str | None = None) -> str:
+    return explicit_model or os.getenv("DOUBAO_JUDGE_MODEL") or os.getenv("DOUBAO_THINKING_MODEL") or DEFAULT_DOUBAO_JUDGE_MODEL
 
 
 def get_doubao_base_url(explicit_base_url: str | None = None) -> str:

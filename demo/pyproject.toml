@@ -4,4 +4,37 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "accelerate==1.11.0",
+    "datasets==4.0.0",
+    "fastapi>=0.115",
+    "httpx>=0.28",
+    "jieba>=0.42",
+    "llamafactory",
+    "numpy==2.4.4",
+    "pandas==2.3.3",
+    "peft==0.18.1",
+    "protobuf==7.34.1",
+    "pyarrow==24.0.0",
+    "pydantic>=2.9",
+    "pypdf>=5.0",
+    "pytest>=8.3",
+    "pyyaml>=6.0",
+    "rank-bm25>=0.2.2",
+    "requests>=2.32",
+    "safetensors==0.7.0",
+    "sentencepiece==0.2.1",
+    "torch==2.11.0+cu126",
+    "transformers==5.2.0",
+    "trl==0.24.0",
+    "uvicorn>=0.30",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
+llamafactory = { path = "../../LlamaFactory", editable = true }
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
