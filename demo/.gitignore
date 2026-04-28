@@ -9,3 +9,7 @@ models/
 results/
 training/outputs/
 data/original_pdfs/*.pdf
+
+
+unsloth_compiled_cache/
+outputs/
