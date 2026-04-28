@@ -21,9 +21,4 @@ $venvPython = Join-Path $venvPath "Scripts\python.exe"
 & $venvPython -m pip install --upgrade pip
 & $venvPython -m pip install -r (Join-Path $WorkspaceRoot "requirements.txt")
 
-$llamaFactoryPath = Join-Path $WorkspaceRoot "LLaMA-Factory"
-if (Test-Path $llamaFactoryPath) {
-    & $venvPython -m pip install -e $llamaFactoryPath
-}
-
 Write-Host "agenticrag environment ready at $venvPath"

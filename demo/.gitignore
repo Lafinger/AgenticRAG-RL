@@ -1,6 +1,5 @@
 .venv/
 .venv-agenticrag/
-.venv-verl/
 .env
 __pycache__/
 .pytest_cache/
@@ -10,6 +9,3 @@ models/
 results/
 training/outputs/
 data/original_pdfs/*.pdf
-
-LLaMA-Factory/
-verl/

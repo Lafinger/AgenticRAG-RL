@@ -25,7 +25,7 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     write_jsonl(sft_records, output_dir / "react.jsonl")
     write_jsonl(sharegpt_records, output_dir / "sharegpt.jsonl")
-    write_jsonl(sharegpt_records, output_dir / "lf_react.jsonl")
+    write_jsonl(sharegpt_records, output_dir / "messages.jsonl")
     print(f"sft_count={len(sft_records)}")
 
 

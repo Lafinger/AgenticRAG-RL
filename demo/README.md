@@ -9,11 +9,11 @@
 - UTF-8 小说文本解析与稳定 chunk 切分
 - `BM25 + dense + rerank` 轻量检索骨架
 - 小说域 seed QA 与多跳合成样本生成
-- Oracle traces、SFT 数据转换、LLaMA-Factory 兼容导出
+- Oracle traces、SFT 数据转换、Unsloth 兼容导出
 - Agentic GRPO 数据准备、reward 计算、retrieval server
 - Pipeline/Agentic 评测、Judge 打分、hop-aware 诊断
 - Windows 11 本机 smoke test
-- 外部 Linux / WSL / A100 环境的 Stage1 / Stage2 / Stage3 启动脚本
+- 外部 Linux / WSL / A100 环境的 Unsloth SFT / GRPO 训练入口
 
 ## 目录结构
 
@@ -27,7 +27,6 @@ demo/
 │   └── smoke_novel/
 ├── docs/
 ├── requirements.txt
-├── requirements-verl.txt
 ├── scripts/
 ├── src/
 ├── tests/
@@ -45,7 +44,7 @@ flowchart TD
     E --> F["Step 5: 清洗 / 划分 / 别名增强"]
     F --> G["Step 6: 构造 Oracle traces"]
     G --> H["Step 7: 转换 SFT 数据"]
-    H --> I["Step 8: 导出 LLaMA-Factory 数据"]
+    H --> I["Step 8: 导出 Unsloth 数据"]
     F --> J["Step 9: 构造 GRPO parquet"]
     C --> K["Step 10: 启动 retrieval server"]
     E --> L["Step 11: Pipeline / Agentic smoke eval"]
@@ -535,7 +534,7 @@ uv run python .\scripts\build_oracle_traces.py `
 
 ## Step 7: 转换 SFT 训练数据
 
-**目标**：把 Oracle traces 转换成 ReAct/SFT 记录和 ShareGPT 格式，供 LLaMA-Factory 使用。
+**目标**：把 Oracle traces 转换成 ReAct/SFT 记录和 ShareGPT 格式，供 Unsloth 使用。
 
 **详细说明**：
 
@@ -549,7 +548,7 @@ flowchart LR
     A["oracle traces"] --> B["trace_to_sft.py"]
     B --> C["react.jsonl"]
     B --> D["sharegpt.jsonl"]
-    B --> E["lf_react.jsonl"]
+    B --> E["messages.jsonl"]
 ```
 
 **需要**：
@@ -571,7 +570,7 @@ uv run python .\scripts\trace_to_sft.py `
 
 - `data/novel_eval/sft/react.jsonl`
 - `data/novel_eval/sft/sharegpt.jsonl`
-- `data/novel_eval/sft/lf_react.jsonl`
+- `data/novel_eval/sft/messages.jsonl`
 - 可检查每条记录是否保留工具调用和 `<answer>` 协议
 
 **数据结构与字段用途**：
@@ -579,8 +578,8 @@ uv run python .\scripts\trace_to_sft.py `
 | 产物 | 结构 / 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- | --- |
 | `react.jsonl` | `messages[]` ReAct 轨迹 | 保留原始工具调用过程 | 调试、协议检查 |
-| `sharegpt.jsonl` | ShareGPT `messages[]` | LLaMA-Factory 可消费格式 | Step 8 |
-| `lf_react.jsonl` | ShareGPT 兼容副本 | 兼容不同数据入口命名 | SFT 训练 |
+| `sharegpt.jsonl` | ShareGPT `messages[]` | Unsloth 可消费格式 | Step 8 |
+| `messages.jsonl` | ShareGPT 兼容副本 | 兼容不同数据入口命名 | SFT 训练 |
 | `messages[].role` | system/user/assistant | 标识对话角色 | tokenizer / template |
 | `messages[].content` | 消息正文 | 包含工具调用和答案标签 | SFT loss |
 
@@ -594,63 +593,62 @@ uv run python .\scripts\trace_to_sft.py `
 | 答案协议 | 保留 `<answer>...</answer>`，后续 reward 和 eval 都依赖该标签抽取最终答案 |
 | 消息角色 | 只保留训练框架可消费的 `system/user/assistant` 消息结构，工具返回会转换成用户侧上下文 |
 
-## Step 8: 导出 LLaMA-Factory 数据目录
+## Step 8: 导出 Unsloth 数据目录
 
-**目标**：把 ShareGPT SFT 数据打包成 LLaMA-Factory 可识别的数据集目录。
+**目标**：把 ShareGPT SFT 数据打包成 Unsloth 可识别的数据集目录。
 
 **详细说明**：
 
-- `convert_sft_to_llamafactory.py` 读取 `sharegpt.jsonl`，转换成 LLaMA-Factory 使用的 `data.json`。
-- 脚本同时生成 `dataset_info.json`，声明数据集名称、文件名、格式和消息列映射。
-- `training/sft_zh_react.yaml` 通过 dataset 名 `novel_agent_zh_react` 引用该数据目录。
+- `convert_sft_to_unsloth.py` 读取 `sharegpt.jsonl`，转换成 Unsloth 使用的 `train.jsonl`。
+- 脚本同时生成 `manifest.json`，记录来源、样本数和数据格式。
+- `training/unsloth_sft.yaml` 直接引用 `data/novel_eval/sft_zh_unsloth/train.jsonl`。
 - 这一步不训练模型，只负责把数据整理成训练框架能直接读取的目录结构。
 
 ```mermaid
 flowchart LR
-    A["sharegpt.jsonl"] --> B["convert_sft_to_llamafactory.py"]
-    B --> C["data.json"]
-    B --> D["dataset_info.json"]
-    D --> E["novel_agent_zh_react"]
+    A["sharegpt.jsonl"] --> B["convert_sft_to_unsloth.py"]
+    B --> C["train.jsonl"]
+    B --> D["manifest.json"]
+    C --> E["Unsloth SFT"]
 ```
 
 **需要**：
 
 - 输入目录：`data/novel_eval/sft/`
-- 脚本：`scripts/convert_sft_to_llamafactory.py`
-- 输出目录：`data/novel_eval/sft_zh_llamafactory/`
+- 脚本：`scripts/convert_sft_to_unsloth.py`
+- 输出目录：`data/novel_eval/sft_zh_unsloth/`
 
 **怎么做**：
 
 ```powershell
-uv run python .\scripts\convert_sft_to_llamafactory.py `
+uv run python .\scripts\convert_sft_to_unsloth.py `
   --input-dir .\data\novel_eval\sft `
-  --output-dir .\data\novel_eval\sft_zh_llamafactory
+  --output-dir .\data\novel_eval\sft_zh_unsloth
 ```
 
 **能拿到的结果**：
 
-- `data/novel_eval/sft_zh_llamafactory/data.json`
-- `data/novel_eval/sft_zh_llamafactory/dataset_info.json`
-- dataset 名：`novel_agent_zh_react`
-- SFT 配置：`training/sft_zh_react.yaml`
+- `data/novel_eval/sft_zh_unsloth/train.jsonl`
+- `data/novel_eval/sft_zh_unsloth/manifest.json`
+- SFT 配置：`training/unsloth_sft.yaml`
 
 **数据结构与字段用途**：
 
 | 产物 | 结构 / 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- | --- |
-| `data.json` | ShareGPT 样本数组 | 真实 SFT 样本 | LLaMA-Factory train |
-| `dataset_info.json` | `novel_agent_zh_react` 数据集定义 | 告诉 LLaMA-Factory 如何读取 `data.json` | `training/sft_zh_react.yaml` |
-| `training/sft_zh_react.yaml` | `dataset/template/model/output_dir` | SFT 训练配置 | Step 12 |
+| `train.jsonl` | 每行一个 `messages[]` 样本 | 真实 SFT 样本 | Unsloth train |
+| `manifest.json` | 数据格式和来源说明 | 记录转换来源、样本数和训练器 | 数据审计 |
+| `training/unsloth_sft.yaml` | `dataset/template/model/output_dir` | SFT 训练配置 | Step 12 |
 
 ## Step 9: 构造 GRPO parquet 数据
 
-**目标**：把多跳 QA 转换成 `verl` Agentic GRPO 需要的 parquet 行，保留 raw chat、agent name 和 reward ground truth。
+**目标**：把多跳 QA 转换成 Unsloth GRPO 可读取的 parquet 行，保留 raw chat 和 reward ground truth。
 
 **详细说明**：
 
-- `prepare_agentic_grpo_data.py` 读取多跳 QA，并调用 `build_grpo_rows` 构造 `verl` 训练行。
+- `prepare_agentic_grpo_data.py` 读取多跳 QA，并调用 `build_grpo_rows` 构造 GRPO 训练行。
 - 每条样本的 `prompt` 保留原始 chat 消息，包含 system prompt 和用户问题。
-- `agent_name` 固定为 `tool_agent`，用于让 `verl` 选择带工具调用的 agent loop。
+- `agent_name` 字段保留在 parquet 中，便于后续区分不同 agent 类型。
 - `reward_model.ground_truth` 会写入标准答案、答案别名、gold chunks 和 hop 数，供 reward 函数打分。
 - 脚本按 `val-ratio` 划分 train/val，并以 parquet 格式保存，减少训练时的解析成本。
 
@@ -695,8 +693,8 @@ uv run python .\scripts\prepare_agentic_grpo_data.py `
 
 | 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- |
-| `prompt` | 原始 chat prompt，包含 system 和 user question | `verl` Agentic rollout 输入 |
-| `agent_name` | 默认 `tool_agent` | `verl` 路由到工具 Agent loop |
+| `prompt` | 原始 chat prompt，包含 system 和 user question | Unsloth GRPO 输入 |
+| `agent_name` | 默认 `tool_agent` | 区分 agent 类型 |
 | `reward_model.ground_truth.target` | 标准答案 | reward correctness |
 | `reward_model.ground_truth.question` | 原始问题 | Judge / debug |
 | `reward_model.ground_truth.answer_aliases` | 答案别名 | correctness 兼容匹配 |
@@ -708,7 +706,7 @@ uv run python .\scripts\prepare_agentic_grpo_data.py `
 | 约束 | 标准 |
 | --- | --- |
 | Raw chat | `prompt` 必须保留原始 chat 结构，包含 system prompt 和用户最终问题 |
-| Agent 路由 | `agent_name` 固定为 `tool_agent`，让 `verl` 使用带工具调用的 agent loop |
+| Agent 路由 | `agent_name` 当前用于数据标识，不作为 Unsloth 主入口的强依赖 |
 | System prompt | 与 SFT 一致：模型必须通过文本检索工具逐步搜索证据，最后用 `<answer>` 输出 |
 | 监督目标 | `reward_model.ground_truth` 必须包含 `target/question/answer_aliases/gold_chunks/hop_count` |
 | 训练边界 | prompt 不直接泄露 gold chunks；gold chunks 只进入 reward ground truth，不进入用户问题 |
@@ -722,8 +720,8 @@ uv run python .\scripts\prepare_agentic_grpo_data.py `
 - `retrieval_server.py` 启动 FastAPI 服务，并在内存中加载小说 corpus。
 - 服务启动后会构造 `HybridRetriever`，支持 keyword、dense 和 hybrid 三类检索请求。
 - `/search` 接口接收 `query/top_k/tool`，返回 chunk ID、标题、文本、分数和 metadata。
-- `novel_tool_config.yaml` 会告诉 `verl` 每个工具应该请求哪个 HTTP endpoint，以及如何组织 payload。
-- 本机 smoke 和远端 GRPO 可以使用同一套服务协议，差异只在运行机器和模型规模。
+- Unsloth GRPO 首版复用 reward 逻辑；如需完整多轮工具调用闭环，后续需要把该 HTTP 服务接入 rollout。
+- 本机 smoke 和外部 GPU 训练可以使用同一套服务协议，差异只在运行机器和模型规模。
 
 ```mermaid
 flowchart LR
@@ -740,7 +738,6 @@ flowchart LR
 - 输入：`data/novel/corpus.jsonl`
 - 服务脚本：`training/tools/retrieval_server.py`
 - 默认端口：`8790`
-- Tool config：`training/config/novel_tool_config.yaml`
 
 **怎么做**：
 
@@ -755,7 +752,7 @@ uv run python .\training\tools\retrieval_server.py `
 - `http://127.0.0.1:8790/health`
 - `http://127.0.0.1:8790/search`
 - 支持 `keyword_search/dense_search/hybrid_search`
-- GRPO 训练脚本可通过 `novel_tool_config.yaml` 调用该服务
+- GRPO/RL 扩展可通过该 HTTP 服务接入检索工具
 
 **数据结构与字段用途**：
 
@@ -766,7 +763,6 @@ uv run python .\training\tools\retrieval_server.py `
 | `/search` response | `results[]` | 检索结果列表 | tool response、证据记录 |
 | `results[].chunk_id` | corpus chunk ID | 证据 ID | hop recall、reward |
 | `results[].text` | 证据文本 | 回答依据 | faithfulness、Judge |
-| `novel_tool_config.yaml` | tool name / endpoint / payload | `verl` 工具配置 | GRPO Stage1/2/3 |
 
 **Tool Calling Prompt / 工具约束**：
 
@@ -848,101 +844,96 @@ uv run python .\scripts\eval_agentic.py `
 
 ```mermaid
 flowchart LR
-    A["novel_agent_zh_react"] --> B["LLaMA-Factory SFT"]
+    A["novel_agent_zh_react"] --> B["Unsloth SFT"]
     C["Qwen3-4B"] --> B
     B --> D["LoRA adapter"]
-    D --> E["export_sft.yaml"]
+    D --> E["unsloth_sft.yaml"]
     E --> F["Qwen3-4B-SFT-merged"]
 ```
 
 **需要**：
 
-- LLaMA-Factory 环境
+- Unsloth 环境
 - 基座模型：默认 `Qwen3-4B`
-- 数据目录：`data/novel_eval/sft_zh_llamafactory/`
-- 配置：`training/sft_zh_react.yaml`
+- 数据目录：`data/novel_eval/sft_zh_unsloth/`
+- 配置：`training/unsloth_sft.yaml`
 - 本机 16GB 显存只建议跑低参 smoke；完整训练建议远端 GPU
 
 **怎么做**：
 
 ```powershell
-# 在已准备好的 LLaMA-Factory 环境中执行，命令示例按实际安装路径调整
-llamafactory-cli train .\training\sft_zh_react.yaml
-llamafactory-cli export .\training\export_sft.yaml
+# 在已准备好的 Unsloth 环境中执行，命令示例按实际安装路径调整
+uv run python .\scripts\train_sft_unsloth.py `
+  --config .\training\unsloth_sft.yaml
+
+uv run python .\scripts\export_unsloth_lora.py `
+  --config .\training\unsloth_sft.yaml `
+  --adapter-path .\training\outputs\unsloth_sft_qwen3_4b_lora `
+  --export-dir .\models\Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
 ```
 
 **能拿到的结果**：
 
-- LoRA 输出：`training/outputs/sft_qwen3_4b_zh_react`
-- 合并模型：`models/Qwen3-4B-SFT-merged`
+- LoRA 输出：`training/outputs/unsloth_sft_qwen3_4b_lora`
+- 合并模型：`models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged`
 - 该模型作为 GRPO Stage1 的默认 base
 
 **数据结构与字段用途**：
 
 | 产物 / 配置 | 结构 / 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- | --- |
-| `training/sft_zh_react.yaml` | model/dataset/template/output_dir | SFT 训练参数 | LLaMA-Factory |
-| `training/outputs/sft_qwen3_4b_zh_react` | LoRA adapter | 学到工具调用格式的增量权重 | export |
-| `models/Qwen3-4B-SFT-merged` | 合并后的 HF 模型目录 | GRPO 初始模型 | Stage1 / v11e |
+| `training/unsloth_sft.yaml` | model/dataset/template/output_dir | SFT 训练参数 | Unsloth |
+| `training/outputs/unsloth_sft_qwen3_4b_lora` | LoRA adapter | 学到工具调用格式的增量权重 | export |
+| `models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged` | 合并后的 HF 模型目录 | GRPO 初始模型 | GRPO / RL |
 
-## Step 13: Agentic GRPO 训练
+## Step 13: Unsloth GRPO / RL 训练
 
-**目标**：在 `verl` Agentic RL 中让模型通过检索工具多轮推理，并用 reward 约束 correctness、faithfulness、hop recall 和搜索行为。
+**目标**：使用 Unsloth + TRL GRPO 入口复用项目 reward 逻辑，让模型在后训练阶段强化 correctness、faithfulness、hop recall 和搜索行为。
 
 **详细说明**：
 
-- Stage1 使用 SFT merged model 作为初始模型，读取 GRPO train/val parquet。
-- rollout 时模型根据 prompt 调用检索工具，工具请求会通过 `novel_tool_config.yaml` 转发到 retrieval server。
+- GRPO 使用 SFT merged model 作为初始模型，读取 GRPO train/val parquet。
+- 当前入口复用已有 reward 函数；多轮工具调用闭环如果需要完全等价替代旧远端 rollout，需要后续单独增强。
 - reward 函数从模型输出中抽取 `<answer>`，并结合答案别名、gold chunks、hop count 和工具调用记录打分。
-- Stage1 默认使用 `v6a` 强化 grounding，Stage2 使用 `v5a` 强化 correctness，Stage3 使用 `v9a` 做对照实验。
-- PowerShell 脚本提供 `-PrintOnly` 模式，先打印完整命令和路径，确认无误后再在 GPU 环境执行真实训练。
+- 默认使用 `AGENTIC_RAG_REWARD_VERSION=v6a`，可通过 `training/unsloth_grpo.yaml` 调整。
 
 ```mermaid
 flowchart TD
-    A["SFT merged model"] --> B["Stage1 v11e / reward v6a"]
+    A["SFT merged model"] --> B["Unsloth GRPO / reward v6a"]
     C["GRPO train / val parquet"] --> B
-    D["retrieval server"] --> B
-    B --> E["Stage1 best checkpoint"]
-    E --> F["Stage2 v14e / reward v5a"]
-    F --> G["Stage2 checkpoint"]
-    G --> H["Stage3 v15e / reward v9a 对照"]
+    D["reward_agentic_rag.py"] --> B
+    B --> E["GRPO checkpoint"]
 ```
 
 **需要**：
 
-- 远端 Linux / WSL2 / A100 级 GPU
-- `verl`、`vLLM`、`flash-attn`
+- 外部 GPU 环境
+- Unsloth、TRL、datasets
 - 已启动 retrieval server
 - GRPO parquet：`data/novel_eval/grpo_agentic_train.parquet` 和 `data/novel_eval/grpo_agentic_val.parquet`
-- Tool config：`training/config/novel_tool_config.yaml`
+- 配置：`training/unsloth_grpo.yaml`
 - Reward：`training/reward_agentic_rag.py`
 
 **怎么做**：
 
 ```powershell
-.\training\run_stage1_v11e.ps1 -PrintOnly
-.\training\run_stage2_v14e.ps1 -PrintOnly
-.\training\run_stage3_v15e.ps1 -PrintOnly
+uv run python .\scripts\train_grpo_unsloth.py `
+  --config .\training\unsloth_grpo.yaml
 ```
-
-确认路径无误后，在目标 GPU 环境去掉 `-PrintOnly` 执行。
 
 **能拿到的结果**：
 
-- Stage1 / `v11e`：使用 reward `v6a`，目标是 grounding-first
-- Stage2 / `v14e`：以上一阶段 checkpoint 为 base，使用 reward `v5a`
-- Stage3 / `v15e`：使用 reward `v9a`，作为检索强化对照实验
-- 可合并 checkpoint，并进入后续 Agentic 评测
+- GRPO checkpoint：`training/outputs/unsloth_grpo_qwen3_4b`
+- 可进入后续 Agentic 评测
 
 **数据结构与字段用途**：
 
 | 组件 | 结构 / 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- | --- |
-| `grpo_agentic_train.parquet` | `prompt/agent_name/reward_model` | 训练 rollout 数据 | `verl.trainer.main_ppo` |
+| `grpo_agentic_train.parquet` | `prompt/agent_name/reward_model` | 训练 rollout 数据 | Unsloth GRPO |
 | `grpo_agentic_val.parquet` | 同 train parquet | 验证 rollout 数据 | checkpoint 选择 |
-| `reward_agentic_rag.py` | `compute_score` | 自定义 reward 入口 | `verl` reward function |
-| `AGENTIC_RAG_REWARD_VERSION` | `v6a/v5a/v9a` | 切换 reward 公式 | Stage1/2/3 |
-| `novel_tool_config.yaml` | tool endpoint | 多轮检索工具配置 | rollout 工具调用 |
+| `reward_agentic_rag.py` | `compute_score` | 自定义 reward 入口 | GRPO reward function |
+| `AGENTIC_RAG_REWARD_VERSION` | `v6a/v5a/v9a` | 切换 reward 公式 | GRPO/RL |
 
 **Rollout Prompt 核心要求**：
 
@@ -1038,7 +1029,7 @@ uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --outp
 uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50
 uv run python .\scripts\build_oracle_traces.py --qa .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\traces_oracle_zh.jsonl --use-zh
 uv run python .\scripts\trace_to_sft.py --input .\data\novel_eval\traces_oracle_zh.jsonl --output-dir .\data\novel_eval\sft --lang zh
-uv run python .\scripts\convert_sft_to_llamafactory.py --input-dir .\data\novel_eval\sft --output-dir .\data\novel_eval\sft_zh_llamafactory
+uv run python .\scripts\convert_sft_to_unsloth.py --input-dir .\data\novel_eval\sft --output-dir .\data\novel_eval\sft_zh_unsloth
 uv run python .\scripts\prepare_agentic_grpo_data.py --input .\data\novel_eval\qa_pairs.jsonl --train-output .\data\novel_eval\grpo_agentic_train.parquet --val-output .\data\novel_eval\grpo_agentic_val.parquet
 uv run python .\scripts\eval_agentic.py --data .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --max-samples 2
 ```
@@ -1047,4 +1038,4 @@ uv run python .\scripts\eval_agentic.py --data .\data\novel_eval\qa_pairs.jsonl 
 
 - Windows 11 本机：数据处理、SFT 数据转换、CPU retrieval server、smoke evaluation。
 - RTX 4070 Ti SUPER 16GB：适合低参模型或 1-2 条样本 rollout smoke，不适合完整 GRPO。
-- 远端 Linux / WSL / A100：完整 LLaMA-Factory SFT、verl GRPO、vLLM rollout 和 Judge。
+- 外部 GPU 环境：完整 Unsloth SFT、Unsloth GRPO/RL、长样本 rollout 和 Judge。

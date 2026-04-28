@@ -1,0 +1,132 @@
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train SFT LoRA with Unsloth.")
+    parser.add_argument("--config", default=str(ROOT / "training" / "unsloth_sft.yaml"))
+    parser.add_argument("--model-name-or-path")
+    parser.add_argument("--data-path")
+    parser.add_argument("--output-dir")
+    parser.add_argument("--max-samples", type=int)
+    return parser.parse_args()
+
+
+def load_config(path: str | Path) -> dict[str, Any]:
+    with Path(path).open("r", encoding="utf-8") as handle:
+        payload = yaml.safe_load(handle) or {}
+    if not isinstance(payload, dict):
+        raise ValueError(f"Config must be a mapping: {path}")
+    return payload
+
+
+def project_path(value: str | Path) -> str:
+    path = Path(value)
+    if not path.is_absolute():
+        path = ROOT / path
+    return str(path)
+
+
+def require_unsloth_stack() -> tuple[Any, Any, Any, Any]:
+    try:
+        from datasets import Dataset
+        from transformers import TrainingArguments
+        from trl import SFTTrainer
+        from unsloth import FastLanguageModel
+    except ModuleNotFoundError as exc:
+        raise SystemExit(
+            "当前环境未安装 Unsloth SFT 训练依赖。请先在本环境安装 unsloth、trl、datasets 等训练栈后再运行。"
+        ) from exc
+    return Dataset, TrainingArguments, SFTTrainer, FastLanguageModel
+
+
+def load_jsonl(path: str | Path, max_samples: int | None = None) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    with Path(path).open("r", encoding="utf-8") as handle:
+        for line in handle:
+            if line.strip():
+                records.append(json.loads(line))
+            if max_samples is not None and len(records) >= max_samples:
+                break
+    return records
+
+
+def render_messages(records: list[dict[str, Any]], tokenizer: Any) -> list[dict[str, str]]:
+    rendered: list[dict[str, str]] = []
+    for index, record in enumerate(records, start=1):
+        messages = record.get("messages")
+        if not isinstance(messages, list):
+            raise ValueError(f"Record {index} is missing messages.")
+        text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+        rendered.append({"text": text})
+    return rendered
+
+
+def main() -> None:
+    args = parse_args()
+    config = load_config(args.config)
+    if args.model_name_or_path:
+        config["model_name_or_path"] = args.model_name_or_path
+    if args.data_path:
+        config["data_path"] = args.data_path
+    if args.output_dir:
+        config["output_dir"] = args.output_dir
+
+    Dataset, TrainingArguments, SFTTrainer, FastLanguageModel = require_unsloth_stack()
+
+    model_name = str(config["model_name_or_path"])
+    max_seq_length = int(config.get("max_seq_length", 2048))
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=model_name,
+        max_seq_length=max_seq_length,
+        load_in_4bit=bool(config.get("load_in_4bit", True)),
+    )
+    model = FastLanguageModel.get_peft_model(
+        model,
+        r=int(config.get("lora_rank", 64)),
+        target_modules=list(config.get("lora_target_modules", [])),
+        lora_alpha=int(config.get("lora_alpha", config.get("lora_rank", 64))),
+        lora_dropout=float(config.get("lora_dropout", 0)),
+        bias="none",
+        use_gradient_checkpointing="unsloth",
+        random_state=int(config.get("seed", 3407)),
+    )
+
+    records = load_jsonl(project_path(config["data_path"]), max_samples=args.max_samples)
+    dataset = Dataset.from_list(render_messages(records, tokenizer))
+
+    training_args = TrainingArguments(
+        output_dir=project_path(config["output_dir"]),
+        per_device_train_batch_size=int(config.get("per_device_train_batch_size", 2)),
+        gradient_accumulation_steps=int(config.get("gradient_accumulation_steps", 8)),
+        learning_rate=float(config.get("learning_rate", 1e-4)),
+        num_train_epochs=float(config.get("num_train_epochs", 3)),
+        warmup_ratio=float(config.get("warmup_ratio", 0.1)),
+        logging_steps=int(config.get("logging_steps", 5)),
+        save_steps=int(config.get("save_steps", 45)),
+        seed=int(config.get("seed", 3407)),
+        report_to=[],
+    )
+    trainer = SFTTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=dataset,
+        dataset_text_field="text",
+        max_seq_length=max_seq_length,
+        packing=bool(config.get("packing", False)),
+        args=training_args,
+    )
+    trainer.train()
+    trainer.save_model(project_path(config["output_dir"]))
+
+
+if __name__ == "__main__":
+    main()

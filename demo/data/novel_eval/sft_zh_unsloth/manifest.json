@@ -1,0 +1,8 @@
+{
+  "format": "sharegpt_messages_jsonl",
+  "source": "data\\novel_eval\\sft\\sharegpt.jsonl",
+  "output": "data\\novel_eval\\sft_zh_unsloth\\train.jsonl",
+  "count": 200,
+  "required_field": "messages",
+  "trainer": "unsloth"
+}
