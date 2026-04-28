@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
+from multiprocessing import freeze_support
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-path")
     parser.add_argument("--output-dir")
     parser.add_argument("--max-samples", type=int)
+    parser.add_argument("--max-steps", type=int)
     return parser.parse_args()
 
 
@@ -37,15 +40,14 @@ def project_path(value: str | Path) -> str:
 
 def require_unsloth_stack() -> tuple[Any, Any, Any, Any]:
     try:
-        from datasets import Dataset
-        from transformers import TrainingArguments
-        from trl import SFTTrainer
         from unsloth import FastLanguageModel
+        from datasets import Dataset
+        from trl import SFTConfig, SFTTrainer
     except ModuleNotFoundError as exc:
         raise SystemExit(
             "当前环境未安装 Unsloth SFT 训练依赖。请先在本环境安装 unsloth、trl、datasets 等训练栈后再运行。"
         ) from exc
-    return Dataset, TrainingArguments, SFTTrainer, FastLanguageModel
+    return Dataset, SFTConfig, SFTTrainer, FastLanguageModel
 
 
 def load_jsonl(path: str | Path, max_samples: int | None = None) -> list[dict[str, Any]]:
@@ -71,6 +73,11 @@ def render_messages(records: list[dict[str, Any]], tokenizer: Any) -> list[dict[
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+
     args = parse_args()
     config = load_config(args.config)
     if args.model_name_or_path:
@@ -80,7 +87,7 @@ def main() -> None:
     if args.output_dir:
         config["output_dir"] = args.output_dir
 
-    Dataset, TrainingArguments, SFTTrainer, FastLanguageModel = require_unsloth_stack()
+    Dataset, SFTConfig, SFTTrainer, FastLanguageModel = require_unsloth_stack()
 
     model_name = str(config["model_name_or_path"])
     max_seq_length = int(config.get("max_seq_length", 2048))
@@ -103,25 +110,35 @@ def main() -> None:
     records = load_jsonl(project_path(config["data_path"]), max_samples=args.max_samples)
     dataset = Dataset.from_list(render_messages(records, tokenizer))
 
-    training_args = TrainingArguments(
-        output_dir=project_path(config["output_dir"]),
-        per_device_train_batch_size=int(config.get("per_device_train_batch_size", 2)),
-        gradient_accumulation_steps=int(config.get("gradient_accumulation_steps", 8)),
-        learning_rate=float(config.get("learning_rate", 1e-4)),
-        num_train_epochs=float(config.get("num_train_epochs", 3)),
-        warmup_ratio=float(config.get("warmup_ratio", 0.1)),
-        logging_steps=int(config.get("logging_steps", 5)),
-        save_steps=int(config.get("save_steps", 45)),
-        seed=int(config.get("seed", 3407)),
-        report_to=[],
-    )
+    training_config: dict[str, Any] = {
+        "output_dir": project_path(config["output_dir"]),
+        "per_device_train_batch_size": int(config.get("per_device_train_batch_size", 2)),
+        "gradient_accumulation_steps": int(config.get("gradient_accumulation_steps", 8)),
+        "learning_rate": float(config.get("learning_rate", 1e-4)),
+        "num_train_epochs": float(config.get("num_train_epochs", 3)),
+        "logging_steps": int(config.get("logging_steps", 5)),
+        "save_steps": int(config.get("save_steps", 45)),
+        "seed": int(config.get("seed", 3407)),
+        "report_to": [],
+        "max_seq_length": max_seq_length,
+        "dataset_text_field": "text",
+        "packing": bool(config.get("packing", False)),
+        "dataset_num_proc": None,
+    }
+    if args.max_steps is not None:
+        training_config["max_steps"] = args.max_steps
+    elif config.get("max_steps") is not None:
+        training_config["max_steps"] = int(config["max_steps"])
+    if config.get("warmup_steps") is not None:
+        training_config["warmup_steps"] = int(config["warmup_steps"])
+    elif config.get("warmup_ratio") is not None:
+        training_config["warmup_ratio"] = float(config["warmup_ratio"])
+
+    training_args = SFTConfig(**training_config)
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=dataset,
-        dataset_text_field="text",
-        max_seq_length=max_seq_length,
-        packing=bool(config.get("packing", False)),
         args=training_args,
     )
     trainer.train()
@@ -129,4 +146,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    freeze_support()
     main()
