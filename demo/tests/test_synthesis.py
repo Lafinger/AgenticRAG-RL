@@ -56,6 +56,33 @@ class FakeMergeLLMClient:
 }"""
 
 
+class SlowMergeLLMClient:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.active_calls = 0
+        self.max_active_calls = 0
+        self.lock = threading.Lock()
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del messages, temperature
+        with self.lock:
+            self.calls += 1
+            call_id = self.calls
+            self.active_calls += 1
+            self.max_active_calls = max(self.max_active_calls, self.active_calls)
+        try:
+            time.sleep(0.05)
+            return f"""{{
+  "final_question": "并发合并问题{call_id}？",
+  "final_answer": "学校",
+  "qa_type": "inference",
+  "answer_aliases": ["学校"]
+}}"""
+        finally:
+            with self.lock:
+                self.active_calls -= 1
+
+
 class BrokenMergeLLMClient:
     def __init__(self) -> None:
         self.calls: list[list[dict[str, str]]] = []
@@ -262,6 +289,51 @@ def test_synthesize_and_clean_multihop_examples() -> None:
     assert cleaned[0]["hop_count"] >= 2
     assert all(hop["doc_chunk_id"] for hop in cleaned[0]["hops"])
     assert all(hop["qa_type"] == "action_result" for hop in cleaned[0]["hops"])
+
+
+def test_iter_synthesize_multihop_examples_respects_merge_concurrency() -> None:
+    chunks = [
+        Chunk(chunk_id="c1", title="1", text="孙少平在学校取黑高粱面馍。"),
+        Chunk(chunk_id="c2", title="2", text="黑高粱面馍让孙少平想起贫困。"),
+        Chunk(chunk_id="c3", title="3", text="孙少平在学校生活艰难。"),
+    ]
+    seeds = [
+        {
+            "question": "孙少平取了什么主食？",
+            "answer": "黑高粱面馍",
+            "doc_chunk_id": "c1",
+            "tool": "keyword_search",
+            "qa_type": "object",
+        },
+        {
+            "question": "黑高粱面馍让孙少平想起什么？",
+            "answer": "贫困",
+            "doc_chunk_id": "c2",
+            "tool": "keyword_search",
+            "qa_type": "action_result",
+        },
+        {
+            "question": "孙少平在哪里生活艰难？",
+            "answer": "学校",
+            "doc_chunk_id": "c3",
+            "tool": "keyword_search",
+            "qa_type": "place",
+        },
+    ]
+    merge_client = SlowMergeLLMClient()
+
+    examples = list(
+        iter_synthesize_multihop_examples(
+            seeds,
+            chunks,
+            target_count=2,
+            merge_llm_client=merge_client,
+            max_concurrency=2,
+        )
+    )
+
+    assert len(examples) == 2
+    assert merge_client.max_active_calls == 2
 
 
 def test_multihop_merge_failure_falls_back_to_rule_template() -> None:

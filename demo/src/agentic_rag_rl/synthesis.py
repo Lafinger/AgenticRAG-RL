@@ -465,6 +465,7 @@ def synthesize_multihop_examples(
     merge_llm_client: LLMClient | None = None,
     skip_chain_keys: set[str] | None = None,
     existing_questions: set[str] | None = None,
+    max_concurrency: int = 1,
 ) -> list[dict[str, Any]]:
     return list(
         iter_synthesize_multihop_examples(
@@ -474,6 +475,7 @@ def synthesize_multihop_examples(
             merge_llm_client=merge_llm_client,
             skip_chain_keys=skip_chain_keys,
             existing_questions=existing_questions,
+            max_concurrency=max_concurrency,
         )
     )
 
@@ -485,28 +487,101 @@ def iter_synthesize_multihop_examples(
     merge_llm_client: LLMClient | None = None,
     skip_chain_keys: set[str] | None = None,
     existing_questions: set[str] | None = None,
+    max_concurrency: int = 1,
 ) -> Iterable[dict[str, Any]]:
+    if max_concurrency < 1:
+        raise ValueError("max_concurrency must be >= 1.")
     logger.info(
-        "multihop_synthesis.start seed_count=%s chunk_count=%s target_count=%s",
+        "multihop_synthesis.start seed_count=%s chunk_count=%s target_count=%s max_concurrency=%s",
         len(seeds),
         len(chunks),
         target_count,
+        max_concurrency,
     )
     retriever = HybridRetriever(chunks)
     seeds_by_chunk = _group_seeds_by_chunk(seeds)
     seen_questions = set(existing_questions or set())
     seen_chain_keys = set(skip_chain_keys or set())
     generated_count = 0
-    extension_attempt_count = 0
+    stats = {"extension_attempt_count": 0}
+    candidate_chains = _iter_multihop_candidate_chains(seeds, seeds_by_chunk, retriever, seen_chain_keys, stats)
 
-    for seed in seeds:
-        if generated_count >= target_count:
-            break
-        chain = [_seed_to_hop(seed, hop_idx=1)]
-        for hop_idx in range(2, 4):
+    if merge_llm_client is None or max_concurrency == 1:
+        for chain in candidate_chains:
             if generated_count >= target_count:
                 break
-            extension_attempt_count += 1
+            example = _build_stepwise_example(chain, merge_llm_client=merge_llm_client)
+            if example["final_question"] in seen_questions:
+                continue
+            seen_questions.add(example["final_question"])
+            generated_count += 1
+            logger.info(
+                "multihop_synthesis.added subset=%s total_count=%s target_count=%s",
+                example["subset"],
+                generated_count,
+                target_count,
+            )
+            yield example
+    else:
+        worker_count = max_concurrency
+        futures: dict[Future[dict[str, Any]], list[dict[str, Any]]] = {}
+        candidate_iter = iter(candidate_chains)
+
+        def submit_next(executor: ThreadPoolExecutor) -> bool:
+            try:
+                chain = next(candidate_iter)
+            except StopIteration:
+                return False
+            futures[executor.submit(_build_stepwise_example, chain, merge_llm_client)] = chain
+            return True
+
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            for _ in range(worker_count):
+                if not submit_next(executor):
+                    break
+            while futures and generated_count < target_count:
+                done, _ = wait(futures, return_when=FIRST_COMPLETED)
+                for future in done:
+                    futures.pop(future)
+                    example = future.result()
+                    if example["final_question"] in seen_questions:
+                        if generated_count < target_count:
+                            submit_next(executor)
+                        continue
+                    seen_questions.add(example["final_question"])
+                    generated_count += 1
+                    logger.info(
+                        "multihop_synthesis.added subset=%s total_count=%s target_count=%s",
+                        example["subset"],
+                        generated_count,
+                        target_count,
+                    )
+                    yield example
+                    if generated_count >= target_count:
+                        break
+                    submit_next(executor)
+            for pending_future in futures:
+                pending_future.cancel()
+
+    logger.info(
+        "multihop_synthesis.done generated_count=%s target_count=%s extension_attempt_count=%s",
+        generated_count,
+        target_count,
+        stats["extension_attempt_count"],
+    )
+
+
+def _iter_multihop_candidate_chains(
+    seeds: list[dict[str, Any]],
+    seeds_by_chunk: dict[str, list[dict[str, Any]]],
+    retriever: HybridRetriever,
+    seen_chain_keys: set[str],
+    stats: dict[str, int],
+) -> Iterable[list[dict[str, Any]]]:
+    for seed in seeds:
+        chain = [_seed_to_hop(seed, hop_idx=1)]
+        for hop_idx in range(2, 4):
+            stats["extension_attempt_count"] += 1
             next_seed = _select_next_seed(chain, seeds_by_chunk, retriever)
             if next_seed is None:
                 logger.debug(
@@ -525,25 +600,7 @@ def iter_synthesize_multihop_examples(
                 )
                 continue
             seen_chain_keys.add(chain_key)
-            example = _build_stepwise_example(chain, merge_llm_client=merge_llm_client)
-            if example["final_question"] in seen_questions:
-                continue
-            seen_questions.add(example["final_question"])
-            generated_count += 1
-            logger.info(
-                "multihop_synthesis.added subset=%s total_count=%s target_count=%s",
-                example["subset"],
-                generated_count,
-                target_count,
-            )
-            yield example
-
-    logger.info(
-        "multihop_synthesis.done generated_count=%s target_count=%s extension_attempt_count=%s",
-        generated_count,
-        target_count,
-        extension_attempt_count,
-    )
+            yield [dict(hop) for hop in chain]
 
 
 def _group_seeds_by_chunk(seeds: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:

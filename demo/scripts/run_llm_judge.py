@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import importlib.util
 import json
 from pathlib import Path
@@ -56,6 +57,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-attempts", type=int, default=2)
+    parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent LLM judge requests.")
     parser.add_argument("--fail-fast", action="store_true")
     return parser.parse_args()
 
@@ -149,8 +151,39 @@ def average(results: list[dict[str, Any]], key: str) -> float:
     return sum(values) / max(len(values), 1)
 
 
+def judge_item(
+    index: int,
+    total_count: int,
+    client: Any,
+    item: dict[str, Any],
+    *,
+    temperature: float,
+    max_attempts: int,
+) -> tuple[int, dict[str, Any], Exception | None]:
+    judged_item = dict(item)
+    try:
+        judged_item["judge"] = judge_one(
+            client,
+            judged_item,
+            temperature=temperature,
+            max_attempts=max_attempts,
+        )
+        print(
+            f"[{index}/{total_count}] "
+            f"correctness={judged_item['judge']['correctness']:.4f} "
+            f"overall={judged_item['judge']['overall']:.4f}"
+        )
+        return index, judged_item, None
+    except Exception as exc:
+        judged_item["judge_error"] = {"type": type(exc).__name__, "message": str(exc)}
+        print(f"[{index}/{total_count}] judge_failed={type(exc).__name__}: {exc}", file=sys.stderr)
+        return index, judged_item, exc
+
+
 def main() -> None:
     args = parse_args()
+    if args.max_concurrency < 1:
+        raise SystemExit("--max-concurrency must be >= 1.")
     load_env_file(args.env_file)
     payload = json.loads(Path(args.results_file).read_text(encoding="utf-8"))
     input_results = payload["results"]
@@ -165,29 +198,51 @@ def main() -> None:
         timeout_seconds=args.timeout_seconds,
     )
 
-    judged_results = []
-    failed_results = []
-    for index, item in enumerate(input_results, start=1):
-        judged_item = dict(item)
-        try:
-            judged_item["judge"] = judge_one(
+    indexed_results: dict[int, dict[str, Any]] = {}
+    failed_indexes: set[int] = set()
+    if args.max_concurrency == 1:
+        for index, item in enumerate(input_results, start=1):
+            _, judged_item, error = judge_item(
+                index,
+                len(input_results),
                 client,
-                judged_item,
+                item,
                 temperature=args.temperature,
                 max_attempts=args.max_attempts,
             )
-            judged_results.append(judged_item)
-            print(
-                f"[{index}/{len(input_results)}] "
-                f"correctness={judged_item['judge']['correctness']:.4f} "
-                f"overall={judged_item['judge']['overall']:.4f}"
-            )
-        except Exception as exc:
-            judged_item["judge_error"] = {"type": type(exc).__name__, "message": str(exc)}
-            failed_results.append(judged_item)
-            print(f"[{index}/{len(input_results)}] judge_failed={type(exc).__name__}: {exc}", file=sys.stderr)
-            if args.fail_fast:
-                raise
+            indexed_results[index] = judged_item
+            if error is not None:
+                failed_indexes.add(index)
+                if args.fail_fast:
+                    raise error
+    else:
+        with ThreadPoolExecutor(max_workers=args.max_concurrency) as executor:
+            futures = {
+                executor.submit(
+                    judge_item,
+                    index,
+                    len(input_results),
+                    client,
+                    item,
+                    temperature=args.temperature,
+                    max_attempts=args.max_attempts,
+                ): index
+                for index, item in enumerate(input_results, start=1)
+            }
+            for future in as_completed(futures):
+                index = futures[future]
+                _, judged_item, error = future.result()
+                indexed_results[index] = judged_item
+                if error is not None:
+                    failed_indexes.add(index)
+                    if args.fail_fast:
+                        for pending_future in futures:
+                            pending_future.cancel()
+                        raise error
+
+    ordered_results = [indexed_results[index] for index in sorted(indexed_results)]
+    judged_results = [item for index, item in enumerate(ordered_results, start=1) if index not in failed_indexes]
+    failed_results = [item for index, item in enumerate(ordered_results, start=1) if index in failed_indexes]
 
     summary = {
         "count": len(judged_results),

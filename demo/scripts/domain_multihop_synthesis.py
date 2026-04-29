@@ -40,20 +40,24 @@ def main() -> None:
     parser.add_argument("--api-key")
     parser.add_argument("--timeout-seconds", type=float, help="Doubao request timeout for LLM merge.")
     parser.add_argument("--disable-llm-merge", action="store_true")
+    parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent LLM merge requests.")
     parser.add_argument("--overwrite", action="store_true", help="Clear output and regenerate from the beginning.")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()
+    if args.max_concurrency < 1:
+        parser.error("--max-concurrency must be >= 1.")
 
     _configure_logging(args.log_level)
     load_env_file(args.env_file)
     logging.info(
-        "domain_multihop_synthesis.start seeds=%s corpus=%s output=%s target_count=%s llm_merge=%s merge_model=%s",
+        "domain_multihop_synthesis.start seeds=%s corpus=%s output=%s target_count=%s llm_merge=%s merge_model=%s max_concurrency=%s",
         args.seeds,
         args.corpus,
         args.output,
         args.target_count,
         not args.disable_llm_merge,
         get_doubao_thinking_model(args.merge_model),
+        args.max_concurrency,
     )
     seeds = load_jsonl(args.seeds)
     chunks = load_chunks(args.corpus)
@@ -97,6 +101,7 @@ def main() -> None:
             merge_llm_client=merge_llm_client,
             skip_chain_keys=existing_chain_keys,
             existing_questions=existing_questions,
+            max_concurrency=args.max_concurrency,
         ):
             write_jsonl_record(handle, example)
             handle.flush()

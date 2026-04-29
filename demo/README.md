@@ -487,6 +487,7 @@ flowchart TD
 - 每条 seed QA 会先作为 `hop1`；扩展下一跳时，主查询使用当前 hop 的 `question`，辅查询使用当前 hop 的 `answer`。
 - 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`，从新的 chunk 中选择已有 seed QA 作为下一跳。
 - 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，生成 `final_question/final_answer/qa_type/answer_aliases`。
+- LLM 合并默认最大并发数为 `5`，可通过 `--max-concurrency` 调整；输出按 merge 完成顺序写入，断点续写仍按 hop 链路签名判断。
 - 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并；该模式只适合连通性测试，不适合作为正式训练数据。
 - 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 hop 级 `qa_type` 继承 seed QA 的 5 类类型。
 - `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
@@ -531,6 +532,7 @@ flowchart TD
 - 环境文件：`.env` 中填写 `ARK_API_KEY`
 - 默认 Provider：`doubao`
 - 默认合并模型：`doubao-seed-2-0-pro-260215`
+- 默认最大并发：`5`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
 
 **怎么做**：
@@ -540,8 +542,11 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --seeds .\data\novel_eval\seeds_clean.jsonl `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
-  --target-count 50
+  --target-count 50 `
+  --max-concurrency 5
 ```
+
+`--max-concurrency` 控制同时发起的多跳 merge LLM 请求数。默认值是 `5`；如果遇到接口限流或合并失败数上升，可以先降到 `1` 或 `2`。
 
 失败后继续执行同一条命令即可续写；如果确认要从头合成，执行：
 
@@ -551,6 +556,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
+  --max-concurrency 5 `
   --overwrite
 ```
 
@@ -1155,6 +1161,7 @@ flowchart LR
 - 检索服务
 - 可选 LLM Judge 服务
 - 脚本：`eval_agentic.py`、`run_cloud_eval.py`、`run_llm_judge.py`
+- LLM Judge 默认最大并发：`5`，可通过 `--max-concurrency` 调整
 
 **怎么做**：
 
@@ -1169,6 +1176,11 @@ uv run python .\scripts\run_cloud_eval.py `
   --data .\data\novel_eval\qa_pairs.jsonl `
   --corpus .\data\novel\corpus.jsonl `
   --output .\results\pipeline_eval.json
+
+uv run python .\scripts\run_llm_judge.py `
+  .\results\agentic_eval.json `
+  --output .\results\agentic_eval_judged.json `
+  --max-concurrency 5
 ```
 
 **能拿到的结果**：
@@ -1208,7 +1220,7 @@ uv run python .\scripts\parse_text_corpus.py --input .\data\original_data\平凡
 uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes
 uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
 uv run python .\scripts\clean_seed_qa.py --input .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds_clean.jsonl --dropped-output .\data\novel_eval\seeds_dropped.jsonl
-uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50
+uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50 --max-concurrency 5
 uv run python .\scripts\build_oracle_traces.py --qa .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\traces_oracle_zh.jsonl --use-zh
 uv run python .\scripts\trace_to_sft.py --input .\data\novel_eval\traces_oracle_zh.jsonl --output-dir .\data\novel_eval\sft --lang zh
 uv run python .\scripts\convert_sft_to_unsloth.py --input-dir .\data\novel_eval\sft --output-dir .\data\novel_eval\sft_zh_unsloth
