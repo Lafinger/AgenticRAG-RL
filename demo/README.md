@@ -269,7 +269,7 @@ Step 7: 可选离线复洗
 **当前脚本行为**：
 
 - `gen_seed_qa.py` 逐条读取 `data/novel/corpus.jsonl`，并把每个 chunk 文本发送给豆包模型生成 seed QA。
-- 默认模型为 `doubao-seed-1-6-flash-250828`，默认每个 chunk 最多生成 2 条 seed。
+- 默认模型为 `doubao-seed-2-0-pro-260215`，对应 Doubao-Seed-2.0 Pro，默认每个 chunk 最多生成 2 条 seed。
 - 模型输出必须是 JSON 数组，元素字段为 `question/answer/qa_type/entities`。
 - 脚本会补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
 - 脚本会把旧类型映射到小说域 5 类，例如 `character_relation -> relation`、`object_reference -> object`、`character_behavior -> action_result`。
@@ -283,7 +283,7 @@ Step 7: 可选离线复洗
 flowchart TD
     A["novel corpus chunks"] --> B["gen_seed_qa.py"]
     B --> C["小说域原子 QA Prompt"]
-    C --> D["doubao-seed-1-6-flash-250828"]
+    C --> D["doubao-seed-2-0-pro-260215"]
     D --> E["候选 JSON seed QA"]
     E --> F["规范化字段 / 补充 doc_chunk_id / tool"]
     F --> G["首轮质量过滤"]
@@ -301,7 +301,7 @@ flowchart TD
 - 清洗脚本：`scripts/clean_seed_qa.py`
 - 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY`
 - 默认 Provider：`doubao`
-- 默认模型：`doubao-seed-1-6-flash-250828`
+- 默认模型：`doubao-seed-2-0-pro-260215`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
 

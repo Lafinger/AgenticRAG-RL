@@ -10,7 +10,7 @@ import httpx
 
 
 DEFAULT_LLM_PROVIDER = "doubao"
-DEFAULT_DOUBAO_MODEL = "doubao-seed-1-6-flash-250828"
+DEFAULT_DOUBAO_MODEL = "doubao-seed-2-0-pro-260215"
 DEFAULT_DOUBAO_THINKING_MODEL = "doubao-seed-2-0-pro-260215"
 DEFAULT_DOUBAO_JUDGE_MODEL = DEFAULT_DOUBAO_THINKING_MODEL
 DEFAULT_DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"

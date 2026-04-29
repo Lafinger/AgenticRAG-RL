@@ -14,7 +14,7 @@ def test_load_env_file_sets_environment_variables(tmp_path: Path, monkeypatch) -
         "\r\n".join(
             [
                 "ARK_API_KEY=test-key",
-                "DOUBAO_MODEL='doubao-seed-1-6-flash-250828'",
+                "DOUBAO_MODEL='doubao-seed-2-0-pro-260215'",
                 'DOUBAO_BASE_URL="https://example.test/api/v3"',
             ]
         ),
@@ -27,7 +27,7 @@ def test_load_env_file_sets_environment_variables(tmp_path: Path, monkeypatch) -
         loaded = load_env_file(env_file)
 
         assert loaded["ARK_API_KEY"] == "test-key"
-        assert os.environ["DOUBAO_MODEL"] == "doubao-seed-1-6-flash-250828"
+        assert os.environ["DOUBAO_MODEL"] == "doubao-seed-2-0-pro-260215"
         assert os.environ["DOUBAO_BASE_URL"] == "https://example.test/api/v3"
     finally:
         for key, value in original_values.items():
