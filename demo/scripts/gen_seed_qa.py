@@ -42,16 +42,20 @@ def main() -> None:
     parser.add_argument("--failed-output", help="JSONL file for chunks that still fail after retries.")
     parser.add_argument("--fail-fast", action="store_true", help="Stop immediately when one chunk fails.")
     parser.add_argument("--max-attempts", type=int, default=2, help="LLM attempts per chunk before marking it failed.")
+    parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent LLM requests.")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()
+    if args.max_concurrency < 1:
+        parser.error("--max-concurrency must be >= 1.")
 
     _configure_logging(args.log_level)
     logging.info(
-        "gen_seed_qa.start corpus=%s output=%s max_per_chunk=%s max_chunks=%s",
+        "gen_seed_qa.start corpus=%s output=%s max_per_chunk=%s max_chunks=%s max_concurrency=%s",
         args.corpus,
         args.output,
         args.max_per_chunk,
         args.max_chunks,
+        args.max_concurrency,
     )
     load_env_file(args.env_file)
     chunks = load_chunks(args.corpus)
@@ -117,6 +121,7 @@ def main() -> None:
             max_attempts=args.max_attempts,
             continue_on_error=not args.fail_fast,
             on_chunk_failed=record_failed_chunk,
+            max_concurrency=args.max_concurrency,
         ):
             for seed in seed_batch:
                 write_jsonl_record(handle, seed)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import threading
+import time
 from pathlib import Path
 
 from agentic_rag_rl.io import load_chunks
@@ -86,6 +88,30 @@ class BrokenSeedLLMClient:
         return '[{"question": "坏 JSON", "answer" "缺少冒号"}]'
 
 
+class SlowSeedLLMClient:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.active_calls = 0
+        self.max_active_calls = 0
+        self.lock = threading.Lock()
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del messages, temperature
+        with self.lock:
+            self.calls += 1
+            self.active_calls += 1
+            self.max_active_calls = max(self.max_active_calls, self.active_calls)
+        try:
+            time.sleep(0.05)
+            return (
+                '[{"question": "孙少平在哪里生活艰难？", "answer": "学校", '
+                '"qa_type": "place", "entities": ["孙少平", "学校"]}]'
+            )
+        finally:
+            with self.lock:
+                self.active_calls -= 1
+
+
 def test_generate_seed_questions_uses_llm_client() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
     client = FakeLLMClient()
@@ -112,6 +138,21 @@ def test_iter_seed_question_batches_yields_per_chunk() -> None:
 
     assert len(batches) == 2
     assert [batch[0]["doc_chunk_id"] for batch in batches] == [chunk.chunk_id for chunk in chunks]
+
+
+def test_iter_seed_question_batches_respects_max_concurrency() -> None:
+    chunks = [
+        Chunk(chunk_id=f"c{index}", title=str(index), text="孙少平在学校生活艰难。")
+        for index in range(4)
+    ]
+    client = SlowSeedLLMClient()
+
+    batches = list(iter_seed_question_batches(chunks, client, max_per_chunk=1, max_concurrency=2))
+
+    assert len(batches) == 4
+    assert client.calls == 4
+    assert client.max_active_calls == 2
+    assert sorted(batch[0]["doc_chunk_id"] for batch in batches) == ["c0", "c1", "c2", "c3"]
 
 
 def test_generate_seed_qa_retries_invalid_json_response() -> None:

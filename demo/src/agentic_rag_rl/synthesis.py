@@ -4,6 +4,7 @@ import json
 import logging
 import re
 from collections.abc import Callable, Iterable
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from typing import Any
 
 from .llm_client import ChatMessage, LLMClient
@@ -40,9 +41,19 @@ def _first_sentence(text: str, max_chars: int = 80) -> str:
     return sentence[:max_chars].strip(" ，,；;") or text[:max_chars]
 
 
-def generate_seed_questions(chunks: Iterable[Chunk], llm_client: LLMClient, max_per_chunk: int = 2) -> list[dict[str, Any]]:
+def generate_seed_questions(
+    chunks: Iterable[Chunk],
+    llm_client: LLMClient,
+    max_per_chunk: int = 2,
+    max_concurrency: int = 1,
+) -> list[dict[str, Any]]:
     seeds: list[dict[str, Any]] = []
-    for seed_batch in iter_seed_question_batches(chunks, llm_client, max_per_chunk=max_per_chunk):
+    for seed_batch in iter_seed_question_batches(
+        chunks,
+        llm_client,
+        max_per_chunk=max_per_chunk,
+        max_concurrency=max_concurrency,
+    ):
         seeds.extend(seed_batch)
     return seeds
 
@@ -54,10 +65,113 @@ def iter_seed_question_batches(
     max_attempts: int = 2,
     continue_on_error: bool = False,
     on_chunk_failed: Callable[[Chunk, Exception], None] | None = None,
+    max_concurrency: int = 1,
 ) -> Iterable[list[dict[str, Any]]]:
     chunk_list = list(chunks)
     seeds: list[dict[str, Any]] = []
-    logger.info("seed_qa_generation.start chunk_count=%s max_per_chunk=%s", len(chunk_list), max_per_chunk)
+    if max_concurrency < 1:
+        raise ValueError("max_concurrency must be >= 1.")
+    logger.info(
+        "seed_qa_generation.start chunk_count=%s max_per_chunk=%s max_concurrency=%s",
+        len(chunk_list),
+        max_per_chunk,
+        max_concurrency,
+    )
+    if max_concurrency == 1:
+        yield from _iter_seed_question_batches_sequential(
+            chunk_list,
+            llm_client,
+            max_per_chunk=max_per_chunk,
+            max_attempts=max_attempts,
+            continue_on_error=continue_on_error,
+            on_chunk_failed=on_chunk_failed,
+            seeds=seeds,
+        )
+        logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
+        return
+
+    worker_count = min(max_concurrency, len(chunk_list))
+    if worker_count == 0:
+        logger.info("seed_qa_generation.done chunk_count=0 seed_count=0")
+        return
+
+    next_chunk_index = 0
+    futures: dict[Future[list[dict[str, Any]]], tuple[int, Chunk]] = {}
+
+    def submit_next(executor: ThreadPoolExecutor) -> None:
+        nonlocal next_chunk_index
+        if next_chunk_index >= len(chunk_list):
+            return
+        chunk = chunk_list[next_chunk_index]
+        index = next_chunk_index + 1
+        next_chunk_index += 1
+        logger.info(
+            "seed_qa_generation.chunk_start index=%s/%s chunk_id=%s title=%s chunk_chars=%s",
+            index,
+            len(chunk_list),
+            chunk.chunk_id,
+            chunk.title,
+            len(chunk.text),
+        )
+        future = executor.submit(
+            generate_seed_qa,
+            llm_client,
+            chunk.text,
+            max_items=max_per_chunk,
+            max_attempts=max_attempts,
+        )
+        futures[future] = (index, chunk)
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        for _ in range(worker_count):
+            submit_next(executor)
+
+        while futures:
+            done, _ = wait(futures, return_when=FIRST_COMPLETED)
+            for future in done:
+                index, chunk = futures.pop(future)
+                try:
+                    items = future.result()
+                except Exception as exc:
+                    logger.exception(
+                        "seed_qa_generation.chunk_failed index=%s/%s chunk_id=%s",
+                        index,
+                        len(chunk_list),
+                        chunk.chunk_id,
+                    )
+                    if on_chunk_failed:
+                        on_chunk_failed(chunk, exc)
+                    if continue_on_error:
+                        submit_next(executor)
+                        continue
+                    for pending_future in futures:
+                        pending_future.cancel()
+                    raise
+                batch = _build_seed_batch(chunk, items)
+                seeds.extend(batch)
+                logger.info(
+                    "seed_qa_generation.chunk_done index=%s/%s chunk_id=%s generated_count=%s total_seed_count=%s",
+                    index,
+                    len(chunk_list),
+                    chunk.chunk_id,
+                    len(items),
+                    len(seeds),
+                )
+                yield batch
+                submit_next(executor)
+    logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
+
+
+def _iter_seed_question_batches_sequential(
+    chunk_list: list[Chunk],
+    llm_client: LLMClient,
+    *,
+    max_per_chunk: int,
+    max_attempts: int,
+    continue_on_error: bool,
+    on_chunk_failed: Callable[[Chunk, Exception], None] | None,
+    seeds: list[dict[str, Any]],
+) -> Iterable[list[dict[str, Any]]]:
     for index, chunk in enumerate(chunk_list, start=1):
         logger.info(
             "seed_qa_generation.chunk_start index=%s/%s chunk_id=%s title=%s chunk_chars=%s",
@@ -81,18 +195,8 @@ def iter_seed_question_batches(
             if continue_on_error:
                 continue
             raise
-        batch: list[dict[str, Any]] = []
-        for item in items:
-            seed = {
-                "question": item["question"],
-                "answer": item["answer"],
-                "doc_chunk_id": chunk.chunk_id,
-                "tool": "keyword_search",
-                "entities": item.get("entities", []),
-                "qa_type": item.get("qa_type", "action_result"),
-            }
-            batch.append(seed)
-            seeds.append(seed)
+        batch = _build_seed_batch(chunk, items)
+        seeds.extend(batch)
         logger.info(
             "seed_qa_generation.chunk_done index=%s/%s chunk_id=%s generated_count=%s total_seed_count=%s",
             index,
@@ -102,7 +206,21 @@ def iter_seed_question_batches(
             len(seeds),
         )
         yield batch
-    logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
+
+
+def _build_seed_batch(chunk: Chunk, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    batch: list[dict[str, Any]] = []
+    for item in items:
+        seed = {
+            "question": item["question"],
+            "answer": item["answer"],
+            "doc_chunk_id": chunk.chunk_id,
+            "tool": "keyword_search",
+            "entities": item.get("entities", []),
+            "qa_type": item.get("qa_type", "action_result"),
+        }
+        batch.append(seed)
+    return batch
 
 
 def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int, max_attempts: int = 2) -> list[dict[str, Any]]:
