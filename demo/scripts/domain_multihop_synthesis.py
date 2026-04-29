@@ -29,7 +29,7 @@ def _configure_logging(level: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Synthesize multi-hop QA examples from seeds.")
-    parser.add_argument("--seeds", default=str(ROOT / "data" / "novel_eval" / "seeds.jsonl"))
+    parser.add_argument("--seeds", default=str(ROOT / "data" / "novel_eval" / "seeds_clean.jsonl"))
     parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     parser.add_argument("--output", default=str(ROOT / "data" / "novel_eval" / "qa_pairs.jsonl"))
     parser.add_argument("--target-count", type=int, default=200)

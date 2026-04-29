@@ -5,6 +5,7 @@ from pathlib import Path
 from agentic_rag_rl.io import load_chunks
 from agentic_rag_rl.synthesis import (
     _build_seed_qa_messages,
+    clean_seed_qa_records,
     clean_multihop_examples,
     generate_seed_qa,
     generate_seed_questions,
@@ -93,11 +94,11 @@ def test_generate_seed_questions_uses_llm_client() -> None:
     assert len(client.calls) == 1
     assert "平凡的世界" in client.calls[0][1]["content"]
     assert seeds == [
-        {
-            "question": "孙少平在学校生活艰难的表现是什么？",
-            "answer": "最后去取黑高粱面馍。",
-            "doc_chunk_id": "corpus_chunkids_000001",
-            "tool": "keyword_search",
+            {
+                "question": "孙少平在学校生活艰难的表现是什么？",
+                "answer": "最后去取黑高粱面馍",
+                "doc_chunk_id": "corpus_chunkids_000001",
+                "tool": "keyword_search",
             "entities": ["孙少平"],
             "qa_type": "action_result",
         }
@@ -127,6 +128,51 @@ def test_generate_seed_qa_retries_invalid_json_response() -> None:
             "entities": ["孙少平"],
         }
     ]
+
+
+def test_clean_seed_qa_records_filters_low_quality_items() -> None:
+    records = [
+        {
+            "question": "郝红梅的名字叫什么？",
+            "answer": "郝红梅",
+            "qa_type": "character",
+            "entities": "郝红梅,名字",
+            "doc_chunk_id": "c1",
+            "tool": "keyword_search",
+        },
+        {
+            "question": "孙少平取走了什么主食？",
+            "answer": "黑高粱面馍。",
+            "qa_type": "object",
+            "entities": "孙少平,黑高粱面馍",
+            "doc_chunk_id": "c1",
+            "tool": "keyword_search",
+        },
+        {
+            "question": "孙少平取走了什么主食？",
+            "answer": "黑高粱面馍。",
+            "qa_type": "object",
+            "entities": ["孙少平"],
+            "doc_chunk_id": "c1",
+            "tool": "keyword_search",
+        },
+    ]
+
+    cleaned, dropped = clean_seed_qa_records(records, valid_chunk_ids={"c1"})
+
+    assert cleaned == [
+        {
+            "question": "孙少平取走了什么主食？",
+            "answer": "黑高粱面馍",
+            "qa_type": "object",
+            "entities": ["孙少平", "黑高粱面馍"],
+            "doc_chunk_id": "c1",
+            "tool": "keyword_search",
+        }
+    ]
+    assert len(dropped) == 2
+    assert "answer_leaked_in_question" in dropped[0]["drop_reasons"]
+    assert "duplicate_question" in dropped[1]["drop_reasons"]
 
 
 def test_iter_seed_question_batches_can_continue_after_invalid_json() -> None:

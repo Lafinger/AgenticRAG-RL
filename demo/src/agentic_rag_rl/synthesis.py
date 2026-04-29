@@ -13,6 +13,8 @@ from .types import Chunk
 logger = logging.getLogger(__name__)
 
 SEED_QA_TYPES = {"character", "place", "object", "relation", "action_result"}
+SEED_ANSWER_MAX_CHARS = 20
+SEED_QUESTION_MIN_CHARS = 8
 LEGACY_SEED_QA_TYPE_MAP = {
     "character_identity": "character",
     "place_origin": "place",
@@ -23,6 +25,14 @@ LEGACY_SEED_QA_TYPE_MAP = {
     "character_behavior": "action_result",
     "inference": "action_result",
 }
+SEED_DOC_REFERENCE_RE = re.compile(r"(根据|据|文档|片段|文本|材料|上文|原文)")
+SEED_AMBIGUOUS_PRONOUN_RE = re.compile(
+    r"(?:^|[，。？?；;、\s])(?:他|她|这个人|那个人|此人|该人|这位|那位|这个青年|那个青年)"
+    r"(?:[，。？?；;、\s]|的|在|被|是|做|去|给|把|和)"
+)
+SEED_ABSTRACT_RE = re.compile(r"(感悟|意义|重要性|体现|说明|反映|象征|态度|心情|感受|评价)")
+SEED_HARD_COMPOUND_RE = re.compile(r"(；|;|、|\n|以及|并且|同时|[，,]|\d+[.．、])")
+SEED_SOFT_COMPOUND_RE = re.compile(r"(和|或)")
 
 
 def _first_sentence(text: str, max_chars: int = 80) -> str:
@@ -103,14 +113,13 @@ def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int, 
         try:
             content = llm_client.chat(_build_seed_qa_messages(chunk_text, max_items=max_items), temperature=0.2)
             records = _extract_json_array(content)
-            normalized_records = [
-                _normalize_seed_qa_record(record) for record in records[:max_items] if _is_usable_seed_qa_record(record)
-            ]
+            normalized_records, dropped_records = clean_seed_qa_records(records, max_records=max_items)
             logger.info(
-                "seed_qa.done attempt=%s raw_count=%s returned_count=%s response_chars=%s",
+                "seed_qa.done attempt=%s raw_count=%s returned_count=%s dropped_count=%s response_chars=%s",
                 attempt,
                 len(records),
                 len(normalized_records),
+                len(dropped_records),
                 len(content),
             )
             return normalized_records
@@ -206,17 +215,39 @@ def _is_usable_seed_qa_record(record: dict[str, Any]) -> bool:
 
 
 def _normalize_seed_qa_record(record: dict[str, Any]) -> dict[str, Any]:
-    entities = record.get("entities", [])
-    if isinstance(entities, str):
-        entities = [entities]
-    if not isinstance(entities, list):
-        entities = []
     return {
         "question": str(record.get("question", "")).strip(),
-        "answer": str(record.get("answer", "")).strip(),
+        "answer": _refine_seed_answer(record.get("answer", "")),
         "qa_type": _normalize_seed_qa_type(record.get("qa_type")),
-        "entities": [str(entity).strip() for entity in entities if str(entity).strip()],
+        "entities": _normalize_seed_entities(record.get("entities", [])),
     }
+
+
+def _refine_seed_answer(value: Any) -> str:
+    answer = re.sub(r"\s+", " ", str(value or "")).strip()
+    answer = re.sub(r"^(?:答案[:：]?|答[:：]?|回答[:：]?)\s*", "", answer)
+    answer = answer.strip(" \t\r\n\"'“”‘’")
+    answer = answer.strip("。！？!?；;，,、")
+    return answer.strip()
+
+
+def _normalize_seed_entities(value: Any) -> list[str]:
+    if isinstance(value, str):
+        raw_entities = [value]
+    elif isinstance(value, list):
+        raw_entities = value
+    else:
+        raw_entities = []
+
+    entities: list[str] = []
+    seen: set[str] = set()
+    for raw_entity in raw_entities:
+        for entity in re.split(r"[,;；]", str(raw_entity)):
+            cleaned = entity.strip()
+            if cleaned and cleaned not in seen:
+                entities.append(cleaned)
+                seen.add(cleaned)
+    return entities
 
 
 def _normalize_seed_qa_type(value: Any) -> str:
@@ -224,6 +255,89 @@ def _normalize_seed_qa_type(value: Any) -> str:
     if qa_type in SEED_QA_TYPES:
         return qa_type
     return LEGACY_SEED_QA_TYPE_MAP.get(qa_type, "action_result")
+
+
+def validate_seed_qa_record(record: dict[str, Any], valid_chunk_ids: set[str] | None = None) -> list[str]:
+    reasons: list[str] = []
+    question = str(record.get("question", "")).strip()
+    answer = str(record.get("answer", "")).strip()
+    qa_type = _normalize_seed_qa_type(record.get("qa_type"))
+    doc_chunk_id = str(record.get("doc_chunk_id", "")).strip()
+    normalized_question = re.sub(r"\s+", "", question)
+    normalized_answer = re.sub(r"\s+", "", answer)
+
+    if not question:
+        reasons.append("empty_question")
+    if not answer:
+        reasons.append("empty_answer")
+    if len(question) < SEED_QUESTION_MIN_CHARS:
+        reasons.append("question_too_short")
+    if qa_type not in SEED_QA_TYPES:
+        reasons.append("invalid_qa_type")
+    if valid_chunk_ids is not None and doc_chunk_id not in valid_chunk_ids:
+        reasons.append("doc_chunk_id_not_found")
+    if len(answer) > SEED_ANSWER_MAX_CHARS:
+        reasons.append("answer_too_long")
+    if len(normalized_answer) >= 2 and normalized_answer in normalized_question:
+        reasons.append("answer_leaked_in_question")
+    if SEED_DOC_REFERENCE_RE.search(question):
+        reasons.append("question_mentions_context")
+    if SEED_AMBIGUOUS_PRONOUN_RE.search(question):
+        reasons.append("ambiguous_pronoun")
+    if SEED_ABSTRACT_RE.search(question) or SEED_ABSTRACT_RE.search(answer):
+        reasons.append("subjective_or_abstract")
+    if SEED_HARD_COMPOUND_RE.search(answer):
+        reasons.append("compound_answer")
+    if qa_type != "relation" and SEED_SOFT_COMPOUND_RE.search(answer):
+        reasons.append("compound_answer")
+    return reasons
+
+
+def clean_seed_qa_records(
+    records: Iterable[dict[str, Any]],
+    valid_chunk_ids: set[str] | None = None,
+    max_records: int | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    cleaned: list[dict[str, Any]] = []
+    dropped: list[dict[str, Any]] = []
+    seen_questions: set[str] = set()
+    seen_pairs: set[tuple[str, str]] = set()
+    seen_doc_questions: set[tuple[str, str]] = set()
+
+    for record in records:
+        if not _is_usable_seed_qa_record(record):
+            dropped.append({"record": record, "drop_reasons": ["empty_question_or_answer"]})
+            continue
+        normalized = _normalize_seed_qa_record(record)
+        if record.get("doc_chunk_id") is not None:
+            normalized["doc_chunk_id"] = str(record.get("doc_chunk_id", "")).strip()
+        if record.get("tool") is not None:
+            normalized["tool"] = str(record.get("tool", "")).strip() or "keyword_search"
+
+        reasons = validate_seed_qa_record(normalized, valid_chunk_ids=valid_chunk_ids)
+        question_key = normalized["question"]
+        pair_key = (normalized["question"], normalized["answer"])
+        doc_question_key = (str(normalized.get("doc_chunk_id", "")), normalized["question"])
+        if question_key in seen_questions:
+            reasons.append("duplicate_question")
+        if pair_key in seen_pairs:
+            reasons.append("duplicate_question_answer")
+        if normalized.get("doc_chunk_id") and doc_question_key in seen_doc_questions:
+            reasons.append("duplicate_doc_question")
+
+        if reasons:
+            dropped.append({**normalized, "drop_reasons": reasons})
+            continue
+
+        seen_questions.add(question_key)
+        seen_pairs.add(pair_key)
+        if normalized.get("doc_chunk_id"):
+            seen_doc_questions.add(doc_question_key)
+        cleaned.append(normalized)
+        if max_records is not None and len(cleaned) >= max_records:
+            break
+
+    return cleaned, dropped
 
 
 def synthesize_multihop_examples(

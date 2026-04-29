@@ -2,7 +2,7 @@ model_name_or_path: Qwen/Qwen3-4B-Instruct-2507
 data_path: ./data/novel_eval/sft_zh_unsloth/train.jsonl
 output_dir: ./training/outputs/unsloth_sft_qwen3_4b_lora
 merged_export_dir: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
-max_seq_length: 2048
+max_seq_length: 4096
 load_in_4bit: true
 lora_rank: 64
 lora_alpha: 64

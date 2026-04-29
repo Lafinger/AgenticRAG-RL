@@ -224,39 +224,81 @@ uv run python .\scripts\build_index.py `
 
 ## Step 3: 生成小说域 seed QA
 
-**目标**：通过豆包大模型 `doubao-seed-1-6-flash-250828` 从 chunk 中生成原子化、可验证、唯一答案的小说域基础问答。
+**目标**：对齐根项目“种子 QA 生成”流程，从每个小说 corpus chunk 中抽取原子化、可验证、唯一答案的单跳 QA。Seed QA 是后续逐跳扩展、多跳合成、Oracle trace、SFT 和 GRPO 的最小事实单元，因此质量优先级高于数量。
 
-**详细说明**：
+**核心原则**：
 
-- `gen_seed_qa.py` 逐条读取 corpus chunk，并把 chunk 文本发送给豆包模型生成 seed QA。
-- 模型必须只基于当前 chunk 生成问题，输出 JSON 数组，字段为 `question/answer/qa_type/entities`。
-- Prompt 核心要求参考原项目“种子 QA 生成”，但改成小说域标准：原子性、可验证性、时间 / 阶段明确性、唯一答案。
-- `answer` 必须是人物名、地点名、物品名、明确关系或明确行为结果之一，拒绝主观判断、抽象感悟、长段解释和多原因并列。
-- `qa_type` 固定收敛为 5 类：`character`、`place`、`object`、`relation`、`action_result`。
-- 如果片段有明确时间、年代、季节、上学阶段或事件阶段，问题必须写入；如果片段没有明确时间或阶段，不强制补时间，也不能编造时间。
-- 脚本会把模型输出规范化，并补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
-- 如果模型返回旧类型，脚本会映射到新的 5 类，例如 `character_relation -> relation`、`object_reference -> object`、`character_behavior -> action_result`。
-- 每条 seed QA 都绑定一个 `doc_chunk_id`，表示这个问题的答案可以从哪个 chunk 中获得。
+- 每条 seed QA 只绑定一个 `doc_chunk_id`，答案必须能从该 chunk 中获得。
+- 每条 seed QA 只表达一个不可拆分事实，不能把多个动作、多个物品、多个原因或多个关系并入同一个答案。
+- 问题必须具体到能定位唯一答案，避免“他 / 她 / 这个人 / 那件事”等脱离上下文后无法解析的指代。
+- 答案必须短、明确、可验证；不接受主观判断、抽象感悟、长段解释和多原因概括。
+- 如果片段出现明确时间、年代、季节、上学阶段或事件阶段，问题必须写入该限定；如果片段没有明确时间或阶段，不能编造。
+- 生成后的 seed 还需要经过质量过滤和答案精炼；仅靠 prompt 约束不能视为正式质量验收。
+
+**生成流程**：
+
+```text
+Step 1: 读取 corpus chunk
+        每个 chunk 独立处理，不能跨 chunk 引入事实
+
+Step 2: 调用 LLM 生成候选 seed QA
+        每个 chunk 默认最多生成 2 条
+        LLM 只输出 JSON 数组，不输出解释文本
+
+Step 3: 规范化字段
+        保留 question / answer / qa_type / entities
+        补充 doc_chunk_id 和 tool=keyword_search
+        将旧 qa_type 映射到小说域 5 类
+
+Step 4: 首轮质量过滤
+        过滤答案泄露、复合答案、过长答案、指代不清和重复问题
+        答案可验证性在质量审计和后续多跳验证中继续复查
+
+Step 5: 答案精炼
+        将冗长答案压缩成最短事实表达
+        不补充原文没有的新信息
+
+Step 6: 写入 seeds.jsonl
+        作为可复查的 seed QA 结果
+
+Step 7: 可选离线复洗
+        clean_seed_qa.py 读取 seeds.jsonl，输出 seeds_clean.jsonl 和 seeds_dropped.jsonl
+        Step 4 多跳合成默认使用 seeds_clean.jsonl
+```
+
+**当前脚本行为**：
+
+- `gen_seed_qa.py` 逐条读取 `data/novel/corpus.jsonl`，并把每个 chunk 文本发送给豆包模型生成 seed QA。
+- 默认模型为 `doubao-seed-1-6-flash-250828`，默认每个 chunk 最多生成 2 条 seed。
+- 模型输出必须是 JSON 数组，元素字段为 `question/answer/qa_type/entities`。
+- 脚本会补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
+- 脚本会把旧类型映射到小说域 5 类，例如 `character_relation -> relation`、`object_reference -> object`、`character_behavior -> action_result`。
 - 脚本默认启用断点续写：如果 `seeds.jsonl` 已存在，会读取已有 `doc_chunk_id`，跳过已经生成过 seed 的 chunk，只处理剩余 chunk。
 - 如果豆包返回非法 JSON 或单个 chunk 多次失败，脚本默认把失败 chunk 写入 `seeds.failed.jsonl` 并继续后续 chunk，避免整个任务中断。
 - 再次执行同一命令时，脚本会从第一条 corpus chunk 开始逐条校验；只有已经成功写入 `seeds.jsonl` 的 `doc_chunk_id` 会被跳过，之前失败但未成功写入的 chunk 会自动重新生成。
 - 如果要清空旧结果重新生成，需要显式添加 `--overwrite`。
-- seed QA 是单跳监督信号，后续多跳合成会把多个 seed 组合成更复杂问题。
+- 当前脚本已经实现 prompt 约束、字段规范化、类型收敛、首轮质量过滤和答案精炼；正式训练前建议再执行 `clean_seed_qa.py` 复洗，并审计 `seeds_dropped.jsonl`。
 
 ```mermaid
 flowchart TD
     A["novel corpus chunks"] --> B["gen_seed_qa.py"]
     B --> C["小说域原子 QA Prompt"]
     C --> D["doubao-seed-1-6-flash-250828"]
-    D --> E["JSON seed QA"]
-    E --> F["规范化 / 补充 doc_chunk_id / tool"]
-    F --> G["seeds.jsonl"]
+    D --> E["候选 JSON seed QA"]
+    E --> F["规范化字段 / 补充 doc_chunk_id / tool"]
+    F --> G["首轮质量过滤"]
+    G --> H["答案精炼"]
+    H --> I["seeds.jsonl"]
+    I --> J["clean_seed_qa.py"]
+    J --> K["seeds_clean.jsonl"]
+    J --> L["seeds_dropped.jsonl"]
 ```
 
 **需要**：
 
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/gen_seed_qa.py`
+- 清洗脚本：`scripts/clean_seed_qa.py`
 - 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY`
 - 默认 Provider：`doubao`
 - 默认模型：`doubao-seed-1-6-flash-250828`
@@ -271,6 +313,16 @@ uv run python .\scripts\gen_seed_qa.py `
   --output .\data\novel_eval\seeds.jsonl
 ```
 
+生成后执行离线复洗，产出 Step 4 默认使用的 `seeds_clean.jsonl`：
+
+```powershell
+uv run python .\scripts\clean_seed_qa.py `
+  --input .\data\novel_eval\seeds.jsonl `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\seeds_clean.jsonl `
+  --dropped-output .\data\novel_eval\seeds_dropped.jsonl
+```
+
 失败后继续执行同一条命令即可续写；如果确认要从头生成，执行：
 
 ```powershell
@@ -283,9 +335,12 @@ uv run python .\scripts\gen_seed_qa.py `
 **能拿到的结果**：
 
 - `data/novel_eval/seeds.jsonl`
+- `data/novel_eval/seeds_clean.jsonl`
+- `data/novel_eval/seeds_dropped.jsonl`
 - `data/novel_eval/seeds.failed.jsonl`，仅当部分 chunk 多次失败时产生
 - 每条 seed 包含 `question/answer/doc_chunk_id/tool/entities/qa_type`
 - 每条 seed 的 `question/answer/qa_type/entities` 来自豆包模型，`doc_chunk_id/tool` 由脚本补齐
+- 正式训练建议使用经过质量过滤和答案精炼后的 seed 数据，而不是直接把未清洗候选 seed 进入多跳合成
 
 **数据结构与字段用途**：
 
@@ -308,43 +363,164 @@ uv run python .\scripts\gen_seed_qa.py `
 | 唯一答案 | 问题必须足够具体，使片段中只有一个明确答案，避免“他/她/这个人”等指代不清 |
 | 类型收敛 | `qa_type` 只使用 `character/place/object/relation/action_result`，避免过细分类造成模型乱分桶 |
 
-TODO: 质量过滤 、 答案精炼。
+**质量过滤标准**：
+
+| 检查项 | 过滤规则 |
+| --- | --- |
+| 字段完整 | 必须包含 `question/answer/doc_chunk_id/tool/entities/qa_type` |
+| chunk 可用 | `doc_chunk_id` 必须存在于 `data/novel/corpus.jsonl` |
+| 答案可验证 | `answer` 应能从对应 chunk 直接获得；关系类和行为结果类允许轻度归纳，但必须可由 chunk 明确支持 |
+| 答案不泄露 | `answer` 不能直接出现在 `question` 中，例如“郝红梅的名字叫什么？ -> 郝红梅”应过滤 |
+| 答案短化 | `answer` 默认应为短文本；过长答案、完整句子和大段解释应过滤或精炼 |
+| 原子性 | `answer` 不能包含多个并列事实；包含“、/和/或/以及/；”的答案需要重点审查 |
+| 问题明确 | `question` 不能依赖“他/她/这个人/那位”等上下文外指代 |
+| 问题自然 | `question` 不能出现“根据文档/根据片段/上文提到”等查表痕迹 |
+| 类型合法 | `qa_type` 必须属于 `character/place/object/relation/action_result` |
+| 去重 | 按 `question`、`question+answer` 和 `doc_chunk_id+question` 去重 |
+| entities 规范 | `entities` 必须是字符串列表，不能把多个实体塞进一个逗号分隔字符串 |
+
+**答案精炼标准**：
+
+- 只保留问题所需的最小答案片段。
+- 不添加原文没有的新信息。
+- 复合物品或多个动作如果不可避免，应优先拆成多个 seed QA。
+- 关系类答案应精炼为短关系词，例如 `父女`、`姐夫和小舅子`。
+- 行为结果类答案应精炼为短动作或短结果，例如 `借书`、`被老师没收`、`去县城`。
+- 过长原因解释应改写为更具体的事实问题，或直接过滤。
+
+**质量验收建议**：
+
+生成 `seeds.jsonl` 后，至少检查以下统计：
+
+```text
+JSON 解析错误数
+缺字段样本数
+doc_chunk_id 不存在样本数
+qa_type 非法样本数
+answer 出现在 question 中的样本数
+answer 过长样本数
+疑似复合 answer 样本数
+重复 question / question+answer 数
+entities 格式异常样本数
+```
+
+只有当上述问题降到可接受范围后，才建议进入 Step 4 多跳合成。
 
 ## Step 4: 合成多跳 QA
 
-**目标**：参考原项目的“逐跳扩展”思路，从单跳 seed QA 出发，逐步检索相关 chunk 并扩展成 2-hop / 3-hop 阅读问答任务。
+**目标**：模仿原项目 AgenticRAGTracer 的“自底向上逐跳扩展”流程，从单跳 seed QA 出发，经检索候选、候选 QA 选择、merge prompt 合并和质量验证，生成适合 SFT / GRPO / eval 使用的 2-hop / 3-hop 小说阅读问答样本。
 
-**详细说明**：
+**核心原则**：
 
-- `domain_multihop_synthesis.py` 加载 seed QA 和 corpus，并在内存中创建 `HybridRetriever`。
-- 每条 seed QA 会先作为 hop1；扩展下一跳时，主查询使用当前 hop 的 `question`，辅查询使用当前 hop 的 `answer`。
-- 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`，从新的 chunk 中选择已有 seed QA 作为下一跳。
-- 当前实现复现“逐跳扩展”的数据流：`seed -> 检索候选 chunk -> 选择候选 QA -> 豆包 thinking 模型合并为多跳样本`。
-- 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，只负责生成自然的 `final_question/final_answer/answer_aliases`；逐跳检索和候选 QA 选择仍由规则流程完成。
-- 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并。
-- 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 `qa_type` 继承 seed QA 的 5 类类型，用于构造 Oracle trace、计算 `gold_chunks` 和诊断检索路径。
-- `answer_aliases` 会记录可接受答案变体，降低训练和评测中因表述不同造成的误判。
-- `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
-- 脚本默认启用断点续写：如果 `qa_pairs.jsonl` 已存在，会读取已有样本数量和 hop 链路签名，只补齐到 `--target-count`，并在调用豆包合并模型前跳过已经生成过的链路。
-- 如果要清空旧结果重新合成，需要显式添加 `--overwrite`。
+- 多跳样本不是把几个单跳问题机械拼接，而是把 `N-hop 链 + 新 QA` 合并为一个自然的 `(N+1)-hop final_question`。
+- 每扩展一跳都必须保留完整 `hops[]`，包括 `question/answer/doc_chunk_id/qa_type/search_tools`。
+- 最终问题必须让模型通过多轮检索收集证据才能回答，不能把中间答案直接写进问题里。
+- 合并后的 `final_answer` 默认取最后一跳短答案；只有链路逻辑要求组合答案时才允许偏离。
+- 结构清洗只能证明字段和 chunk 引用有效，不能替代语义级四重验证。
+
+**逐跳扩展流程**：
+
+```text
+Step 1: 选择一个 seed QA 作为 hop1
+        要求 seed answer 是短文本，且绑定唯一 doc_chunk_id
+
+Step 2: 基于当前链路检索候选 chunk
+        主查询优先使用当前链路问题或当前 hop.question
+        辅查询使用当前 hop.answer 做实体线索检索
+        跳过已经在当前链路中使用过的 doc_chunk_id
+
+Step 3: 从候选 chunk 中选择可接续的 seed QA 作为下一跳
+        新 hop 必须来自新的 doc_chunk_id
+        新 hop 的 qa_type 继续使用 seed QA 的 5 类类型
+        记录候选 chunk 被哪些检索工具命中到 search_tools
+
+Step 4: 使用 merge prompt 合并 N-hop 链和新 QA
+        输出 final_question / final_answer / qa_type / answer_aliases
+        final_question 必须自然、无合成痕迹、无中间答案泄露
+
+Step 5: 对候选多跳样本做质量验证
+        规则检查：字段、hop 数、chunk 引用、答案长度、别名数量
+        语义检查：链路是否合理，是否存在虚假关联或简单拼接
+        多跳必要性检查：不能只看最后一跳或单个 chunk 就能回答
+
+Step 6: 通过检查后写入 qa_pairs.jsonl
+        保留 final_question/final_answer/hop_count/qa_type/subset/hops/answer_aliases
+```
 
 ```mermaid
 flowchart TD
-    A["seed QA hop1"] --> B["主查询: hop.question"]
-    A --> C["辅查询: hop.answer"]
-    B --> D["HybridRetriever"]
-    C --> D
-    D --> E["候选 chunk 去重"]
-    E --> F["选择候选 chunk 的 seed QA"]
-    F --> G["追加 hop2 / hop3"]
-    G --> H["doubao-seed-2-0-pro-260215 合并"]
-    H --> I["构造 final_question / final_answer"]
-    I --> J["qa_pairs.jsonl"]
+    A["seed QA"] --> B["初始化 hop1"]
+    B --> C["主查询: 当前链路问题 / hop.question"]
+    B --> D["辅查询: hop.answer"]
+    C --> E["HybridRetriever"]
+    D --> E
+    E --> F["候选 chunk 合并去重"]
+    F --> G["跳过已用 doc_chunk_id"]
+    G --> H["选择候选 chunk 中的 seed QA"]
+    H --> I["追加为 hop2 / hop3"]
+    I --> J["merge prompt 合并多跳问题"]
+    J --> K["规则检查"]
+    K --> L["语义和多跳必要性检查"]
+    L --> M["写入 qa_pairs.jsonl"]
 ```
+
+**小说域适配**：
+
+| 环节 | 原项目金融域思路 | 小说域实现 / 要求 |
+| --- | --- | --- |
+| seed QA | 从年报 chunk 抽取原子事实 | 从小说段落抽取人物、地点、物品、关系、行为结果 |
+| 答案类型 | 数字、日期、唯一实体名 | 人物名、地点名、物品名、明确关系、明确行为结果 |
+| 检索 query | 上一跳 answer 或 final_question | 主查询用问题语义，辅查询用答案实体线索 |
+| 候选选择 | 从检索 chunk 生成或选择新 QA | 优先选择已有 seed QA，避免重新生成不可控答案 |
+| 合并模型 | 强模型 merge | 默认 `doubao-seed-2-0-pro-260215` 做自然问题合并 |
+| 多跳类型 | inference / comparison | 当前小说域主流程固定为 `inference` |
+| 质量风险 | 数字查表、虚假跨公司关联 | 指代不清、答案泄露、剧情常识猜中、机械拼接 |
+
+**当前脚本行为**：
+
+- `domain_multihop_synthesis.py` 默认加载 `seeds_clean.jsonl` 和 `corpus.jsonl`，并在内存中创建 `HybridRetriever`。
+- 每条 seed QA 会先作为 `hop1`；扩展下一跳时，主查询使用当前 hop 的 `question`，辅查询使用当前 hop 的 `answer`。
+- 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`，从新的 chunk 中选择已有 seed QA 作为下一跳。
+- 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，生成 `final_question/final_answer/qa_type/answer_aliases`。
+- 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并；该模式只适合连通性测试，不适合作为正式训练数据。
+- 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 hop 级 `qa_type` 继承 seed QA 的 5 类类型。
+- `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
+- 脚本默认启用断点续写：如果 `qa_pairs.jsonl` 已存在，会读取已有样本数量和 hop 链路签名，只补齐到 `--target-count`，并跳过已经生成过的链路。
+- 如果要清空旧结果重新合成，需要显式添加 `--overwrite`。
+
+**正式数据质量门槛**：
+
+| 检查项 | 必须满足的条件 |
+| --- | --- |
+| 字段完整性 | 每条样本包含 `final_question/final_answer/hop_count/qa_type/subset/hops/answer_aliases` |
+| hop 数 | `hop_count >= 2`，且 `hop_count == len(hops)` |
+| hop 顺序 | `hop_idx` 从 1 连续递增 |
+| chunk 可用性 | 每个 `doc_chunk_id` 必须存在于 `data/novel/corpus.jsonl` |
+| chunk 去重 | 同一条多跳链内不重复使用同一个 `doc_chunk_id` |
+| 顶层类型 | 多跳样本 `qa_type` 固定为 `inference` |
+| hop 类型 | hop 级 `qa_type` 只能是 `character/place/object/relation/action_result` |
+| 自然性 | `final_question` 不能出现“第1步 / 第2步 / hop / 逐步检索 / 最终答案是什么”等合成痕迹 |
+| 无泄露 | `final_question` 不能直接包含中间 hop answer 或最终答案 |
+| 多跳必要性 | 不能退化成只看最后一跳即可回答的单跳题 |
+| 答案短化 | `final_answer` 应为短答案；拒绝长段解释、编号列表和多个事实并列 |
+| 别名约束 | `answer_aliases` 给出 1-3 个短别名，不能重复，不能引入冲突事实 |
+
+**四重验证目标**：
+
+根项目要求逐跳扩展后的候选样本全部通过四重验证才进入最终 QA。小说域也应保留同一验收思想：
+
+| 验证 | 目的 | 小说域判断标准 |
+| --- | --- | --- |
+| 语义检查 | 判断多跳逻辑是否合理 | 问题读起来自然，hop 间存在真实剧情、人物、地点或事件依赖 |
+| 纯推理不可答 | 确保不能只靠模型常识回答 | 不给文档时，LLM 不应稳定答对 `final_answer` |
+| 单文档不可答 | 确保需要多跳证据 | 任意单个 gold chunk 都不足以回答完整 `final_question` |
+| 全文档可答 | 确保问题本身可回答 | 给出所有 gold chunks 时，LLM 能得到与 `final_answer/answer_aliases` 等价的答案 |
+
+当前 `clean_synthesis.py` 只做 hop 数和 `doc_chunk_id` 有效性清洗，不能替代上面的四重验证。正式训练数据应在 Step 5 前至少完成规则检查；如果要严格复现根项目质量控制，应新增或执行 LLM 验证流程，并保存每条样本的验证结果，便于追溯。
 
 **需要**：
 
-- 输入：`data/novel_eval/seeds.jsonl`
+- 输入：`data/novel_eval/seeds_clean.jsonl`
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/domain_multihop_synthesis.py`
 - 环境文件：`.env` 中填写 `ARK_API_KEY`
@@ -356,7 +532,7 @@ flowchart TD
 
 ```powershell
 uv run python .\scripts\domain_multihop_synthesis.py `
-  --seeds .\data\novel_eval\seeds.jsonl `
+  --seeds .\data\novel_eval\seeds_clean.jsonl `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50
@@ -366,7 +542,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 
 ```powershell
 uv run python .\scripts\domain_multihop_synthesis.py `
-  --seeds .\data\novel_eval\seeds.jsonl `
+  --seeds .\data\novel_eval\seeds_clean.jsonl `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
@@ -1026,7 +1202,8 @@ uv run python -m pytest
 uv run python .\scripts\parse_text_corpus.py --input .\data\original_data\平凡的世界utf8.txt --output .\data\novel\corpus.jsonl
 uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes
 uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
-uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50
+uv run python .\scripts\clean_seed_qa.py --input .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds_clean.jsonl --dropped-output .\data\novel_eval\seeds_dropped.jsonl
+uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50
 uv run python .\scripts\build_oracle_traces.py --qa .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\traces_oracle_zh.jsonl --use-zh
 uv run python .\scripts\trace_to_sft.py --input .\data\novel_eval\traces_oracle_zh.jsonl --output-dir .\data\novel_eval\sft --lang zh
 uv run python .\scripts\convert_sft_to_unsloth.py --input-dir .\data\novel_eval\sft --output-dir .\data\novel_eval\sft_zh_unsloth
@@ -1039,3 +1216,4 @@ uv run python .\scripts\eval_agentic.py --data .\data\novel_eval\qa_pairs.jsonl 
 - Windows 11 本机：数据处理、SFT 数据转换、CPU retrieval server、smoke evaluation。
 - RTX 4070 Ti SUPER 16GB：适合低参模型或 1-2 条样本 rollout smoke，不适合完整 GRPO。
 - 外部 GPU 环境：完整 Unsloth SFT、Unsloth GRPO/RL、长样本 rollout 和 Judge。
+
