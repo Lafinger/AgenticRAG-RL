@@ -11,13 +11,11 @@ from agentic_rag_rl.chunking import chunk_text_file_to_jsonl
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Parse a UTF-8 novel text file into stable corpus chunks.")
-    parser.add_argument("--input", default=str(ROOT / "data" / "original_data" / "平凡的世界utf8.txt"))
+    parser = argparse.ArgumentParser(description="Parse a UTF-8 novel text file into chapter-level corpus chunks.")
+    parser.add_argument("--input", default=str(ROOT / "data" / "original_data" / "平凡的世界-路遥.txt"))
     parser.add_argument("--output", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     parser.add_argument("--title", default="平凡的世界")
     parser.add_argument("--prefix", default="corpus_chunkids")
-    parser.add_argument("--chunk-chars", type=int, default=900)
-    parser.add_argument("--overlap-chars", type=int, default=120)
     args = parser.parse_args()
 
     chunk_text_file_to_jsonl(
@@ -25,8 +23,6 @@ def main() -> None:
         args.output,
         title=args.title,
         prefix=args.prefix,
-        chunk_chars=args.chunk_chars,
-        overlap_chars=args.overlap_chars,
     )
     print(f"output={args.output}")
 

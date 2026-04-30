@@ -49,6 +49,10 @@ NOVEL_ALIASES = [
 ]
 
 INVISIBLE_UNICODE_PATTERN = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]")
+CHAPTER_HEADING_PATTERN = re.compile(
+    r"^(?:(第[一二三四五六七八九十百千万零〇两\d０-９]+部)\s+)?"
+    r"(第[一二三四五六七八九十百千万零〇两\d０-９]+章)$"
+)
 
 
 def normalize_text(text: str) -> str:
@@ -107,101 +111,91 @@ def _detect_aliases(text: str) -> list[str]:
     return [alias for alias in NOVEL_ALIASES if alias in text]
 
 
-def _paragraph_records(text: str) -> list[tuple[str, int, int]]:
-    records: list[tuple[str, int, int]] = []
-    buffer: list[str] = []
-    start_line = 1
+def _chapter_records(text: str) -> list[tuple[str, str, str, str, int, int]]:
+    records: list[tuple[str, str, str, str, int, int]] = []
     lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    current_part = ""
+    current_chapter = ""
+    current_heading = ""
+    current_lines: list[str] = []
+    current_start = 1
+    current_end = 1
+
+    def flush() -> None:
+        nonlocal current_heading, current_chapter, current_lines, current_start, current_end
+        if not current_heading:
+            return
+        body = normalize_text("\n".join(current_lines))
+        if body:
+            records.append((current_part, current_chapter, current_heading, body, current_start, current_end))
+        current_heading = ""
+        current_chapter = ""
+        current_lines = []
+
     for line_no, line in enumerate(lines, start=1):
         stripped = line.strip()
-        if not stripped:
-            if buffer:
-                records.append(("\n".join(buffer), start_line, line_no - 1))
-                buffer = []
+        match = CHAPTER_HEADING_PATTERN.match(stripped)
+        if match:
+            flush()
+            if match.group(1):
+                current_part = match.group(1)
+            current_chapter = match.group(2)
+            current_heading = stripped
+            current_lines = [stripped]
+            current_start = line_no
+            current_end = line_no
             continue
-        if not buffer:
-            start_line = line_no
-        buffer.append(stripped)
-    if buffer:
-        records.append(("\n".join(buffer), start_line, len(lines)))
-    return records
+
+        if current_heading:
+            current_lines.append(stripped)
+            if stripped:
+                current_end = line_no
+
+    flush()
+    if records:
+        return records
+
+    body = normalize_text(text)
+    if not body:
+        return []
+    return [("", "全文", "全文", body, 1, len(lines))]
 
 
 def chunk_text_file(
     input_path: str | Path,
     title: str = "平凡的世界",
     prefix: str = "corpus_chunkids",
-    chunk_chars: int = 900,
-    overlap_chars: int = 120,
 ) -> list[Chunk]:
     source = Path(input_path)
     text = source.read_text(encoding="utf-8-sig")
-    paragraphs = _paragraph_records(text)
     chunks: list[Chunk] = []
-    current_text = ""
-    current_start = 1
-    current_end = 1
-
-    def flush() -> None:
-        nonlocal current_text, current_start, current_end
-        if not current_text.strip():
-            return
-        index = len(chunks) + 1
-        body = normalize_text(current_text)
+    for index, (part_title, chapter_title, heading, body, line_start, line_end) in enumerate(_chapter_records(text), start=1):
+        title_parts = [title]
+        if part_title:
+            title_parts.append(part_title)
+        if chapter_title and chapter_title != "全文":
+            title_parts.append(chapter_title)
+        elif chapter_title == "全文":
+            title_parts.append(chapter_title)
         chunks.append(
             Chunk(
                 chunk_id=f"{prefix}_{index:06d}",
-                title=f"{title} 段落 {index}",
+                title=" ".join(title_parts),
                 text=body,
                 company="",
                 metadata={
                     "source_file": source.name,
-                    "line_start": current_start,
-                    "line_end": current_end,
+                    "line_start": line_start,
+                    "line_end": line_end,
+                    "chunk_type": "chapter",
+                    "chapter_index": index,
+                    "part_title": part_title,
+                    "chapter_title": chapter_title,
+                    "chapter_heading": heading,
                     "character_aliases": _detect_aliases(body),
                 },
             )
         )
-        if overlap_chars > 0 and len(body) > overlap_chars:
-            current_text = body[-overlap_chars:]
-            current_start = current_end
-        else:
-            current_text = ""
-
-    for paragraph, line_start, line_end in paragraphs:
-        candidate = paragraph if not current_text else f"{current_text}\n\n{paragraph}"
-        if len(candidate) <= chunk_chars:
-            if not current_text:
-                current_start = line_start
-            current_text = candidate
-            current_end = line_end
-            continue
-
-        flush()
-        current_text = paragraph
-        current_start = line_start
-        current_end = line_end
-
-        while len(current_text) > chunk_chars:
-            piece = current_text[:chunk_chars]
-            index = len(chunks) + 1
-            chunks.append(
-                Chunk(
-                    chunk_id=f"{prefix}_{index:06d}",
-                    title=f"{title} 段落 {index}",
-                    text=normalize_text(piece),
-                    company="",
-                    metadata={
-                        "source_file": source.name,
-                        "line_start": current_start,
-                        "line_end": current_end,
-                        "character_aliases": _detect_aliases(piece),
-                    },
-                )
-            )
-            current_text = current_text[max(chunk_chars - overlap_chars, 1) :]
-
-    flush()
     return chunks
 
 
@@ -238,11 +232,9 @@ def chunk_text_file_to_jsonl(
     output_path: str | Path,
     title: str = "平凡的世界",
     prefix: str = "corpus_chunkids",
-    chunk_chars: int = 900,
-    overlap_chars: int = 120,
 ) -> None:
     records = []
-    for chunk in chunk_text_file(input_path, title=title, prefix=prefix, chunk_chars=chunk_chars, overlap_chars=overlap_chars):
+    for chunk in chunk_text_file(input_path, title=title, prefix=prefix):
         record = asdict(chunk)
         record.pop("company", None)
         records.append(record)

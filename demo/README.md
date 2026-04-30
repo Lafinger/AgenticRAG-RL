@@ -1,6 +1,6 @@
 # 中文小说多跳 Agentic RAG & RL 复现工程
 
-这个目录是 `9.2.1 垂直领域多跳 Agentic RAG & RL 简历项目.pdf` 的工程化复现版本。默认训练语料是 `data/original_data/平凡的世界utf8.txt`，任务域是中文小说人物、地点、事件、关系多跳阅读问答。
+这个目录是 `9.2.1 垂直领域多跳 Agentic RAG & RL 简历项目.pdf` 的工程化复现版本。默认训练语料是 `data/original_data/平凡的世界-路遥.txt`，任务域是中文小说人物、地点、事件、关系多跳阅读问答。
 
 本工程采用 `uv` 管理本地 Python 环境。Windows 11 本机负责数据处理、检索服务、SFT/GRPO 数据构造和 smoke test；完整 SFT/GRPO 训练建议迁移到 Linux / WSL2 / A100 级 GPU 环境。
 
@@ -21,7 +21,7 @@
 demo/
 ├── bootstrap/
 ├── data/
-│   ├── original_data/平凡的世界utf8.txt
+│   ├── original_data/平凡的世界-路遥.txt
 │   ├── novel/
 │   ├── novel_eval/
 │   └── smoke_novel/
@@ -37,7 +37,7 @@ demo/
 
 ```mermaid
 flowchart TD
-    A["Step 0: uv 环境准备"] --> B["Step 1: 小说文本切块"]
+    A["Step 0: uv 环境准备"] --> B["Step 1: 小说文本按章节切块"]
     B --> C["Step 2: 构建检索索引"]
     C --> D["Step 3: 生成 seed QA"]
     D --> E["Step 4: 合成多跳 QA"]
@@ -103,29 +103,32 @@ uv pip install -r .\requirements.txt
 | `requirements.txt` | Python 包列表 | 本机数据处理、检索、评测所需依赖 | Step 1 到 Step 11 |
 | `pyproject.toml` | 项目元信息与 pytest 配置 | 指定源码路径和测试路径 | Step 11、单元测试 |
 
-## Step 1: 解析《平凡的世界》文本并切块
+## Step 1: 解析《平凡的世界》文本并按章节切块
 
 **目标**：把原始 UTF-8 小说文本转换成统一 corpus 契约，供检索、QA 合成和训练数据构造使用。
 
 **详细说明**：
 
-- `parse_text_corpus.py` 读取 `平凡的世界utf8.txt`，按空行和长度窗口切分为多个 chunk。
-- 切分时会保留每个 chunk 在原始文本中的行号范围，用于后续人工定位证据。
+- `parse_text_corpus.py` 读取 `平凡的世界-路遥.txt`，按小说章节标题切分为多个 chapter chunk。
+- 脚本识别 `第一部 第一章`、`第二章` 这类章节标题；没有显式“第 N 部”的章节会沿用最近一次出现的部名。
+- 每个 chunk 对应一个完整章节，不再使用固定字数窗口，也不再做 overlap。
+- 切分时会保留每个章节在原始文本中的行号范围，用于后续人工定位证据。
 - 生成 `chunk_id` 时使用稳定递增编号，例如 `corpus_chunkids_000001`，保证重新生成后 ID 可预测。
 - 脚本会扫描 chunk 中出现的人物名称，写入 `metadata.character_aliases`。
 - 输出的 `corpus.jsonl` 是后续检索、QA 合成、Oracle trace 和评测的共同源数据。
 
 ```mermaid
 flowchart LR
-    A["平凡的世界utf8.txt"] --> B["parse_text_corpus.py"]
-    B --> C["段落 / 长度窗口切分"]
-    C --> D["识别人名 alias"]
-    D --> E["data/novel/corpus.jsonl"]
+    A["平凡的世界-路遥.txt"] --> B["parse_text_corpus.py"]
+    B --> C["章节标题识别"]
+    C --> D["一个章节一个 chunk"]
+    D --> E["识别人名 alias"]
+    E --> F["data/novel/corpus.jsonl"]
 ```
 
 **需要**：
 
-- 输入：`data/original_data/平凡的世界utf8.txt`
+- 输入：`data/original_data/平凡的世界-路遥.txt`
 - 脚本：`scripts/parse_text_corpus.py`
 - 输出目录：`data/novel/`
 
@@ -133,7 +136,7 @@ flowchart LR
 
 ```powershell
 uv run python .\scripts\parse_text_corpus.py `
-  --input .\data\original_data\平凡的世界utf8.txt `
+  --input .\data\original_data\平凡的世界-路遥.txt `
   --output .\data\novel\corpus.jsonl
 ```
 
@@ -142,7 +145,8 @@ uv run python .\scripts\parse_text_corpus.py `
 - `data/novel/corpus.jsonl`
 - 每条 chunk 包含 `chunk_id/title/text/metadata`
 - `chunk_id` 形如 `corpus_chunkids_000001`
-- `metadata` 包含 `source_file/line_start/line_end/character_aliases`
+- `title` 形如 `平凡的世界 第一部 第一章`
+- `metadata` 包含 `source_file/line_start/line_end/chunk_type/chapter_index/part_title/chapter_title/chapter_heading/character_aliases`
 
 **数据结构与字段用途**：
 
@@ -151,12 +155,17 @@ uv run python .\scripts\parse_text_corpus.py `
 ```json
 {
   "chunk_id": "corpus_chunkids_000001",
-  "title": "平凡的世界 段落 1",
-  "text": "小说原文片段",
+  "title": "平凡的世界 第一部 第一章",
+  "text": "第一部 第一章\n小说原文章节内容",
   "metadata": {
-    "source_file": "平凡的世界utf8.txt",
-    "line_start": 2,
+    "source_file": "平凡的世界-路遥.txt",
+    "line_start": 1,
     "line_end": 22,
+    "chunk_type": "chapter",
+    "chapter_index": 1,
+    "part_title": "第一部",
+    "chapter_title": "第一章",
+    "chapter_heading": "第一部 第一章",
     "character_aliases": ["孙少平"]
   }
 }
@@ -165,11 +174,16 @@ uv run python .\scripts\parse_text_corpus.py `
 | 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- |
 | `chunk_id` | chunk 的稳定唯一 ID，默认前缀是 `corpus_chunkids` | 索引对齐、QA hop 的 `doc_chunk_id`、GRPO `gold_chunks`、hop-aware 评测 |
-| `title` | chunk 的可读标题，默认使用“平凡的世界 段落 N” | 检索结果展示、index bundle、调试证据 |
-| `text` | 实际参与检索和作为证据的小说片段 | BM25/dense 检索、tool response、Oracle traces、Agentic eval |
+| `title` | chunk 的可读标题，默认使用“平凡的世界 第 N 部 第 M 章” | 检索结果展示、index bundle、调试证据 |
+| `text` | 实际参与检索和作为证据的完整章节文本 | BM25/dense 检索、tool response、Oracle traces、Agentic eval |
 | `metadata.source_file` | 原始文本文件名 | 数据溯源、排查生成错误 |
-| `metadata.line_start` | chunk 在原始 txt 中的起始行 | 证据定位、人工审查 |
-| `metadata.line_end` | chunk 在原始 txt 中的结束行 | 证据定位、人工审查 |
+| `metadata.line_start` | 章节 chunk 在原始 txt 中的起始行 | 证据定位、人工审查 |
+| `metadata.line_end` | 章节 chunk 在原始 txt 中的结束行 | 证据定位、人工审查 |
+| `metadata.chunk_type` | 当前固定为 `chapter`，表示按章节切分 | 区分未来可能增加的段落级或滑窗级 corpus |
+| `metadata.chapter_index` | 章节 chunk 的递增序号 | 章节排序、人工审查 |
+| `metadata.part_title` | 所属部名，例如 `第一部` | 章节定位、检索结果展示 |
+| `metadata.chapter_title` | 所属章名，例如 `第一章` | 章节定位、检索结果展示 |
+| `metadata.chapter_heading` | 原始章节标题行，例如 `第一部 第一章` | 数据溯源、排查章节识别 |
 | `metadata.character_aliases` | 在 chunk 中命中的人物名称或人物别名 | seed QA 生成、查询分解、诊断分析 |
 
 ## Step 2: 构建检索索引
@@ -1216,7 +1230,7 @@ Copy-Item .\.env.example .\.env
 
 ```powershell
 uv run python -m pytest
-uv run python .\scripts\parse_text_corpus.py --input .\data\original_data\平凡的世界utf8.txt --output .\data\novel\corpus.jsonl
+uv run python .\scripts\parse_text_corpus.py --input .\data\original_data\平凡的世界-路遥.txt --output .\data\novel\corpus.jsonl
 uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes
 uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
 uv run python .\scripts\clean_seed_qa.py --input .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds_clean.jsonl --dropped-output .\data\novel_eval\seeds_dropped.jsonl
