@@ -19,6 +19,21 @@ from agentic_rag_rl.llm_client import (
 from agentic_rag_rl.synthesis import iter_synthesize_multihop_examples, multihop_chain_key
 
 
+def _default_failed_output(output: Path) -> Path:
+    return output.with_name(f"{output.stem}.failed.jsonl")
+
+
+def _default_checkpoint_output(output: Path) -> Path:
+    return output.with_name(f"{output.stem}.checkpoint.jsonl")
+
+
+def _append_record(path: Path, record: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8", newline="") as handle:
+        write_jsonl_record(handle, record)
+        handle.flush()
+
+
 def _configure_logging(level: str) -> None:
     logging.basicConfig(
         level=getattr(logging, level.upper(), logging.INFO),
@@ -42,6 +57,8 @@ def main() -> None:
     parser.add_argument("--disable-llm-merge", action="store_true")
     parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent LLM merge requests.")
     parser.add_argument("--overwrite", action="store_true", help="Clear output and regenerate from the beginning.")
+    parser.add_argument("--failed-output", help="JSONL file for failed LLM merge chains.")
+    parser.add_argument("--checkpoint-output", help="JSONL checkpoint file for successful and failed chains.")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()
     if args.max_concurrency < 1:
@@ -64,6 +81,12 @@ def main() -> None:
     logging.info("domain_multihop_synthesis.loaded_inputs seed_count=%s chunk_count=%s", len(seeds), len(chunks))
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    failed_output_path = Path(args.failed_output) if args.failed_output else _default_failed_output(output_path)
+    checkpoint_output_path = Path(args.checkpoint_output) if args.checkpoint_output else _default_checkpoint_output(output_path)
+    if args.overwrite and failed_output_path.exists():
+        failed_output_path.unlink()
+    if args.overwrite and checkpoint_output_path.exists():
+        checkpoint_output_path.unlink()
     existing_examples = [] if args.overwrite or not output_path.exists() else load_jsonl(output_path)
     existing_chain_keys = {multihop_chain_key(record.get("hops", [])) for record in existing_examples}
     existing_questions = {
@@ -92,8 +115,22 @@ def main() -> None:
             timeout_seconds=args.timeout_seconds,
         )
     generated_count = 0
+    failed_count = 0
     mode = "w" if args.overwrite else "a"
     with output_path.open(mode, encoding="utf-8", newline="") as handle:
+        def record_failed_chain(chain: list[dict], exc: Exception) -> None:
+            nonlocal failed_count
+            failed_record = {
+                "chain_key": multihop_chain_key(chain),
+                "status": "failed",
+                "hops": chain,
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+            }
+            _append_record(failed_output_path, failed_record)
+            _append_record(checkpoint_output_path, failed_record)
+            failed_count += 1
+
         for example in iter_synthesize_multihop_examples(
             seeds,
             chunks,
@@ -102,18 +139,32 @@ def main() -> None:
             skip_chain_keys=existing_chain_keys,
             existing_questions=existing_questions,
             max_concurrency=args.max_concurrency,
+            raise_on_merge_failure=merge_llm_client is not None,
+            on_chain_failed=record_failed_chain,
         ):
             write_jsonl_record(handle, example)
             handle.flush()
             generated_count += 1
+            _append_record(
+                checkpoint_output_path,
+                {
+                    "chain_key": multihop_chain_key(example.get("hops", [])),
+                    "status": "ok",
+                    "final_question": example.get("final_question"),
+                },
+            )
             logging.info(
-                "domain_multihop_synthesis.appended generated_count=%s total_count=%s",
+                "domain_multihop_synthesis.appended generated_count=%s total_count=%s failed_count=%s",
                 generated_count,
                 len(existing_examples) + generated_count,
+                failed_count,
             )
     total_count = len(existing_examples) + generated_count
     logging.info("domain_multihop_synthesis.done output=%s multihop_count=%s", args.output, total_count)
     print(f"multihop_count={total_count}")
+    if failed_count:
+        print(f"failed_count={failed_count}")
+        print(f"failed_output={failed_output_path}")
 
 
 if __name__ == "__main__":

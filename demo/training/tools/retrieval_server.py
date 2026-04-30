@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from agentic_rag_rl.io import load_chunks
+from agentic_rag_rl.retrieval import IndexedHybridRetriever
 from agentic_rag_rl.server import create_app
 
 
@@ -21,10 +22,17 @@ def main() -> None:
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--embedding-model")
     parser.add_argument("--reranker-model")
+    parser.add_argument("--index-dir")
     args = parser.parse_args()
 
-    del args.device, args.embedding_model, args.reranker_model
-    app = create_app(load_chunks(args.corpus))
+    del args.device
+    if args.index_dir:
+        if not args.embedding_model:
+            parser.error("--embedding-model is required when --index-dir is set.")
+        retriever = IndexedHybridRetriever(args.index_dir, embedding_model=args.embedding_model, reranker_model=args.reranker_model)
+        app = create_app(retriever=retriever)
+    else:
+        app = create_app(load_chunks(args.corpus))
     uvicorn.run(app, host=args.host, port=args.port)
 
 

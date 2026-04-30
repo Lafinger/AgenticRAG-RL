@@ -1,13 +1,13 @@
 # 中文小说多跳 Agentic RAG & RL 复现工程
 
-这个目录是 `9.2.1 垂直领域多跳 Agentic RAG & RL 简历项目.pdf` 的工程化复现版本。默认训练语料是 `data/original_data/平凡的世界-路遥.txt`，任务域是中文小说人物、地点、事件、关系多跳阅读问答。
+这个目录是 `9.2.1 垂直领域多跳 Agentic RAG & RL 简历项目.pdf` 的工程化复现版本。默认训练语料是 `data/original_data/*.txt` 下的金庸系列小说，任务域是中文武侠小说人物、地点、事件、关系多跳阅读问答。
 
 本工程采用 `uv` 管理本地 Python 环境。Windows 11 本机负责数据处理、检索服务、SFT/GRPO 数据构造和 smoke test；完整 SFT/GRPO 训练建议迁移到 Linux / WSL2 / A100 级 GPU 环境。
 
 ## 复现范围
 
-- UTF-8 小说文本解析与稳定 chunk 切分
-- `BM25 + dense + rerank` 轻量检索骨架
+- UTF-8 多文档小说文本解析与稳定 chunk 切分
+- `FAISS(BGE-M3) + BM25 + KG + rerank` 检索索引骨架
 - 小说域 seed QA 与多跳合成样本生成
 - Oracle traces、SFT 数据转换、Unsloth 兼容导出
 - Agentic GRPO 数据准备、reward 计算、retrieval server
@@ -21,7 +21,7 @@
 demo/
 ├── bootstrap/
 ├── data/
-│   ├── original_data/平凡的世界-路遥.txt
+│   ├── original_data/*.txt
 │   ├── novel/
 │   ├── novel_eval/
 │   └── smoke_novel/
@@ -37,7 +37,7 @@ demo/
 
 ```mermaid
 flowchart TD
-    A["Step 0: uv 环境准备"] --> B["Step 1: 小说文本按章节切块"]
+    A["Step 0: uv 环境准备"] --> B["Step 1: 金庸多文档切块"]
     B --> C["Step 2: 构建检索索引"]
     C --> D["Step 3: 生成 seed QA"]
     D --> E["Step 4: 合成多跳 QA"]
@@ -103,32 +103,32 @@ uv pip install -r .\requirements.txt
 | `requirements.txt` | Python 包列表 | 本机数据处理、检索、评测所需依赖 | Step 1 到 Step 11 |
 | `pyproject.toml` | 项目元信息与 pytest 配置 | 指定源码路径和测试路径 | Step 11、单元测试 |
 
-## Step 1: 解析《平凡的世界》文本并按章节切块
+## Step 1: 解析金庸系列文本并切块
 
 **目标**：把原始 UTF-8 小说文本转换成统一 corpus 契约，供检索、QA 合成和训练数据构造使用。
 
 **详细说明**：
 
-- `parse_text_corpus.py` 读取 `平凡的世界-路遥.txt`，按小说章节标题切分为多个 chapter chunk。
-- 脚本识别 `第一部 第一章`、`第二章` 这类章节标题；没有显式“第 N 部”的章节会沿用最近一次出现的部名。
-- 每个 chunk 对应一个完整章节，不再使用固定字数窗口，也不再做 overlap。
-- 切分时会保留每个章节在原始文本中的行号范围，用于后续人工定位证据。
-- 生成 `chunk_id` 时使用稳定递增编号，例如 `corpus_chunkids_000001`，保证重新生成后 ID 可预测。
+- `parse_text_corpus.py` 默认读取 `data/original_data/*.txt`，一次解析目录下全部金庸小说文档。
+- 脚本先识别章节标题，再在章节内按段落窗口切块，默认 `500` 字符上限、`50` 字符 overlap、最小 `50` 字符。
+- 章节标题支持 `一 青衫磊落险峰行`、`第一回 烧饼馅子`、`后记`、`附录 ...`；无章节短篇会按整篇作为一个 section。
+- 切分时会保留每个 chunk 在原始 txt 中的行号范围，用于后续人工定位证据。
+- 生成 `chunk_id` 时按来源文件使用稳定前缀，例如 `tlbb_0001`、`xkx_0001`、`xajh_0001`、`yttlj_0001`、`yue_0001`。
 - 脚本会扫描 chunk 中出现的人物名称，写入 `metadata.character_aliases`。
 - 输出的 `corpus.jsonl` 是后续检索、QA 合成、Oracle trace 和评测的共同源数据。
 
 ```mermaid
 flowchart LR
-    A["平凡的世界-路遥.txt"] --> B["parse_text_corpus.py"]
+    A["data/original_data/*.txt"] --> B["parse_text_corpus.py"]
     B --> C["章节标题识别"]
-    C --> D["一个章节一个 chunk"]
+    C --> D["章节内段落窗口切块"]
     D --> E["识别人名 alias"]
     E --> F["data/novel/corpus.jsonl"]
 ```
 
 **需要**：
 
-- 输入：`data/original_data/平凡的世界-路遥.txt`
+- 输入：`data/original_data/*.txt`
 - 脚本：`scripts/parse_text_corpus.py`
 - 输出目录：`data/novel/`
 
@@ -136,17 +136,18 @@ flowchart LR
 
 ```powershell
 uv run python .\scripts\parse_text_corpus.py `
-  --input .\data\original_data\平凡的世界-路遥.txt `
+  --input-dir .\data\original_data `
   --output .\data\novel\corpus.jsonl
 ```
 
 **能拿到的结果**：
 
 - `data/novel/corpus.jsonl`
-- 每条 chunk 包含 `chunk_id/title/text/metadata`
-- `chunk_id` 形如 `corpus_chunkids_000001`
-- `title` 形如 `平凡的世界 第一部 第一章`
-- `metadata` 包含 `source_file/line_start/line_end/chunk_type/chapter_index/part_title/chapter_title/chapter_heading/character_aliases`
+- 每条 chunk 包含 `chunk_id/text/title/pages/section/metadata`
+- `chunk_id` 形如 `tlbb_0001`
+- `title` 形如 `天龙八部`
+- `section` 形如 `一 青衫磊落险峰行`
+- `metadata` 包含 `source_file/novel_title/author/line_start/line_end/section_index/chunk_index_in_section/section_heading/character_aliases`
 
 **数据结构与字段用途**：
 
@@ -154,57 +155,67 @@ uv run python .\scripts\parse_text_corpus.py `
 
 ```json
 {
-  "chunk_id": "corpus_chunkids_000001",
-  "title": "平凡的世界 第一部 第一章",
-  "text": "第一部 第一章\n小说原文章节内容",
+  "chunk_id": "tlbb_0001",
+  "title": "天龙八部",
+  "text": "小说原文片段",
+  "pages": [],
+  "section": "一 青衫磊落险峰行",
   "metadata": {
-    "source_file": "平凡的世界-路遥.txt",
-    "line_start": 1,
-    "line_end": 22,
-    "chunk_type": "chapter",
-    "chapter_index": 1,
-    "part_title": "第一部",
-    "chapter_title": "第一章",
-    "chapter_heading": "第一部 第一章",
-    "character_aliases": ["孙少平"]
+    "source_file": "金庸-天龙八部.txt",
+    "novel_title": "天龙八部",
+    "author": "金庸",
+    "line_start": 48,
+    "line_end": 55,
+    "section_index": 1,
+    "chunk_index_in_section": 1,
+    "section_heading": "一 青衫磊落险峰行",
+    "character_aliases": ["乔峰"]
   }
 }
 ```
 
 | 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- |
-| `chunk_id` | chunk 的稳定唯一 ID，默认前缀是 `corpus_chunkids` | 索引对齐、QA hop 的 `doc_chunk_id`、GRPO `gold_chunks`、hop-aware 评测 |
-| `title` | chunk 的可读标题，默认使用“平凡的世界 第 N 部 第 M 章” | 检索结果展示、index bundle、调试证据 |
-| `text` | 实际参与检索和作为证据的完整章节文本 | BM25/dense 检索、tool response、Oracle traces、Agentic eval |
+| `chunk_id` | chunk 的稳定唯一 ID，按小说来源使用前缀 | 索引对齐、QA hop 的 `doc_chunk_id`、GRPO `gold_chunks`、hop-aware 评测 |
+| `title` | 小说标题，例如 `天龙八部` | 检索结果展示、index bundle、调试证据 |
+| `text` | 实际参与检索和作为证据的段落窗口文本 | BM25/FAISS 检索、tool response、Oracle traces、Agentic eval |
+| `pages` | txt 语料固定为空数组，用于兼容根项目 PDF corpus 契约 | chunk store、未来 PDF 语料扩展 |
+| `section` | 章节或特殊段落标题 | 检索结果展示、人工审查 |
 | `metadata.source_file` | 原始文本文件名 | 数据溯源、排查生成错误 |
-| `metadata.line_start` | 章节 chunk 在原始 txt 中的起始行 | 证据定位、人工审查 |
-| `metadata.line_end` | 章节 chunk 在原始 txt 中的结束行 | 证据定位、人工审查 |
-| `metadata.chunk_type` | 当前固定为 `chapter`，表示按章节切分 | 区分未来可能增加的段落级或滑窗级 corpus |
-| `metadata.chapter_index` | 章节 chunk 的递增序号 | 章节排序、人工审查 |
-| `metadata.part_title` | 所属部名，例如 `第一部` | 章节定位、检索结果展示 |
-| `metadata.chapter_title` | 所属章名，例如 `第一章` | 章节定位、检索结果展示 |
-| `metadata.chapter_heading` | 原始章节标题行，例如 `第一部 第一章` | 数据溯源、排查章节识别 |
+| `metadata.novel_title` | 小说标题 | 过滤、诊断、展示 |
+| `metadata.author` | 作者，当前固定为 `金庸` | 过滤、诊断、展示 |
+| `metadata.line_start` | chunk 在原始 txt 中的起始行 | 证据定位、人工审查 |
+| `metadata.line_end` | chunk 在原始 txt 中的结束行 | 证据定位、人工审查 |
+| `metadata.section_index` | section 在当前文件内的递增序号 | 章节排序、人工审查 |
+| `metadata.chunk_index_in_section` | chunk 在当前 section 内的递增序号 | 定位长章节内的片段 |
+| `metadata.section_heading` | 原始 section 标题行 | 数据溯源、排查章节识别 |
 | `metadata.character_aliases` | 在 chunk 中命中的人物名称或人物别名 | seed QA 生成、查询分解、诊断分析 |
 
 ## Step 2: 构建检索索引
 
-**目标**：为 corpus 构建本机可跑的轻量索引，支持 keyword、dense 和 hybrid 检索。
+**目标**：为 corpus 构建与根项目一致的检索索引，支持 FAISS 语义检索、BM25 关键词检索、KG 图检索和 hybrid 检索。
 
 **详细说明**：
 
-- `build_index.py` 先加载 `corpus.jsonl`，把每条 JSON 转成内部 `Chunk` 对象。
-- 索引构建会保留 chunk 顺序、chunk 文本和 metadata，便于检索结果回填原始证据。
-- 当前工程的本机索引是轻量版，主要保存 chunk store 和 ID 清单；真实检索时由 `HybridRetriever` 在内存中构建 BM25 与 TF-IDF dense 表示。
-- `chunk_store.pkl` 用于快速恢复检索所需的 chunk 内容，`manifest.json` 用于检查索引规模是否与 corpus 一致。
+- `build_index.py` 加载 `corpus.jsonl` 后，一次性构建 `faiss.index`、`bm25.pkl`、`chunk_store.pkl` 和 `chunk_ids.json`。
+- FAISS 使用 BGE-M3 对每个 chunk 编码，`normalize_embeddings=True`，再写入 `IndexFlatIP`。
+- BM25 使用 `jieba` 中文分词和英文/数字正则切分，查询和建库共用同一套 tokenizer。
+- 未加 `--skip-kg` 时，脚本会并发调用豆包抽取三元组，构建 `knowledge_graph.json` 和 `entity_embeddings.pkl`；默认最大并发为 `5`，可通过 `--max-concurrency` 调整。
+- KG 三元组抽取会打印 `kg_extraction.progress completed=.../... failed=...`，长时间运行时可据此判断是否仍在推进。
+- KG 抽取会把每个 chunk 的状态逐条追加到 `triples_cache.jsonl`：成功写 `status=ok`，失败写 `status=failed`。重新执行同一命令时只跳过 `ok` 的 chunk，失败和未完成 chunk 会重新请求豆包；最终缓存会按 chunk 顺序重写。
+- CrossEncoder reranker 不预构建索引，运行检索服务时通过 `--reranker-model` 加载，对 FAISS/BM25/KG 候选进行精排。
 
 ```mermaid
 flowchart LR
     A["corpus.jsonl"] --> B["build_index.py"]
-    B --> C["BM25 keyword"]
-    B --> D["char ngram dense"]
-    C --> E["RRF fusion"]
-    D --> E
-    E --> F["index bundle"]
+    B --> C["BGE-M3 embeddings"]
+    C --> D["FAISS IndexFlatIP"]
+    B --> E["BM25Okapi"]
+    B --> F["Doubao triples"]
+    F --> G["Knowledge Graph"]
+    D --> H["RRF + rerank"]
+    E --> H
+    G --> H
 ```
 
 **需要**：
@@ -212,29 +223,56 @@ flowchart LR
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/build_index.py`
 - 输出目录：`data/novel/indexes/`
+- 本地 embedding 模型：`models/bge-m3`
+- 可选 reranker 模型：`models/bge-reranker-v2-m3`
 
 **怎么做**：
+
+如果本地还没有 BGE 模型，先下载：
+
+```powershell
+uv run hf download BAAI/bge-m3 --local-dir .\models\bge-m3
+uv run hf download BAAI/bge-reranker-v2-m3 --local-dir .\models\bge-reranker-v2-m3
+```
+
+然后构建索引：
 
 ```powershell
 uv run python .\scripts\build_index.py `
   --corpus .\data\novel\corpus.jsonl `
-  --index-dir .\data\novel\indexes
+  --index-dir .\data\novel\indexes `
+  --embedding-model .\models\bge-m3 `
+  --reranker-model .\models\bge-reranker-v2-m3 `
+  --max-concurrency 5 `
+  --skip-kg
 ```
+
+去掉 `--skip-kg` 会启用知识图谱构建，需要 `.env` 中配置 `ARK_API_KEY`。`--max-concurrency` 控制同时发起的豆包三元组抽取请求数；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
 
 **能拿到的结果**：
 
 - `data/novel/indexes/manifest.json`
+- `data/novel/indexes/faiss.index`
+- `data/novel/indexes/bm25.pkl`
 - `data/novel/indexes/chunk_ids.json`
 - `data/novel/indexes/chunk_store.pkl`
-- 后续检索服务和评测可直接加载 corpus 或索引产物
+- `data/novel/indexes/knowledge_graph.json`
+- `data/novel/indexes/entity_embeddings.pkl`
+- `data/novel/indexes/triples_cache.jsonl`
+- 后续检索服务和评测可加载 corpus 或索引产物；正式三路检索应优先加载索引产物
 
 **数据结构与字段用途**：
 
 | 产物 | 结构 / 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- | --- |
-| `manifest.json` | `chunk_count/index_type` 等索引摘要 | 记录索引规模和类型 | 检查索引是否与 corpus 对齐 |
-| `chunk_ids.json` | chunk ID 列表 | 保留索引顺序 | 检索结果排序、调试索引错位 |
+| `manifest.json` | `chunk_count/index_type/embedding_model` 等摘要 | 记录索引规模和类型 | 检查索引是否与 corpus 对齐 |
+| `faiss.index` | BGE-M3 向量的 `IndexFlatIP` | 语义检索 | `semantic_search`、`hybrid_search` |
+| `bm25.pkl` | `BM25Okapi` 对象 | 关键词检索 | `keyword_search`、`hybrid_search` |
+| `chunk_ids.json` | 与 FAISS 行号对齐的 chunk ID 列表 | FAISS row id 到 chunk id 的映射 | 检索结果回填 |
 | `chunk_store.pkl` | `chunk_id -> chunk record` | 存储检索返回所需文本和 metadata | retrieval server、Agentic evidence |
+| `knowledge_graph.json` | NetworkX node-link JSON | 实体关系图 | `graph_search` |
+| `entity_embeddings.pkl` | 实体名、实体行号和实体向量 | query 到图实体的语义匹配 | `graph_search` |
+| `triples_cache.jsonl` | 每行一条 `chunk_id/status/triples` checkpoint | 避免重复调用 LLM 抽取三元组；失败 chunk 下次自动重试 | 重建 KG |
 
 ## Step 3: 生成小说域 seed QA
 
@@ -284,13 +322,14 @@ Step 7: 可选离线复洗
 
 - `gen_seed_qa.py` 逐条读取 `data/novel/corpus.jsonl`，并把每个 chunk 文本发送给豆包模型生成 seed QA。
 - 默认模型为 `doubao-seed-2-0-pro-260215`，对应 Doubao-Seed-2.0 Pro，默认每个 chunk 最多生成 2 条 seed。
-- 默认并发数为 `5`，可通过 `--max-concurrency` 调整；输出按请求完成顺序写入，断点续写仍按 `doc_chunk_id` 判断。
+- 默认并发数为 `5`，可通过 `--max-concurrency` 调整；每完成一个 chunk 就重写 `seeds.jsonl`，并保证输出按 corpus chunk 顺序排列。
+- 并发生成会打印 `seed_qa_generation.chunk_done ... progress=.../... failed=...`，用于观察请求进度和失败数。
 - 模型输出必须是 JSON 数组，元素字段为 `question/answer/qa_type/entities`。
 - 脚本会补充 `doc_chunk_id` 和默认检索工具 `keyword_search`。
 - 脚本会把旧类型映射到小说域 5 类，例如 `character_relation -> relation`、`object_reference -> object`、`character_behavior -> action_result`。
-- 脚本默认启用断点续写：如果 `seeds.jsonl` 已存在，会读取已有 `doc_chunk_id`，跳过已经生成过 seed 的 chunk，只处理剩余 chunk。
+- 脚本默认启用断点续写：`seeds.checkpoint.jsonl` 记录每个 chunk 的 `status=ok/failed`；重新执行同一命令时只跳过 `ok` 的 chunk，失败和未完成 chunk 会重新请求豆包。
 - 如果豆包返回非法 JSON 或单个 chunk 多次失败，脚本默认把失败 chunk 写入 `seeds.failed.jsonl` 并继续后续 chunk，避免整个任务中断。
-- 再次执行同一命令时，脚本会从第一条 corpus chunk 开始逐条校验；只有已经成功写入 `seeds.jsonl` 的 `doc_chunk_id` 会被跳过，之前失败但未成功写入的 chunk 会自动重新生成。
+- 再次执行同一命令时，脚本会从第一条 corpus chunk 开始逐条校验；失败 chunk 成功后会插入回 `seeds.jsonl` 对应的 corpus 顺序位置，而不是追加到文件末尾。
 - 如果要清空旧结果重新生成，需要显式添加 `--overwrite`。
 - 当前脚本已经实现 prompt 约束、字段规范化、类型收敛、首轮质量过滤和答案精炼；正式训练前建议再执行 `clean_seed_qa.py` 复洗，并审计 `seeds_dropped.jsonl`。
 
@@ -354,6 +393,7 @@ uv run python .\scripts\gen_seed_qa.py `
 **能拿到的结果**：
 
 - `data/novel_eval/seeds.jsonl`
+- `data/novel_eval/seeds.checkpoint.jsonl`
 - `data/novel_eval/seeds_clean.jsonl`
 - `data/novel_eval/seeds_dropped.jsonl`
 - `data/novel_eval/seeds.failed.jsonl`，仅当部分 chunk 多次失败时产生
@@ -502,6 +542,8 @@ flowchart TD
 - 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`，从新的 chunk 中选择已有 seed QA 作为下一跳。
 - 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，生成 `final_question/final_answer/qa_type/answer_aliases`。
 - LLM 合并默认最大并发数为 `5`，可通过 `--max-concurrency` 调整；输出按 merge 完成顺序写入，断点续写仍按 hop 链路签名判断。
+- LLM 合并会打印 `multihop_synthesis.progress` / `multihop_synthesis.added`，显示已完成 merge、已接受样本、重复跳过数和目标数量。
+- 使用真实 LLM merge 时，合并失败的链路会写入 `qa_pairs.failed.jsonl` 和 `qa_pairs.checkpoint.jsonl` 的 `status=failed` 记录；重新执行同一命令时，失败链路不会被当作已完成，会重新尝试生成。
 - 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并；该模式只适合连通性测试，不适合作为正式训练数据。
 - 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 hop 级 `qa_type` 继承 seed QA 的 5 类类型。
 - `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
@@ -1176,6 +1218,7 @@ flowchart LR
 - 可选 LLM Judge 服务
 - 脚本：`eval_agentic.py`、`run_cloud_eval.py`、`run_llm_judge.py`
 - LLM Judge 默认最大并发：`5`，可通过 `--max-concurrency` 调整
+- `run_llm_judge.py` 会逐条追加 `*_judged.checkpoint.jsonl`，并在每条样本完成后重写最终 JSON。重新执行同一命令时只跳过已经 `status=ok` 的样本，失败样本会重新请求 Judge，并按原始输入 index 插入回结果顺序。
 
 **怎么做**：
 
@@ -1230,8 +1273,8 @@ Copy-Item .\.env.example .\.env
 
 ```powershell
 uv run python -m pytest
-uv run python .\scripts\parse_text_corpus.py --input .\data\original_data\平凡的世界-路遥.txt --output .\data\novel\corpus.jsonl
-uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes
+uv run python .\scripts\parse_text_corpus.py --input-dir .\data\original_data --output .\data\novel\corpus.jsonl
+uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes --embedding-model .\models\bge-m3 --reranker-model .\models\bge-reranker-v2-m3 --max-concurrency 5 --skip-kg
 uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
 uv run python .\scripts\clean_seed_qa.py --input .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds_clean.jsonl --dropped-output .\data\novel_eval\seeds_dropped.jsonl
 uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50 --max-concurrency 5
@@ -1241,6 +1284,8 @@ uv run python .\scripts\convert_sft_to_unsloth.py --input-dir .\data\novel_eval\
 uv run python .\scripts\prepare_agentic_grpo_data.py --input .\data\novel_eval\qa_pairs.jsonl --train-output .\data\novel_eval\grpo_agentic_train.parquet --val-output .\data\novel_eval\grpo_agentic_val.parquet
 uv run python .\scripts\eval_agentic.py --data .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --max-samples 2
 ```
+
+切换到金庸多文档 corpus 后，旧的 `seeds.jsonl`、`qa_pairs.jsonl`、oracle traces、SFT/GRPO 数据都不再和新 `chunk_id` 对齐，需要按上面的顺序重新生成。
 
 ## 环境边界
 

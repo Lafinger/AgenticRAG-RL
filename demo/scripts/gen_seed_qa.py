@@ -27,6 +27,49 @@ def _default_failed_output(output: Path) -> Path:
     return output.with_name(f"{output.stem}.failed.jsonl")
 
 
+def _default_checkpoint_output(output: Path) -> Path:
+    return output.with_name(f"{output.stem}.checkpoint.jsonl")
+
+
+def _append_checkpoint(path: Path, record: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8", newline="") as handle:
+        write_jsonl_record(handle, record)
+        handle.flush()
+
+
+def _load_checkpoint(path: Path) -> dict[str, dict[str, Any]]:
+    if not path.exists():
+        return {}
+    latest: dict[str, dict[str, Any]] = {}
+    for record in load_jsonl(path):
+        chunk_id = str(record.get("chunk_id", "")).strip()
+        if chunk_id:
+            latest[chunk_id] = record
+    return latest
+
+
+def _group_seed_records(records: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        chunk_id = str(record.get("doc_chunk_id", "")).strip()
+        if chunk_id:
+            grouped.setdefault(chunk_id, []).append(record)
+    return grouped
+
+
+def _write_ordered_seed_records(output: Path, chunks: list[Any], records_by_chunk: dict[str, list[dict[str, Any]]]) -> int:
+    temp_output = output.with_name(f"{output.name}.tmp")
+    seed_count = 0
+    with temp_output.open("w", encoding="utf-8", newline="") as handle:
+        for chunk in chunks:
+            for record in records_by_chunk.get(chunk.chunk_id, []):
+                write_jsonl_record(handle, record)
+                seed_count += 1
+    temp_output.replace(output)
+    return seed_count
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate seed QA from novel corpus chunks.")
     parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
@@ -40,6 +83,7 @@ def main() -> None:
     parser.add_argument("--api-key")
     parser.add_argument("--overwrite", action="store_true", help="Clear output and regenerate from the beginning.")
     parser.add_argument("--failed-output", help="JSONL file for chunks that still fail after retries.")
+    parser.add_argument("--checkpoint-output", help="JSONL checkpoint file for successful and failed chunks.")
     parser.add_argument("--fail-fast", action="store_true", help="Stop immediately when one chunk fails.")
     parser.add_argument("--max-attempts", type=int, default=2, help="LLM attempts per chunk before marking it failed.")
     parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent LLM requests.")
@@ -71,20 +115,28 @@ def main() -> None:
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     failed_output_path = Path(args.failed_output) if args.failed_output else _default_failed_output(output_path)
+    checkpoint_output_path = Path(args.checkpoint_output) if args.checkpoint_output else _default_checkpoint_output(output_path)
     failed_output_path.parent.mkdir(parents=True, exist_ok=True)
+    checkpoint_output_path.parent.mkdir(parents=True, exist_ok=True)
     if args.overwrite and failed_output_path.exists():
         failed_output_path.unlink()
+    if args.overwrite and checkpoint_output_path.exists():
+        checkpoint_output_path.unlink()
     existing_records = [] if args.overwrite or not output_path.exists() else load_jsonl(output_path)
-    completed_chunk_ids = {str(record.get("doc_chunk_id")) for record in existing_records if record.get("doc_chunk_id")}
+    records_by_chunk = _group_seed_records(existing_records)
+    checkpoint = {} if args.overwrite else _load_checkpoint(checkpoint_output_path)
+    completed_chunk_ids = {chunk_id for chunk_id, record in checkpoint.items() if record.get("status") == "ok"}
+    completed_chunk_ids.update(records_by_chunk)
     pending_chunks = [chunk for chunk in chunks if chunk.chunk_id not in completed_chunk_ids]
+    seed_count = _write_ordered_seed_records(output_path, chunks, records_by_chunk) if records_by_chunk or completed_chunk_ids else 0
     logging.info(
-        "gen_seed_qa.resume existing_seed_count=%s completed_chunk_count=%s pending_chunk_count=%s overwrite=%s",
-        len(existing_records),
+        "gen_seed_qa.resume existing_seed_count=%s completed_chunk_count=%s pending_chunk_count=%s checkpoint=%s overwrite=%s",
+        seed_count,
         len(completed_chunk_ids),
         len(pending_chunks),
+        checkpoint_output_path,
         args.overwrite,
     )
-    seed_count = len(existing_records)
     if not pending_chunks:
         logging.info("gen_seed_qa.done output=%s seed_count=%s", args.output, seed_count)
         print(f"seed_count={seed_count}")
@@ -95,47 +147,58 @@ def main() -> None:
         model=get_doubao_model(args.model),
         base_url=get_doubao_base_url(args.base_url),
     )
-    mode = "w" if args.overwrite else "a"
     failed_count = 0
-    with output_path.open(mode, encoding="utf-8", newline="") as handle:
 
-        def record_failed_chunk(chunk: Any, exc: Exception) -> None:
-            nonlocal failed_count
-            with failed_output_path.open("a", encoding="utf-8", newline="") as failed_handle:
-                write_jsonl_record(
-                    failed_handle,
-                    {
-                        "chunk_id": chunk.chunk_id,
-                        "title": chunk.title,
-                        "error_type": type(exc).__name__,
-                        "error": str(exc),
-                    },
-                )
-                failed_handle.flush()
-            failed_count += 1
+    def record_failed_chunk(chunk: Any, exc: Exception) -> None:
+        nonlocal failed_count
+        failed_record = {
+            "chunk_id": chunk.chunk_id,
+            "title": chunk.title,
+            "status": "failed",
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+        }
+        with failed_output_path.open("a", encoding="utf-8", newline="") as failed_handle:
+            write_jsonl_record(failed_handle, failed_record)
+            failed_handle.flush()
+        _append_checkpoint(checkpoint_output_path, failed_record)
+        failed_count += 1
 
-        for seed_batch in iter_seed_question_batches(
-            pending_chunks,
-            llm_client,
-            max_per_chunk=args.max_per_chunk,
-            max_attempts=args.max_attempts,
-            continue_on_error=not args.fail_fast,
-            on_chunk_failed=record_failed_chunk,
-            max_concurrency=args.max_concurrency,
-        ):
-            for seed in seed_batch:
-                write_jsonl_record(handle, seed)
-                seed_count += 1
-            handle.flush()
-            logging.info("gen_seed_qa.appended batch_count=%s total_seed_count=%s", len(seed_batch), seed_count)
+    def record_completed_chunk(chunk: Any, seed_batch: list[dict[str, Any]]) -> None:
+        nonlocal seed_count
+        records_by_chunk[chunk.chunk_id] = seed_batch
+        seed_count = _write_ordered_seed_records(output_path, chunks, records_by_chunk)
+        _append_checkpoint(
+            checkpoint_output_path,
+            {
+                "chunk_id": chunk.chunk_id,
+                "title": chunk.title,
+                "status": "ok",
+                "seed_count": len(seed_batch),
+            },
+        )
+
+    for seed_batch in iter_seed_question_batches(
+        pending_chunks,
+        llm_client,
+        max_per_chunk=args.max_per_chunk,
+        max_attempts=args.max_attempts,
+        continue_on_error=not args.fail_fast,
+        on_chunk_failed=record_failed_chunk,
+        on_chunk_done=record_completed_chunk,
+        max_concurrency=args.max_concurrency,
+    ):
+        logging.info("gen_seed_qa.recorded batch_count=%s total_seed_count=%s", len(seed_batch), seed_count)
     logging.info(
-        "gen_seed_qa.done output=%s seed_count=%s failed_output=%s failed_count=%s",
+        "gen_seed_qa.done output=%s seed_count=%s checkpoint=%s failed_output=%s failed_count=%s",
         args.output,
         seed_count,
+        checkpoint_output_path,
         failed_output_path,
         failed_count,
     )
     print(f"seed_count={seed_count}")
+    print(f"checkpoint_output={checkpoint_output_path}")
     if failed_count:
         print(f"failed_count={failed_count}")
         print(f"failed_output={failed_output_path}")

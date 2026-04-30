@@ -58,6 +58,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-attempts", type=int, default=2)
     parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent LLM judge requests.")
+    parser.add_argument("--checkpoint-output", help="JSONL checkpoint file for successful and failed judge tasks.")
+    parser.add_argument("--overwrite", action="store_true", help="Ignore existing checkpoint and regenerate judge results.")
     parser.add_argument("--fail-fast", action="store_true")
     return parser.parse_args()
 
@@ -151,6 +153,65 @@ def average(results: list[dict[str, Any]], key: str) -> float:
     return sum(values) / max(len(values), 1)
 
 
+def default_output_path(results_file: str) -> Path:
+    return Path(results_file).with_name(Path(results_file).stem + "_judged.json")
+
+
+def default_checkpoint_path(output_path: Path) -> Path:
+    return output_path.with_name(f"{output_path.stem}.checkpoint.jsonl")
+
+
+def append_checkpoint(path: Path, record: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8", newline="") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False))
+        handle.write("\r\n")
+        handle.flush()
+
+
+def load_checkpoint(path: Path) -> dict[int, dict[str, Any]]:
+    if not path.exists():
+        return {}
+    latest: dict[int, dict[str, Any]] = {}
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            try:
+                index = int(record.get("index"))
+            except (TypeError, ValueError):
+                continue
+            latest[index] = record
+    return latest
+
+
+def write_output(
+    output_path: Path,
+    *,
+    provider: str,
+    model: str,
+    successes: dict[int, dict[str, Any]],
+    failures: dict[int, dict[str, Any]],
+) -> None:
+    judged_results = [successes[index] for index in sorted(successes)]
+    failed_results = [failures[index] for index in sorted(failures) if index not in successes]
+    summary = {
+        "count": len(judged_results),
+        "failed_count": len(failed_results),
+        "judge_provider": provider,
+        "judge_model": model,
+        "avg_correctness": average(judged_results, "correctness"),
+        "avg_faithfulness": average(judged_results, "faithfulness"),
+        "avg_answer_format": average(judged_results, "answer_format"),
+        "avg_overall": average(judged_results, "overall"),
+    }
+    output_payload = {"summary": summary, "results": judged_results, "failed_results": failed_results}
+    temp_output = output_path.with_name(f"{output_path.name}.tmp")
+    temp_output.write_text(json.dumps(output_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    temp_output.replace(output_path)
+
+
 def judge_item(
     index: int,
     total_count: int,
@@ -189,19 +250,48 @@ def main() -> None:
     input_results = payload["results"]
     if args.max_samples is not None:
         input_results = input_results[: args.max_samples]
+    output_path = Path(args.output) if args.output else default_output_path(args.results_file)
+    checkpoint_path = Path(args.checkpoint_output) if args.checkpoint_output else default_checkpoint_path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    if args.overwrite and checkpoint_path.exists():
+        checkpoint_path.unlink()
 
+    judge_model = get_doubao_judge_model(args.judge_model)
     client = create_llm_client(
         args.llm_provider,
         api_key=args.api_key,
-        model=get_doubao_judge_model(args.judge_model),
+        model=judge_model,
         base_url=get_doubao_base_url(args.base_url),
         timeout_seconds=args.timeout_seconds,
     )
 
-    indexed_results: dict[int, dict[str, Any]] = {}
-    failed_indexes: set[int] = set()
+    checkpoint = {} if args.overwrite else load_checkpoint(checkpoint_path)
+    successes = {
+        index: record["item"]
+        for index, record in checkpoint.items()
+        if record.get("status") == "ok" and isinstance(record.get("item"), dict)
+    }
+    failures = {
+        index: record["item"]
+        for index, record in checkpoint.items()
+        if record.get("status") == "failed" and isinstance(record.get("item"), dict)
+    }
+    pending_items = [(index, item) for index, item in enumerate(input_results, start=1) if index not in successes]
+    completed_count = 0
+    write_output(
+        output_path,
+        provider=args.llm_provider,
+        model=judge_model,
+        successes=successes,
+        failures=failures,
+    )
+    print(
+        f"judge_resume success={len(successes)} failed_to_retry={len(failures)} "
+        f"pending={len(pending_items)} checkpoint={checkpoint_path}"
+    )
     if args.max_concurrency == 1:
-        for index, item in enumerate(input_results, start=1):
+        for index, item in pending_items:
             _, judged_item, error = judge_item(
                 index,
                 len(input_results),
@@ -210,11 +300,24 @@ def main() -> None:
                 temperature=args.temperature,
                 max_attempts=args.max_attempts,
             )
-            indexed_results[index] = judged_item
             if error is not None:
-                failed_indexes.add(index)
+                failures[index] = judged_item
+                append_checkpoint(checkpoint_path, {"index": index, "status": "failed", "item": judged_item})
                 if args.fail_fast:
                     raise error
+            else:
+                successes[index] = judged_item
+                failures.pop(index, None)
+                append_checkpoint(checkpoint_path, {"index": index, "status": "ok", "item": judged_item})
+            completed_count += 1
+            write_output(
+                output_path,
+                provider=args.llm_provider,
+                model=judge_model,
+                successes=successes,
+                failures=failures,
+            )
+            print(f"judge_progress completed={completed_count}/{len(pending_items)} success={len(successes)} failed={len(failures)}")
     else:
         with ThreadPoolExecutor(max_workers=args.max_concurrency) as executor:
             futures = {
@@ -227,37 +330,34 @@ def main() -> None:
                     temperature=args.temperature,
                     max_attempts=args.max_attempts,
                 ): index
-                for index, item in enumerate(input_results, start=1)
+                for index, item in pending_items
             }
             for future in as_completed(futures):
                 index = futures[future]
                 _, judged_item, error = future.result()
-                indexed_results[index] = judged_item
                 if error is not None:
-                    failed_indexes.add(index)
+                    failures[index] = judged_item
+                    append_checkpoint(checkpoint_path, {"index": index, "status": "failed", "item": judged_item})
                     if args.fail_fast:
                         for pending_future in futures:
                             pending_future.cancel()
                         raise error
+                else:
+                    successes[index] = judged_item
+                    failures.pop(index, None)
+                    append_checkpoint(checkpoint_path, {"index": index, "status": "ok", "item": judged_item})
+                completed_count += 1
+                write_output(
+                    output_path,
+                    provider=args.llm_provider,
+                    model=judge_model,
+                    successes=successes,
+                    failures=failures,
+                )
+                print(f"judge_progress completed={completed_count}/{len(pending_items)} success={len(successes)} failed={len(failures)}")
 
-    ordered_results = [indexed_results[index] for index in sorted(indexed_results)]
-    judged_results = [item for index, item in enumerate(ordered_results, start=1) if index not in failed_indexes]
-    failed_results = [item for index, item in enumerate(ordered_results, start=1) if index in failed_indexes]
-
-    summary = {
-        "count": len(judged_results),
-        "failed_count": len(failed_results),
-        "judge_provider": args.llm_provider,
-        "judge_model": get_doubao_judge_model(args.judge_model),
-        "avg_correctness": average(judged_results, "correctness"),
-        "avg_faithfulness": average(judged_results, "faithfulness"),
-        "avg_answer_format": average(judged_results, "answer_format"),
-        "avg_overall": average(judged_results, "overall"),
-    }
-    output_payload = {"summary": summary, "results": judged_results, "failed_results": failed_results}
-    output_path = Path(args.output) if args.output else Path(args.results_file).with_name(Path(args.results_file).stem + "_judged.json")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(output_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    final_payload = json.loads(output_path.read_text(encoding="utf-8"))
+    summary = final_payload["summary"]
     print(json.dumps({"summary": summary, "output": str(output_path)}, ensure_ascii=False, indent=2))
 
 

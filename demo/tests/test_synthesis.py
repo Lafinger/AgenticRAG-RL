@@ -145,7 +145,7 @@ def test_generate_seed_questions_uses_llm_client() -> None:
     seeds = generate_seed_questions(chunks[:1], client, max_per_chunk=1)
 
     assert len(client.calls) == 1
-    assert "平凡的世界" in client.calls[0][1]["content"]
+    assert "中文武侠小说" in client.calls[0][1]["content"]
     assert seeds == [
             {
                 "question": "孙少平在学校生活艰难的表现是什么？",

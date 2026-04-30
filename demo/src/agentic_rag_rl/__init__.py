@@ -2,7 +2,7 @@ from .evaluation import exact_match, hop_recall, over_extension, premature_colla
 from .grpo_data import build_grpo_rows
 from .io import load_chunks, load_multihop_examples
 from .protocols import DEFAULT_AGENT_NAME, SYSTEM_PROMPT_EN, SYSTEM_PROMPT_ZH, TOOL_SCHEMAS
-from .retrieval import HybridRetriever, KeywordRetriever, RetrievalResult, rrf_fuse, tokenize
+from .retrieval import HybridRetriever, IndexedHybridRetriever, KeywordRetriever, RetrievalResult, rrf_fuse, tokenize
 from .rewards import RewardInputs, RewardResult, score_response
 from .server import create_app
 from .traces import build_oracle_traces, convert_traces_to_sft_records
@@ -13,6 +13,7 @@ __all__ = [
     "DEFAULT_AGENT_NAME",
     "Hop",
     "HybridRetriever",
+    "IndexedHybridRetriever",
     "KeywordRetriever",
     "MultiHopExample",
     "RetrievalResult",

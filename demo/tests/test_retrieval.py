@@ -38,3 +38,14 @@ def test_hybrid_search_prefers_novel_chunk() -> None:
 
     assert results
     assert results[0].chunk_id == "corpus_chunkids_000003"
+
+
+def test_dispatch_supports_semantic_and_graph_tool_names() -> None:
+    chunks = load_chunks(DATA_DIR / "corpus.jsonl")
+    retriever = HybridRetriever(chunks)
+
+    semantic_results = retriever.dispatch("semantic_search", "双水村 东拉河", top_k=2)
+    graph_results = retriever.dispatch("graph_search", "双水村 东拉河", top_k=2)
+
+    assert semantic_results
+    assert graph_results

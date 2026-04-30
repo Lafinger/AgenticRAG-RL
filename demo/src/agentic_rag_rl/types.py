@@ -11,6 +11,8 @@ class Chunk:
     text: str
     company: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+    pages: list[int] = field(default_factory=list)
+    section: str = ""
 
 
 @dataclass(slots=True)

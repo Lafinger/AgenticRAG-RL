@@ -65,6 +65,7 @@ def iter_seed_question_batches(
     max_attempts: int = 2,
     continue_on_error: bool = False,
     on_chunk_failed: Callable[[Chunk, Exception], None] | None = None,
+    on_chunk_done: Callable[[Chunk, list[dict[str, Any]]], None] | None = None,
     max_concurrency: int = 1,
 ) -> Iterable[list[dict[str, Any]]]:
     chunk_list = list(chunks)
@@ -85,6 +86,7 @@ def iter_seed_question_batches(
             max_attempts=max_attempts,
             continue_on_error=continue_on_error,
             on_chunk_failed=on_chunk_failed,
+            on_chunk_done=on_chunk_done,
             seeds=seeds,
         )
         logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
@@ -96,6 +98,8 @@ def iter_seed_question_batches(
         return
 
     next_chunk_index = 0
+    completed_count = 0
+    failed_count = 0
     futures: dict[Future[list[dict[str, Any]]], tuple[int, Chunk]] = {}
 
     def submit_next(executor: ThreadPoolExecutor) -> None:
@@ -133,6 +137,8 @@ def iter_seed_question_batches(
                 try:
                     items = future.result()
                 except Exception as exc:
+                    completed_count += 1
+                    failed_count += 1
                     logger.exception(
                         "seed_qa_generation.chunk_failed index=%s/%s chunk_id=%s",
                         index,
@@ -142,6 +148,13 @@ def iter_seed_question_batches(
                     if on_chunk_failed:
                         on_chunk_failed(chunk, exc)
                     if continue_on_error:
+                        logger.info(
+                            "seed_qa_generation.progress completed=%s/%s failed=%s total_seed_count=%s",
+                            completed_count,
+                            len(chunk_list),
+                            failed_count,
+                            len(seeds),
+                        )
                         submit_next(executor)
                         continue
                     for pending_future in futures:
@@ -149,13 +162,19 @@ def iter_seed_question_batches(
                     raise
                 batch = _build_seed_batch(chunk, items)
                 seeds.extend(batch)
+                completed_count += 1
+                if on_chunk_done:
+                    on_chunk_done(chunk, batch)
                 logger.info(
-                    "seed_qa_generation.chunk_done index=%s/%s chunk_id=%s generated_count=%s total_seed_count=%s",
+                    "seed_qa_generation.chunk_done index=%s/%s chunk_id=%s generated_count=%s total_seed_count=%s progress=%s/%s failed=%s",
                     index,
                     len(chunk_list),
                     chunk.chunk_id,
                     len(items),
                     len(seeds),
+                    completed_count,
+                    len(chunk_list),
+                    failed_count,
                 )
                 yield batch
                 submit_next(executor)
@@ -170,8 +189,11 @@ def _iter_seed_question_batches_sequential(
     max_attempts: int,
     continue_on_error: bool,
     on_chunk_failed: Callable[[Chunk, Exception], None] | None,
+    on_chunk_done: Callable[[Chunk, list[dict[str, Any]]], None] | None,
     seeds: list[dict[str, Any]],
 ) -> Iterable[list[dict[str, Any]]]:
+    completed_count = 0
+    failed_count = 0
     for index, chunk in enumerate(chunk_list, start=1):
         logger.info(
             "seed_qa_generation.chunk_start index=%s/%s chunk_id=%s title=%s chunk_chars=%s",
@@ -184,6 +206,8 @@ def _iter_seed_question_batches_sequential(
         try:
             items = generate_seed_qa(llm_client, chunk.text, max_items=max_per_chunk, max_attempts=max_attempts)
         except Exception as exc:
+            completed_count += 1
+            failed_count += 1
             logger.exception(
                 "seed_qa_generation.chunk_failed index=%s/%s chunk_id=%s",
                 index,
@@ -193,17 +217,30 @@ def _iter_seed_question_batches_sequential(
             if on_chunk_failed:
                 on_chunk_failed(chunk, exc)
             if continue_on_error:
+                logger.info(
+                    "seed_qa_generation.progress completed=%s/%s failed=%s total_seed_count=%s",
+                    completed_count,
+                    len(chunk_list),
+                    failed_count,
+                    len(seeds),
+                )
                 continue
             raise
         batch = _build_seed_batch(chunk, items)
         seeds.extend(batch)
+        completed_count += 1
+        if on_chunk_done:
+            on_chunk_done(chunk, batch)
         logger.info(
-            "seed_qa_generation.chunk_done index=%s/%s chunk_id=%s generated_count=%s total_seed_count=%s",
+            "seed_qa_generation.chunk_done index=%s/%s chunk_id=%s generated_count=%s total_seed_count=%s progress=%s/%s failed=%s",
             index,
             len(chunk_list),
             chunk.chunk_id,
             len(items),
             len(seeds),
+            completed_count,
+            len(chunk_list),
+            failed_count,
         )
         yield batch
 
@@ -262,7 +299,7 @@ def _build_seed_qa_messages(chunk_text: str, *, max_items: int) -> list[ChatMess
         "请只基于给定小说片段提取原子化、可验证、唯一答案的 seed QA。"
         "只能输出 JSON 数组，不要输出解释。"
     )
-    user_prompt = f"""请为下面《平凡的世界》片段生成最多 {max_items} 条 seed QA。
+    user_prompt = f"""请为下面中文武侠小说片段生成最多 {max_items} 条 seed QA。
 
 # 任务
 给定一段小说文本，提取一组原子化、可验证的事实，并将每个事实转化为问答对。
@@ -270,14 +307,14 @@ def _build_seed_qa_messages(chunk_text: str, *, max_items: int) -> list[ChatMess
 # 问答生成规则
 1. 原子性
 - 每个 QA 只包含一个不可拆分的事实，不能把多个动作、多个原因、多个关系并列在一个答案里。
-- 错误示例："孙少平为什么最后取饭？" -> "因为贫穷、敏感、自尊心强"。
-- 正确做法：拆成更单一的问题，例如"孙少平最后取饭体现了怎样的生活处境？"。
+- 错误示例："令狐冲为什么离开？" -> "因为受伤、被误解、想保护同门"。
+- 正确做法：拆成更单一的问题，例如"令狐冲离开华山前做了什么？"。
 
 2. 可验证性
 - answer 必须直接来自片段，且只能属于以下类型之一：
-  - 人物名：如 孙少平、郝红梅。
-  - 地点名：如 双水村、罐子村。
-  - 物品名：如 粮票、黑高粱面馍。
+  - 人物名：如 乔峰、令狐冲。
+  - 地点名：如 少室山、武当山。
+  - 物品名：如 倚天剑、屠龙刀。
   - 明确关系：如 同班同学、兄妹、父子。
   - 明确行为结果：如 借书、取走两个高粱面馍、被老师没收。
 - 拒绝主观判断、抽象感悟、长段解释或多原因概括。
@@ -466,6 +503,7 @@ def synthesize_multihop_examples(
     skip_chain_keys: set[str] | None = None,
     existing_questions: set[str] | None = None,
     max_concurrency: int = 1,
+    raise_on_merge_failure: bool = False,
 ) -> list[dict[str, Any]]:
     return list(
         iter_synthesize_multihop_examples(
@@ -476,6 +514,7 @@ def synthesize_multihop_examples(
             skip_chain_keys=skip_chain_keys,
             existing_questions=existing_questions,
             max_concurrency=max_concurrency,
+            raise_on_merge_failure=raise_on_merge_failure,
         )
     )
 
@@ -488,6 +527,8 @@ def iter_synthesize_multihop_examples(
     skip_chain_keys: set[str] | None = None,
     existing_questions: set[str] | None = None,
     max_concurrency: int = 1,
+    raise_on_merge_failure: bool = False,
+    on_chain_failed: Callable[[list[dict[str, Any]], Exception], None] | None = None,
 ) -> Iterable[dict[str, Any]]:
     if max_concurrency < 1:
         raise ValueError("max_concurrency must be >= 1.")
@@ -507,32 +548,81 @@ def iter_synthesize_multihop_examples(
     candidate_chains = _iter_multihop_candidate_chains(seeds, seeds_by_chunk, retriever, seen_chain_keys, stats)
 
     if merge_llm_client is None or max_concurrency == 1:
+        completed_merge_count = 0
+        skipped_duplicate_count = 0
         for chain in candidate_chains:
             if generated_count >= target_count:
                 break
-            example = _build_stepwise_example(chain, merge_llm_client=merge_llm_client)
+            try:
+                example = _build_stepwise_example(
+                    chain,
+                    merge_llm_client=merge_llm_client,
+                    raise_on_merge_failure=raise_on_merge_failure,
+                )
+            except Exception as exc:
+                if on_chain_failed:
+                    on_chain_failed(chain, exc)
+                logger.exception(
+                    "multihop_synthesis.merge_failed chain_key=%s accepted=%s target_count=%s",
+                    multihop_chain_key(chain),
+                    generated_count,
+                    target_count,
+                )
+                continue
+            if merge_llm_client is not None:
+                completed_merge_count += 1
             if example["final_question"] in seen_questions:
+                skipped_duplicate_count += 1
+                if merge_llm_client is not None:
+                    logger.info(
+                        "multihop_synthesis.progress completed_merges=%s accepted=%s skipped_duplicates=%s target_count=%s",
+                        completed_merge_count,
+                        generated_count,
+                        skipped_duplicate_count,
+                        target_count,
+                    )
                 continue
             seen_questions.add(example["final_question"])
             generated_count += 1
             logger.info(
-                "multihop_synthesis.added subset=%s total_count=%s target_count=%s",
+                "multihop_synthesis.added subset=%s total_count=%s target_count=%s completed_merges=%s skipped_duplicates=%s",
                 example["subset"],
                 generated_count,
                 target_count,
+                completed_merge_count,
+                skipped_duplicate_count,
             )
             yield example
     else:
         worker_count = max_concurrency
+        submitted_count = 0
+        completed_merge_count = 0
+        skipped_duplicate_count = 0
         futures: dict[Future[dict[str, Any]], list[dict[str, Any]]] = {}
         candidate_iter = iter(candidate_chains)
 
         def submit_next(executor: ThreadPoolExecutor) -> bool:
+            nonlocal submitted_count
             try:
                 chain = next(candidate_iter)
             except StopIteration:
                 return False
-            futures[executor.submit(_build_stepwise_example, chain, merge_llm_client)] = chain
+            futures[
+                executor.submit(
+                    _build_stepwise_example,
+                    chain,
+                    merge_llm_client,
+                    raise_on_merge_failure=raise_on_merge_failure,
+                )
+            ] = chain
+            submitted_count += 1
+            logger.info(
+                "multihop_synthesis.merge_submitted submitted=%s accepted=%s target_count=%s in_flight=%s",
+                submitted_count,
+                generated_count,
+                target_count,
+                len(futures),
+            )
             return True
 
         with ThreadPoolExecutor(max_workers=worker_count) as executor:
@@ -542,19 +632,46 @@ def iter_synthesize_multihop_examples(
             while futures and generated_count < target_count:
                 done, _ = wait(futures, return_when=FIRST_COMPLETED)
                 for future in done:
-                    futures.pop(future)
-                    example = future.result()
+                    chain = futures.pop(future)
+                    completed_merge_count += 1
+                    try:
+                        example = future.result()
+                    except Exception as exc:
+                        if on_chain_failed:
+                            on_chain_failed(chain, exc)
+                        logger.exception(
+                            "multihop_synthesis.merge_failed completed_merges=%s submitted=%s accepted=%s chain_key=%s",
+                            completed_merge_count,
+                            submitted_count,
+                            generated_count,
+                            multihop_chain_key(chain),
+                        )
+                        if generated_count < target_count:
+                            submit_next(executor)
+                        continue
                     if example["final_question"] in seen_questions:
+                        skipped_duplicate_count += 1
+                        logger.info(
+                            "multihop_synthesis.progress completed_merges=%s submitted=%s accepted=%s skipped_duplicates=%s target_count=%s",
+                            completed_merge_count,
+                            submitted_count,
+                            generated_count,
+                            skipped_duplicate_count,
+                            target_count,
+                        )
                         if generated_count < target_count:
                             submit_next(executor)
                         continue
                     seen_questions.add(example["final_question"])
                     generated_count += 1
                     logger.info(
-                        "multihop_synthesis.added subset=%s total_count=%s target_count=%s",
+                        "multihop_synthesis.added subset=%s total_count=%s target_count=%s completed_merges=%s submitted=%s skipped_duplicates=%s",
                         example["subset"],
                         generated_count,
                         target_count,
+                        completed_merge_count,
+                        submitted_count,
+                        skipped_duplicate_count,
                     )
                     yield example
                     if generated_count >= target_count:
@@ -673,9 +790,18 @@ def multihop_chain_key(hops: Iterable[dict[str, Any]]) -> str:
     return "|".join(f"{hop.get('doc_chunk_id', '')}::{hop.get('question', '')}" for hop in hops)
 
 
-def _build_stepwise_example(chain: list[dict[str, Any]], merge_llm_client: LLMClient | None = None) -> dict[str, Any]:
+def _build_stepwise_example(
+    chain: list[dict[str, Any]],
+    merge_llm_client: LLMClient | None = None,
+    *,
+    raise_on_merge_failure: bool = False,
+) -> dict[str, Any]:
     hop_count = len(chain)
-    merged = _merge_stepwise_question_with_llm(chain, merge_llm_client) if merge_llm_client else {}
+    merged = (
+        _merge_stepwise_question_with_llm(chain, merge_llm_client, raise_on_error=raise_on_merge_failure)
+        if merge_llm_client
+        else {}
+    )
     final_answer = merged.get("final_answer") or chain[-1]["answer"]
     final_question = merged.get("final_question") or _build_stepwise_question(chain)
     qa_type = merged.get("qa_type") or "inference"
@@ -691,22 +817,33 @@ def _build_stepwise_example(chain: list[dict[str, Any]], merge_llm_client: LLMCl
     }
 
 
-def _merge_stepwise_question_with_llm(chain: list[dict[str, Any]], llm_client: LLMClient) -> dict[str, Any]:
+def _merge_stepwise_question_with_llm(
+    chain: list[dict[str, Any]],
+    llm_client: LLMClient,
+    *,
+    raise_on_error: bool = False,
+) -> dict[str, Any]:
     logger.info("multihop_merge.start hop_count=%s", len(chain))
     try:
         content = llm_client.chat(_build_multihop_merge_messages(chain), temperature=0.2)
     except Exception:
         logger.exception("multihop_merge.failed fallback=rule hop_count=%s", len(chain))
+        if raise_on_error:
+            raise
         return {}
     try:
         payload = _extract_json_object(content)
-    except Exception:
+    except Exception as exc:
         logger.exception("multihop_merge.invalid_json fallback=rule response_chars=%s", len(content))
+        if raise_on_error:
+            raise ValueError("Multihop merge response is not valid JSON.") from exc
         return {}
     final_question = str(payload.get("final_question", "")).strip()
     final_answer = str(payload.get("final_answer", "")).strip()
     if not final_question or not final_answer:
         logger.warning("multihop_merge.missing_required_fields keys=%s", sorted(payload))
+        if raise_on_error:
+            raise ValueError("Multihop merge response missing final_question or final_answer.")
         return {}
     answer_aliases = payload.get("answer_aliases", [final_answer])
     if isinstance(answer_aliases, str):

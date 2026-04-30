@@ -41,6 +41,8 @@ def load_chunks(path: str | Path) -> list[Chunk]:
                 text=record["text"],
                 company=record.get("company", ""),
                 metadata=record.get("metadata", {}),
+                pages=record.get("pages", []),
+                section=record.get("section", record.get("metadata", {}).get("section", "")),
             )
         )
     return chunks

@@ -25,3 +25,7 @@ def test_retrieval_server_health_and_search() -> None:
 
     payload = response.json()
     assert payload["results"][0]["chunk_id"] == "corpus_chunkids_000002"
+
+    graph_response = client.post("/search", json={"query": "双水村 东拉河 哭咽河", "top_k": 2, "tool": "graph_search"})
+    assert graph_response.status_code == 200
+    assert graph_response.json()["results"]
