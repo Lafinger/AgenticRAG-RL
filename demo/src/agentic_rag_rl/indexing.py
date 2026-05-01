@@ -69,13 +69,23 @@ def encode_texts(
     encoder: TextEncoder | None = None,
 ) -> np.ndarray:
     if encoder is not None:
-        return _as_float32_matrix(encoder(texts, batch_size))
+        logger.info("index_build.progress stage=embedding_custom_start text_count=%s batch_size=%s", len(texts), batch_size)
+        matrix = _as_float32_matrix(encoder(texts, batch_size))
+        logger.info("index_build.progress stage=embedding_custom_done shape=%s", matrix.shape)
+        return matrix
     if not embedding_model:
         raise ValueError("embedding_model is required when encoder is not provided.")
 
     from sentence_transformers import SentenceTransformer
 
+    logger.info(
+        "index_build.progress stage=embedding_model_load_start model=%s text_count=%s batch_size=%s",
+        embedding_model,
+        len(texts),
+        batch_size,
+    )
     model = SentenceTransformer(embedding_model)
+    logger.info("index_build.progress stage=embedding_encode_start model=%s text_count=%s", embedding_model, len(texts))
     embeddings = model.encode(
         list(texts),
         batch_size=batch_size,
@@ -83,7 +93,9 @@ def encode_texts(
         convert_to_numpy=True,
         show_progress_bar=True,
     )
-    return _as_float32_matrix(embeddings)
+    matrix = _as_float32_matrix(embeddings)
+    logger.info("index_build.progress stage=embedding_encode_done shape=%s", matrix.shape)
+    return matrix
 
 
 def _load_faiss(faiss_module: Any | None = None) -> Any:
@@ -96,15 +108,26 @@ def _load_faiss(faiss_module: Any | None = None) -> Any:
 
 def build_faiss_index(embeddings: np.ndarray, *, faiss_module: Any | None = None) -> Any:
     faiss = _load_faiss(faiss_module)
+    logger.info("index_build.progress stage=faiss_build_start vector_count=%s dim=%s", embeddings.shape[0], embeddings.shape[1])
     index = faiss.IndexFlatIP(int(embeddings.shape[1]))
     index.add(embeddings)
+    logger.info("index_build.progress stage=faiss_build_done ntotal=%s", getattr(index, "ntotal", embeddings.shape[0]))
     return index
 
 
 def _tokenized_corpus(chunks: Sequence[Chunk]) -> list[list[str]]:
     from .retrieval import tokenize
 
-    return [tokenize(chunk.text) for chunk in chunks]
+    total = len(chunks)
+    logger.info("index_build.progress stage=bm25_tokenize_start chunk_count=%s", total)
+    tokenized: list[list[str]] = []
+    checkpoint = max(1, total // 10) if total else 1
+    for index, chunk in enumerate(chunks, start=1):
+        tokenized.append(tokenize(chunk.text))
+        if index == total or index % checkpoint == 0:
+            logger.info("index_build.progress stage=bm25_tokenize_progress completed=%s/%s", index, total)
+    logger.info("index_build.progress stage=bm25_tokenize_done chunk_count=%s", total)
+    return tokenized
 
 
 def _parse_triples(content: str) -> list[dict[str, str]]:
@@ -370,15 +393,20 @@ def build_index_bundle(
     kg_cache_path: str | Path | None = None,
     kg_max_concurrency: int = 5,
 ) -> dict[str, Any]:
+    logger.info("index_build.progress stage=prepare_chunks_start")
     chunk_list = list(chunks)
     chunk_ids = [chunk.chunk_id for chunk in chunk_list]
     chunk_store = {chunk.chunk_id: _chunk_record(chunk) for chunk in chunk_list}
+    logger.info("index_build.progress stage=prepare_chunks_done chunk_count=%s", len(chunk_list))
     tokenized = _tokenized_corpus(chunk_list)
+    logger.info("index_build.progress stage=bm25_build_start document_count=%s", len(tokenized))
     bm25 = BM25Okapi(tokenized)
+    logger.info("index_build.progress stage=bm25_build_done document_count=%s", len(tokenized))
 
     faiss_index = None
     embedding_dim = None
     if embedding_model or text_encoder is not None:
+        logger.info("index_build.progress stage=semantic_index_start")
         embeddings = encode_texts(
             [chunk.text for chunk in chunk_list],
             embedding_model=embedding_model,
@@ -387,6 +415,7 @@ def build_index_bundle(
         )
         embedding_dim = int(embeddings.shape[1]) if embeddings.size else 0
         faiss_index = build_faiss_index(embeddings, faiss_module=faiss_module)
+        logger.info("index_build.progress stage=semantic_index_done embedding_dim=%s", embedding_dim)
 
     knowledge_graph = None
     entity_embeddings = None
@@ -394,19 +423,27 @@ def build_index_bundle(
     if not skip_kg:
         if kg_llm_client is None:
             raise ValueError("kg_llm_client is required when skip_kg=False.")
+        logger.info("index_build.progress stage=kg_build_start cache_path=%s", kg_cache_path)
         knowledge_graph, triples, completed_chunk_ids = build_knowledge_graph(
             chunk_list,
             llm_client=kg_llm_client,
             cache_path=kg_cache_path,
             max_concurrency=kg_max_concurrency,
         )
+        logger.info("index_build.progress stage=kg_build_done triple_count=%s", len(triples))
+        logger.info("index_build.progress stage=entity_embedding_start")
         entity_embeddings = build_entity_embeddings(
             knowledge_graph,
             embedding_model=embedding_model,
             encoder=text_encoder,
             batch_size=256,
         )
+        logger.info(
+            "index_build.progress stage=entity_embedding_done entity_count=%s",
+            len(entity_embeddings.get("entities", [])),
+        )
 
+    logger.info("index_build.progress stage=bundle_done")
     return {
         "manifest": {
             "chunk_count": len(chunk_list),
@@ -433,30 +470,46 @@ def build_index_bundle(
 def save_index_bundle(bundle: dict[str, Any], output_dir: str | Path, *, faiss_module: Any | None = None) -> None:
     target = Path(output_dir)
     target.mkdir(parents=True, exist_ok=True)
+    logger.info("index_save.progress stage=manifest_start output_dir=%s", target)
     (target / "manifest.json").write_text(json.dumps(bundle["manifest"], ensure_ascii=False, indent=2), encoding="utf-8")
     (target / "chunk_ids.json").write_text(json.dumps(bundle["chunk_ids"], ensure_ascii=False, indent=2), encoding="utf-8")
+    logger.info("index_save.progress stage=manifest_done chunk_count=%s", len(bundle["chunk_ids"]))
 
+    logger.info("index_save.progress stage=chunk_store_start")
     with (target / "chunk_store.pkl").open("wb") as handle:
         pickle.dump(bundle["chunk_store"], handle)
+    logger.info("index_save.progress stage=chunk_store_done")
+
+    logger.info("index_save.progress stage=bm25_start")
     with (target / "bm25.pkl").open("wb") as handle:
         pickle.dump(bundle["bm25"], handle)
+    logger.info("index_save.progress stage=bm25_done")
 
     faiss_index = bundle.get("faiss_index")
     if faiss_index is not None:
         faiss = _load_faiss(faiss_module)
+        logger.info("index_save.progress stage=faiss_start")
         faiss.write_index(faiss_index, str(target / "faiss.index"))
+        logger.info("index_save.progress stage=faiss_done")
 
     if bundle.get("knowledge_graph") is not None:
+        logger.info("index_save.progress stage=knowledge_graph_start")
         (target / "knowledge_graph.json").write_text(
             json.dumps(bundle["knowledge_graph"], ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+        logger.info("index_save.progress stage=knowledge_graph_done")
     if bundle.get("entity_embeddings") is not None:
+        logger.info("index_save.progress stage=entity_embeddings_start")
         with (target / "entity_embeddings.pkl").open("wb") as handle:
             pickle.dump(bundle["entity_embeddings"], handle)
+        logger.info("index_save.progress stage=entity_embeddings_done")
     if bundle.get("triples") or bundle.get("kg_completed_chunk_ids"):
+        logger.info("index_save.progress stage=triples_cache_start")
         _write_triples_cache(
             target / "triples_cache.jsonl",
             bundle["triples"],
             completed_chunk_ids=bundle.get("kg_completed_chunk_ids"),
         )
+        logger.info("index_save.progress stage=triples_cache_done")
+    logger.info("index_save.progress stage=done output_dir=%s", target)

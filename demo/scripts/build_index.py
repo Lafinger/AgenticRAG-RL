@@ -73,7 +73,9 @@ def main() -> None:
     _validate_embedding_model(args.embedding_model)
     _warn_missing_reranker_model(args.reranker_model)
 
+    logging.info("build_index.progress stage=load_env env_file=%s", args.env_file)
     load_env_file(args.env_file)
+    logging.info("build_index.progress stage=load_corpus_start corpus=%s", args.corpus)
     chunks = load_chunks(args.corpus)
     logging.info(
         "build_index.start chunk_count=%s skip_kg=%s embedding_model=%s max_concurrency=%s",
@@ -85,6 +87,12 @@ def main() -> None:
     kg_llm_client = None
     kg_cache = args.kg_cache or str(Path(args.index_dir) / "triples_cache.jsonl")
     if not args.skip_kg:
+        logging.info(
+            "build_index.progress stage=create_kg_client provider=%s model=%s cache=%s",
+            args.llm_provider,
+            args.kg_model or os.getenv("KG_EXTRACTION_MODEL") or DEFAULT_DOUBAO_MODEL,
+            kg_cache,
+        )
         kg_llm_client = create_llm_client(
             args.llm_provider,
             api_key=args.api_key,
@@ -92,6 +100,7 @@ def main() -> None:
             base_url=get_doubao_base_url(args.base_url),
         )
 
+    logging.info("build_index.progress stage=build_bundle_start")
     bundle = build_index_bundle(
         chunks,
         embedding_model=args.embedding_model,
@@ -102,7 +111,9 @@ def main() -> None:
         kg_max_concurrency=args.max_concurrency,
     )
     bundle["manifest"]["reranker_model"] = args.reranker_model
+    logging.info("build_index.progress stage=save_bundle_start index_dir=%s", args.index_dir)
     save_index_bundle(bundle, args.index_dir)
+    logging.info("build_index.progress stage=done index_dir=%s", args.index_dir)
     print(f"chunk_count={bundle['manifest']['chunk_count']}")
     print(f"faiss={bundle['manifest']['faiss']}")
     print(f"bm25={bundle['manifest']['bm25']}")

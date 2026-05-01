@@ -201,6 +201,7 @@ uv run python .\scripts\parse_text_corpus.py `
 - FAISS 使用 BGE-M3 对每个 chunk 编码，`normalize_embeddings=True`，再写入 `IndexFlatIP`。
 - BM25 使用 `jieba` 中文分词和英文/数字正则切分，查询和建库共用同一套 tokenizer。
 - 未加 `--skip-kg` 时，脚本会并发调用豆包抽取三元组，构建 `knowledge_graph.json` 和 `entity_embeddings.pkl`；默认最大并发为 `5`，可通过 `--max-concurrency` 调整。
+- 构建过程会打印 `build_index.progress`、`index_build.progress`、`index_save.progress` 三类进度日志，覆盖语料加载、BM25 分词、BM25 构建、BGE-M3 embedding、FAISS 写入、KG 抽取、实体 embedding 和索引保存。
 - KG 三元组抽取会打印 `kg_extraction.progress completed=.../... failed=...`，长时间运行时可据此判断是否仍在推进。
 - KG 抽取会把每个 chunk 的状态逐条追加到 `triples_cache.jsonl`：成功写 `status=ok`，失败写 `status=failed`。重新执行同一命令时只跳过 `ok` 的 chunk，失败和未完成 chunk 会重新请求豆包；最终缓存会按 chunk 顺序重写。
 - CrossEncoder reranker 不预构建索引，运行检索服务时通过 `--reranker-model` 加载，对 FAISS/BM25/KG 候选进行精排。
@@ -248,6 +249,17 @@ uv run python .\scripts\build_index.py `
 ```
 
 去掉 `--skip-kg` 会启用知识图谱构建，需要 `.env` 中配置 `ARK_API_KEY`。`--max-concurrency` 控制同时发起的豆包三元组抽取请求数；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
+
+构建时应能看到类似日志：
+
+```text
+build_index.progress stage=load_corpus_start corpus=...
+index_build.progress stage=bm25_tokenize_progress completed=840/8411
+index_build.progress stage=embedding_encode_start model=...
+index_build.progress stage=faiss_build_done ntotal=8411
+kg_extraction.progress completed=12/8193 failed=0 chunk_id=...
+index_save.progress stage=done output_dir=...
+```
 
 **能拿到的结果**：
 

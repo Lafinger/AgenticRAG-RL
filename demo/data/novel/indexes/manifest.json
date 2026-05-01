@@ -1,4 +1,12 @@
 {
-  "chunk_count": 366,
-  "index_type": "bm25+tifidf-light"
+  "chunk_count": 8411,
+  "index_type": "faiss_bge_m3+bm25+kg",
+  "embedding_model": ".\\models\\bge-m3",
+  "embedding_dim": 1024,
+  "faiss": true,
+  "bm25": true,
+  "knowledge_graph": false,
+  "triple_count": 0,
+  "llm_max_concurrency": null,
+  "reranker_model": ".\\models\\bge-reranker-v2-m3"
 }
