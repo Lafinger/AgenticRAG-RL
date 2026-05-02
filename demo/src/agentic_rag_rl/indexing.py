@@ -134,6 +134,19 @@ def _parse_triples(content: str) -> list[dict[str, str]]:
     stripped = content.strip()
     if not stripped:
         return []
+    no_result_markers = (
+        "没有找到相关",
+        "未找到相关",
+        "无相关结果",
+        "没有相关结果",
+        "无法回答这个问题",
+        "无法回答该问题",
+        "不能帮助你",
+        "无法给到相关内容",
+        "无法给到相关",
+    )
+    if any(marker in stripped for marker in no_result_markers):
+        return []
     if not stripped.startswith("["):
         match = re.search(r"\[[\s\S]*\]", stripped)
         if not match:
@@ -278,10 +291,25 @@ def _extract_chunk_triples(llm_client: Any, chunk: Chunk) -> list[dict[str, str]
     return [{**triple, "chunk_id": chunk.chunk_id} for triple in triples]
 
 
+def _build_kg_messages(chunk: Chunk) -> list[dict[str, str]]:
+    return [{"role": "user", "content": KG_EXTRACTION_PROMPT_ZH.format(text=chunk.text[:2000])}]
+
+
+def _parse_chunk_triples_content(chunk: Chunk, content: str) -> list[dict[str, str]]:
+    triples = _parse_triples(content)
+    return [{**triple, "chunk_id": chunk.chunk_id} for triple in triples]
+
+
 def build_knowledge_graph(
     chunks: Sequence[Chunk],
     *,
     llm_client: Any,
+    batch_job_client: Any | None = None,
+    batch_job_dir: str | Path | None = None,
+    batch_job_name: str = "agentic-rag-kg",
+    batch_model: str | None = None,
+    batch_poll_interval_seconds: float = 60.0,
+    batch_wait_timeout_seconds: float | None = None,
     cache_path: str | Path | None = None,
     max_concurrency: int = 5,
 ) -> tuple[dict[str, Any], list[dict[str, str]], list[str]]:
@@ -307,26 +335,51 @@ def build_knowledge_graph(
         max_concurrency,
     )
     if missing_chunks:
-        completed_count = 0
-        failed_count = 0
-        with ThreadPoolExecutor(max_workers=max(1, max_concurrency)) as executor:
-            futures = {executor.submit(_extract_chunk_triples, llm_client, chunk): chunk for chunk in missing_chunks}
-            for future in as_completed(futures):
-                chunk = futures[future]
-                try:
-                    chunk_triples = future.result()
-                except Exception as exc:
+        if batch_job_client is not None:
+            if not batch_job_dir:
+                raise ValueError("batch_job_dir is required when batch_job_client is provided.")
+            if not batch_model:
+                raise ValueError("batch_model is required when batch_job_client is provided.")
+            requests = [
+                {"custom_id": chunk.chunk_id, "messages": _build_kg_messages(chunk), "temperature": 0.0}
+                for chunk in missing_chunks
+            ]
+            results = batch_job_client.run_chat_batch(
+                requests,
+                local_dir=batch_job_dir,
+                job_name=batch_job_name,
+                model=batch_model,
+                poll_interval_seconds=batch_poll_interval_seconds,
+                wait_timeout_seconds=batch_wait_timeout_seconds,
+            )
+            failed_count = 0
+            for completed_count, chunk in enumerate(missing_chunks, start=1):
+                result = results.get(chunk.chunk_id)
+                if result is None:
                     failed_count += 1
+                    exc = RuntimeError("Batch job result missing for chunk.")
                     _append_chunk_triples_failure(cache_path, chunk.chunk_id, exc)
-                    logger.exception(
-                        "kg_extraction.progress completed=%s/%s failed=%s chunk_id=%s status=failed",
+                    logger.error(
+                        "kg_extraction.progress completed=%s/%s failed=%s chunk_id=%s status=missing_result",
                         completed_count,
                         len(missing_chunks),
                         failed_count,
                         chunk.chunk_id,
                     )
-                    raise
-                completed_count += 1
+                    continue
+                try:
+                    chunk_triples = _parse_chunk_triples_content(chunk, result.content)
+                except Exception as exc:
+                    failed_count += 1
+                    _append_chunk_triples_failure(cache_path, chunk.chunk_id, exc)
+                    logger.exception(
+                        "kg_extraction.progress completed=%s/%s failed=%s chunk_id=%s status=parse_failed",
+                        completed_count,
+                        len(missing_chunks),
+                        failed_count,
+                        chunk.chunk_id,
+                    )
+                    continue
                 all_triples.extend(chunk_triples)
                 completed_chunk_ids.append(chunk.chunk_id)
                 _append_chunk_triples_cache(cache_path, chunk.chunk_id, chunk_triples)
@@ -339,6 +392,41 @@ def build_knowledge_graph(
                     len(chunk_triples),
                     len(all_triples),
                 )
+            if failed_count:
+                raise RuntimeError(f"KG batch extraction failed for {failed_count} chunks.")
+        else:
+            completed_count = 0
+            failed_count = 0
+            with ThreadPoolExecutor(max_workers=max(1, max_concurrency)) as executor:
+                futures = {executor.submit(_extract_chunk_triples, llm_client, chunk): chunk for chunk in missing_chunks}
+                for future in as_completed(futures):
+                    chunk = futures[future]
+                    try:
+                        chunk_triples = future.result()
+                    except Exception as exc:
+                        failed_count += 1
+                        _append_chunk_triples_failure(cache_path, chunk.chunk_id, exc)
+                        logger.exception(
+                            "kg_extraction.progress completed=%s/%s failed=%s chunk_id=%s status=failed",
+                            completed_count,
+                            len(missing_chunks),
+                            failed_count,
+                            chunk.chunk_id,
+                        )
+                        raise
+                    completed_count += 1
+                    all_triples.extend(chunk_triples)
+                    completed_chunk_ids.append(chunk.chunk_id)
+                    _append_chunk_triples_cache(cache_path, chunk.chunk_id, chunk_triples)
+                    logger.info(
+                        "kg_extraction.progress completed=%s/%s failed=%s chunk_id=%s triples=%s total_triples=%s",
+                        completed_count,
+                        len(missing_chunks),
+                        failed_count,
+                        chunk.chunk_id,
+                        len(chunk_triples),
+                        len(all_triples),
+                    )
 
     graph = nx.MultiDiGraph()
 
@@ -390,6 +478,12 @@ def build_index_bundle(
     faiss_module: Any | None = None,
     skip_kg: bool = True,
     kg_llm_client: Any | None = None,
+    kg_batch_job_client: Any | None = None,
+    kg_batch_job_dir: str | Path | None = None,
+    kg_batch_job_name: str = "agentic-rag-kg",
+    kg_batch_model: str | None = None,
+    kg_batch_poll_interval_seconds: float = 60.0,
+    kg_batch_wait_timeout_seconds: float | None = None,
     kg_cache_path: str | Path | None = None,
     kg_max_concurrency: int = 5,
 ) -> dict[str, Any]:
@@ -421,12 +515,18 @@ def build_index_bundle(
     entity_embeddings = None
     triples: list[dict[str, str]] = []
     if not skip_kg:
-        if kg_llm_client is None:
-            raise ValueError("kg_llm_client is required when skip_kg=False.")
+        if kg_llm_client is None and kg_batch_job_client is None:
+            raise ValueError("kg_llm_client or kg_batch_job_client is required when skip_kg=False.")
         logger.info("index_build.progress stage=kg_build_start cache_path=%s", kg_cache_path)
         knowledge_graph, triples, completed_chunk_ids = build_knowledge_graph(
             chunk_list,
             llm_client=kg_llm_client,
+            batch_job_client=kg_batch_job_client,
+            batch_job_dir=kg_batch_job_dir,
+            batch_job_name=kg_batch_job_name,
+            batch_model=kg_batch_model,
+            batch_poll_interval_seconds=kg_batch_poll_interval_seconds,
+            batch_wait_timeout_seconds=kg_batch_wait_timeout_seconds,
             cache_path=kg_cache_path,
             max_concurrency=kg_max_concurrency,
         )

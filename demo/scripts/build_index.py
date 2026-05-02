@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 from pathlib import Path
 import sys
 
@@ -12,7 +11,17 @@ sys.path.insert(0, str(ROOT / "src"))
 from agentic_rag_rl.env import load_env_file
 from agentic_rag_rl.indexing import build_index_bundle, save_index_bundle
 from agentic_rag_rl.io import load_chunks
-from agentic_rag_rl.llm_client import DEFAULT_DOUBAO_MODEL, DEFAULT_LLM_PROVIDER, create_llm_client, get_doubao_base_url
+from agentic_rag_rl.llm_client import (
+    DEFAULT_LLM_PROVIDER,
+    LLM_PROVIDER_CHOICES,
+    create_batch_job_client,
+    create_llm_client,
+    get_doubao_batch_job_config,
+    get_doubao_use_batch_inference,
+    resolve_kg_model,
+    resolve_llm_base_url,
+    split_doubao_model_version,
+)
 
 
 def _configure_logging(level: str) -> None:
@@ -60,11 +69,28 @@ def main() -> None:
     parser.add_argument("--skip-kg", action="store_true")
     parser.add_argument("--kg-cache")
     parser.add_argument("--kg-model")
-    parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent Doubao KG extraction requests.")
+    parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent online LLM KG extraction requests.")
     parser.add_argument("--env-file", default=str(ROOT / ".env"))
-    parser.add_argument("--llm-provider", default=DEFAULT_LLM_PROVIDER, choices=["doubao"])
+    parser.add_argument("--llm-provider", default=DEFAULT_LLM_PROVIDER, choices=LLM_PROVIDER_CHOICES)
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
+    parser.add_argument("--timeout-seconds", type=float, help="Online LLM request timeout for KG extraction.")
+    parser.add_argument(
+        "--use-batch-inference",
+        action="store_true",
+        help="Use Doubao Batch Inference Job API for KG extraction.",
+    )
+    parser.add_argument("--batch-foundation-model", help="Foundation model name for Batch Job, e.g. doubao-seed-2-0-pro.")
+    parser.add_argument("--batch-model-version", help="Foundation model version for Batch Job, e.g. 260215.")
+    parser.add_argument("--batch-custom-model-id", help="Custom model ID for Batch Job. Overrides foundation model.")
+    parser.add_argument("--batch-tos-bucket", help="TOS bucket for Batch Job input and output.")
+    parser.add_argument("--batch-input-prefix", help="TOS input object key prefix for Batch Job JSONL files.")
+    parser.add_argument("--batch-output-prefix", help="TOS output object key prefix for Batch Job results.")
+    parser.add_argument("--batch-project-name", help="Volcengine project name for Batch Job.")
+    parser.add_argument("--batch-completion-window", help="Batch Job completion window, e.g. 1d.")
+    parser.add_argument("--batch-poll-interval", type=float, default=60.0, help="Seconds between Batch Job status polls.")
+    parser.add_argument("--batch-wait-timeout", type=float, help="Maximum seconds to wait for Batch Job completion.")
+    parser.add_argument("--batch-work-dir", default=str(ROOT / "data" / "batch_jobs" / "kg"), help="Local Batch Job work dir.")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()
     if args.max_concurrency < 1:
@@ -75,6 +101,9 @@ def main() -> None:
 
     logging.info("build_index.progress stage=load_env env_file=%s", args.env_file)
     load_env_file(args.env_file)
+    batch_inference_enabled = get_doubao_use_batch_inference(args.use_batch_inference)
+    if batch_inference_enabled and args.llm_provider != "doubao":
+        parser.error("--use-batch-inference only supports --llm-provider doubao.")
     logging.info("build_index.progress stage=load_corpus_start corpus=%s", args.corpus)
     chunks = load_chunks(args.corpus)
     logging.info(
@@ -85,20 +114,40 @@ def main() -> None:
         args.max_concurrency,
     )
     kg_llm_client = None
+    kg_batch_job_client = None
+    batch_model = None
     kg_cache = args.kg_cache or str(Path(args.index_dir) / "triples_cache.jsonl")
     if not args.skip_kg:
+        kg_model = resolve_kg_model(args.llm_provider, args.kg_model)
         logging.info(
-            "build_index.progress stage=create_kg_client provider=%s model=%s cache=%s",
+            "build_index.progress stage=create_kg_client provider=%s model=%s cache=%s batch_inference=%s",
             args.llm_provider,
-            args.kg_model or os.getenv("KG_EXTRACTION_MODEL") or DEFAULT_DOUBAO_MODEL,
+            kg_model,
             kg_cache,
+            batch_inference_enabled,
         )
-        kg_llm_client = create_llm_client(
-            args.llm_provider,
-            api_key=args.api_key,
-            model=args.kg_model or os.getenv("KG_EXTRACTION_MODEL") or DEFAULT_DOUBAO_MODEL,
-            base_url=get_doubao_base_url(args.base_url),
-        )
+        batch_model = kg_model
+        if batch_inference_enabled:
+            default_batch_name, default_batch_version = split_doubao_model_version(batch_model)
+            batch_config = get_doubao_batch_job_config(
+                foundation_model_name=args.batch_foundation_model or default_batch_name,
+                foundation_model_version=args.batch_model_version or default_batch_version,
+                custom_model_id=args.batch_custom_model_id,
+                tos_bucket=args.batch_tos_bucket,
+                input_key_prefix=args.batch_input_prefix,
+                output_key_prefix=args.batch_output_prefix,
+                project_name=args.batch_project_name,
+                completion_window=args.batch_completion_window,
+            )
+            kg_batch_job_client = create_batch_job_client(batch_config)
+        else:
+            kg_llm_client = create_llm_client(
+                args.llm_provider,
+                api_key=args.api_key,
+                model=batch_model,
+                base_url=resolve_llm_base_url(args.llm_provider, args.base_url),
+                timeout_seconds=args.timeout_seconds,
+            )
 
     logging.info("build_index.progress stage=build_bundle_start")
     bundle = build_index_bundle(
@@ -107,6 +156,12 @@ def main() -> None:
         batch_size=args.batch_size,
         skip_kg=args.skip_kg,
         kg_llm_client=kg_llm_client,
+        kg_batch_job_client=kg_batch_job_client,
+        kg_batch_job_dir=args.batch_work_dir,
+        kg_batch_job_name="agentic-rag-kg",
+        kg_batch_model=batch_model,
+        kg_batch_poll_interval_seconds=args.batch_poll_interval,
+        kg_batch_wait_timeout_seconds=args.batch_wait_timeout,
         kg_cache_path=kg_cache,
         kg_max_concurrency=args.max_concurrency,
     )

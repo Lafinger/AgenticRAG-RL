@@ -14,4 +14,6 @@ rank-bm25>=0.2.2
 requests>=2.32
 scikit-learn>=1.5
 sentence-transformers>=5.4
+tos>=2.8
 uvicorn>=0.30
+volcengine-python-sdk[ark]>=5.0

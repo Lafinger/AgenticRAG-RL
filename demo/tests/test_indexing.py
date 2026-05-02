@@ -6,7 +6,7 @@ from typing import Sequence
 
 import numpy as np
 
-from agentic_rag_rl.indexing import build_index_bundle, build_knowledge_graph, save_index_bundle
+from agentic_rag_rl.indexing import _parse_triples, build_index_bundle, build_knowledge_graph, save_index_bundle
 from agentic_rag_rl.io import load_chunks
 
 
@@ -140,3 +140,11 @@ def test_knowledge_graph_retries_failed_cache_and_rewrites_ordered_checkpoint(tm
     checkpoint_records = [json.loads(line) for line in cache_path.read_text(encoding="utf-8").splitlines()]
     assert [record["chunk_id"] for record in checkpoint_records] == [chunk.chunk_id for chunk in chunks]
     assert [record["status"] for record in checkpoint_records] == ["ok", "ok"]
+
+
+def test_parse_triples_treats_no_result_reply_as_empty_list() -> None:
+    assert _parse_triples("抱歉，没有找到相关的结果。") == []
+    assert _parse_triples("抱歉，这个问题未找到相关结果。") == []
+    assert _parse_triples("抱歉，我无法回答这个问题。") == []
+    assert _parse_triples("你好，这个问题我无法回答，很遗憾不能帮助你。") == []
+    assert _parse_triples("你好，我无法给到相关内容。") == []

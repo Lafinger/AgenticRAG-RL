@@ -8905,3 +8905,753 @@
 {"question": "辽圣宗耶律隆绪逝世后遗命传位的人是谁？", "answer": "耶律宗真", "doc_chunk_id": "tlbb_1536", "tool": "keyword_search", "entities": ["耶律隆绪", "遗命传位"], "qa_type": "character"}
 {"question": "辽国官居天下兵马大元帅的皇太叔是谁？", "answer": "耶律重元", "doc_chunk_id": "tlbb_1537", "tool": "keyword_search", "entities": ["皇太叔", "天下兵马大元帅", "辽国"], "qa_type": "character"}
 {"question": "耶律洪基看到斥责自己为篡位伪帝的新皇诏书后是如何处理诏书的？", "answer": "掷入火中烧成灰烬", "doc_chunk_id": "tlbb_1537", "tool": "keyword_search", "entities": ["耶律洪基", "新皇诏书"], "qa_type": "action_result"}
+{"question": "萧峰的义兄是谁？", "answer": "耶律洪基", "doc_chunk_id": "tlbb_1538", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基"], "qa_type": "relation"}
+{"question": "萧峰在耶律洪基身边担任什么？", "answer": "亲身护卫", "doc_chunk_id": "tlbb_1538", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基", "亲身护卫"], "qa_type": "action_result"}
+{"question": "耶律洪基解释契丹骑兵在平原交锋前下马是为了什么？", "answer": "免得坐骑疲劳", "doc_chunk_id": "tlbb_1539", "tool": "keyword_search", "entities": ["耶律洪基", "契丹骑兵", "下马", "坐骑"], "qa_type": "action_result"}
+{"question": "耶律洪基与萧峰以什么相称？", "answer": "兄弟", "doc_chunk_id": "tlbb_1539", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰"], "qa_type": "relation"}
+{"question": "耶律洪基见到良机后，命令左军骑兵采取什么行动？", "answer": "包抄", "doc_chunk_id": "tlbb_1541", "tool": "keyword_search", "entities": ["耶律洪基", "左军骑兵", "包抄"], "qa_type": "action_result"}
+{"question": "率领三万左军骑兵从侧面包抄叛军的是谁？", "answer": "北院枢密使", "doc_chunk_id": "tlbb_1541", "tool": "keyword_search", "entities": ["左军骑兵", "北院枢密使", "叛军"], "qa_type": "character"}
+{"question": "耶律洪基平叛时，左军由谁率领？", "answer": "北院枢密使", "doc_chunk_id": "tlbb_1542", "tool": "keyword_search", "entities": ["耶律洪基", "左军", "北院枢密使"], "qa_type": "character"}
+{"question": "中军围歼叛军两队骑兵后，耶律洪基如何处置余下投降的数百人？", "answer": "下令用长矛戳死", "doc_chunk_id": "tlbb_1542", "tool": "keyword_search", "entities": ["耶律洪基", "中军", "叛军", "投降者"], "qa_type": "action_result"}
+{"question": "萧峰在敌阵中望见一人全身黄袍、头戴冲天冠，他推测此人是谁？", "answer": "皇太叔", "doc_chunk_id": "tlbb_1544", "tool": "keyword_search", "entities": ["萧峰", "皇太叔"], "qa_type": "character"}
+{"question": "萧峰在敌阵中望见另一人身披黄金甲胄，他推测此人是谁？", "answer": "楚王", "doc_chunk_id": "tlbb_1544", "tool": "keyword_search", "entities": ["萧峰", "楚王"], "qa_type": "character"}
+{"question": "皇太叔和楚王是什么关系？", "answer": "父子", "doc_chunk_id": "tlbb_1545", "tool": "keyword_search", "entities": ["皇太叔", "楚王"], "qa_type": "relation"}
+{"question": "耶律洪基的母亲是谁？", "answer": "萧太后", "doc_chunk_id": "tlbb_1545", "tool": "keyword_search", "entities": ["耶律洪基", "萧太后"], "qa_type": "character"}
+{"question": "萧峰与耶律洪基是什么关系？", "answer": "结义兄弟", "doc_chunk_id": "tlbb_1549", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基"], "qa_type": "relation"}
+{"question": "耶律洪基自称什么身份？", "answer": "国君", "doc_chunk_id": "tlbb_1549", "tool": "keyword_search", "entities": ["耶律洪基"], "qa_type": "character"}
+{"question": "阿紫向萧峰发射毒针是为了让萧峰怎样？", "answer": "动弹不得", "doc_chunk_id": "tlbb_1551", "tool": "keyword_search", "entities": ["阿紫", "萧峰", "毒针"], "qa_type": "action_result"}
+{"question": "阿紫在星宿派中是什么身份？", "answer": "大师姊", "doc_chunk_id": "tlbb_1551", "tool": "keyword_search", "entities": ["阿紫", "星宿派"], "qa_type": "character"}
+{"question": "阿紫说将来要像爱惜谁那样爱惜她？", "answer": "阿朱", "doc_chunk_id": "tlbb_1552", "tool": "keyword_search", "entities": ["阿紫", "阿朱"], "qa_type": "character"}
+{"question": "明天萧峰要陪着谁死？", "answer": "义兄", "doc_chunk_id": "tlbb_1552", "tool": "keyword_search", "entities": ["萧峰", "义兄"], "qa_type": "character"}
+{"question": "北院枢密使最终是如何死的？", "answer": "自刎而死", "doc_chunk_id": "tlbb_1554", "tool": "keyword_search", "entities": ["北院枢密使"], "qa_type": "action_result"}
+{"question": "萧峰从耶律洪基手中夺下了什么？", "answer": "刀子", "doc_chunk_id": "tlbb_1554", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基", "刀子"], "qa_type": "object"}
+{"question": "萧峰在战阵中射向皇太叔前，已经射出了几枝箭？", "answer": "七枝", "doc_chunk_id": "tlbb_1557", "tool": "keyword_search", "entities": ["萧峰", "箭"], "qa_type": "action_result"}
+{"question": "萧峰纵身跃过盾牌后擒获了谁？", "answer": "皇太叔", "doc_chunk_id": "tlbb_1557", "tool": "keyword_search", "entities": ["萧峰", "皇太叔"], "qa_type": "character"}
+{"question": "辽军中由谁分派处理事务？", "answer": "耶律莫哥", "doc_chunk_id": "tlbb_1563", "tool": "keyword_search", "entities": ["耶律莫哥", "辽军"], "qa_type": "character"}
+{"question": "萧峰在丐帮的职位是什么？", "answer": "帮主", "doc_chunk_id": "tlbb_1563", "tool": "keyword_search", "entities": ["萧峰", "丐帮"], "qa_type": "character"}
+{"question": "游坦之试图用什么工具自杀？", "answer": "短刀", "doc_chunk_id": "tlbb_1581", "tool": "keyword_search", "entities": ["游坦之", "短刀"], "qa_type": "object"}
+{"question": "阿紫想用什么废掉游坦之的一双招子？", "answer": "石灰包", "doc_chunk_id": "tlbb_1581", "tool": "keyword_search", "entities": ["阿紫", "石灰包", "游坦之"], "qa_type": "object"}
+{"question": "萧峰是游坦之的什么人？", "answer": "杀父仇人", "doc_chunk_id": "tlbb_1584", "tool": "keyword_search", "entities": ["萧峰", "游坦之"], "qa_type": "relation"}
+{"question": "阿紫称呼萧峰为什么？", "answer": "姊夫", "doc_chunk_id": "tlbb_1584", "tool": "keyword_search", "entities": ["阿紫", "萧峰"], "qa_type": "relation"}
+{"question": "游坦之在聚贤庄大战时躲在何处观战？", "answer": "照壁后", "doc_chunk_id": "tlbb_1586", "tool": "keyword_search", "entities": ["游坦之", "聚贤庄", "照壁"], "qa_type": "place"}
+{"question": "游坦之一心要找谁报仇？", "answer": "乔峰", "doc_chunk_id": "tlbb_1586", "tool": "keyword_search", "entities": ["游坦之", "乔峰"], "qa_type": "character"}
+{"question": "游坦之被契丹兵拖入了哪座城？", "answer": "南京城", "doc_chunk_id": "tlbb_1588", "tool": "keyword_search", "entities": ["游坦之", "契丹兵", "南京城"], "qa_type": "place"}
+{"question": "游坦之被俘时背上遭遇了什么？", "answer": "挨了一刀背", "doc_chunk_id": "tlbb_1588", "tool": "keyword_search", "entities": ["游坦之", "刀背"], "qa_type": "action_result"}
+{"question": "阿紫命侍女取出了什么？", "answer": "五十两银子", "doc_chunk_id": "tlbb_1597", "tool": "keyword_search", "entities": ["阿紫", "侍女", "五十两银子"], "qa_type": "object"}
+{"question": "游坦之被谁架出厅去？", "answer": "两名契丹兵", "doc_chunk_id": "tlbb_1597", "tool": "keyword_search", "entities": ["游坦之", "契丹兵", "厅"], "qa_type": "character"}
+{"question": "游坦之被关押在何处？", "answer": "地牢", "doc_chunk_id": "tlbb_1598", "tool": "keyword_search", "entities": ["游坦之", "地牢"], "qa_type": "place"}
+{"question": "这天晚上，契丹人从游坦之脸上揭下了什么？", "answer": "一个湿面粉印成的面目模型", "doc_chunk_id": "tlbb_1598", "tool": "keyword_search", "entities": ["契丹人", "游坦之", "湿面粉印成的面目模型"], "qa_type": "object"}
+{"question": "第四日，三名契丹人将游坦之带到了什么地方？", "answer": "一间黑沉沉的大石屋", "doc_chunk_id": "tlbb_1599", "tool": "keyword_search", "entities": ["三名契丹人", "游坦之", "大石屋"], "qa_type": "place"}
+{"question": "第四日，铁匠正在仔细察看的物事是什么？", "answer": "一个镔铁所打的面具", "doc_chunk_id": "tlbb_1599", "tool": "keyword_search", "entities": ["铁匠", "镔铁面具"], "qa_type": "object"}
+{"question": "游坦之被戴上的面具是用什么金属打造的？", "answer": "镔铁", "doc_chunk_id": "tlbb_1600", "tool": "keyword_search", "entities": ["游坦之", "面具", "镔铁"], "qa_type": "object"}
+{"question": "铁匠举起什么工具戳向游坦之的双眼？", "answer": "铁钳", "doc_chunk_id": "tlbb_1600", "tool": "keyword_search", "entities": ["铁匠", "游坦之", "铁钳"], "qa_type": "object"}
+{"question": "给游坦之头上罩铁罩的铁匠在燕京城中以什么身份著称？", "answer": "第一铁工巧手", "doc_chunk_id": "tlbb_1601", "tool": "keyword_search", "entities": ["铁匠", "燕京城", "游坦之"], "qa_type": "character"}
+{"question": "铁匠在游坦之头上最终罩上了什么？", "answer": "一个铁球", "doc_chunk_id": "tlbb_1601", "tool": "keyword_search", "entities": ["铁匠", "游坦之", "铁球"], "qa_type": "object"}
+{"question": "这一切功夫是室里队长在谁的授意下干的？", "answer": "阿紫", "doc_chunk_id": "tlbb_1602", "tool": "keyword_search", "entities": ["室里队长", "阿紫"], "qa_type": "character"}
+{"question": "套在他头上的铁罩是什么材质？", "answer": "镔铁", "doc_chunk_id": "tlbb_1602", "tool": "keyword_search", "entities": ["铁罩", "镔铁"], "qa_type": "object"}
+{"question": "游坦之的仇人是谁？", "answer": "乔峰", "doc_chunk_id": "tlbb_1604", "tool": "keyword_search", "entities": ["游坦之", "乔峰"], "qa_type": "character"}
+{"question": "阿紫给游坦之戴上了什么？", "answer": "面具", "doc_chunk_id": "tlbb_1604", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "面具"], "qa_type": "object"}
+{"question": "游坦之在聚贤庄的身份是什么？", "answer": "小庄主", "doc_chunk_id": "tlbb_1605", "tool": "keyword_search", "entities": ["游坦之", "聚贤庄"], "qa_type": "character"}
+{"question": "游坦之与萧峰是什么关系？", "answer": "杀父仇人", "doc_chunk_id": "tlbb_1605", "tool": "keyword_search", "entities": ["游坦之", "萧峰"], "qa_type": "relation"}
+{"question": "阿紫给游坦之起了什么名字？", "answer": "铁丑", "doc_chunk_id": "tlbb_1606", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "铁丑"], "qa_type": "character"}
+{"question": "阿紫让室里叫驯狮人带来什么动物？", "answer": "狮子", "doc_chunk_id": "tlbb_1606", "tool": "keyword_search", "entities": ["阿紫", "室里", "驯狮人", "狮子"], "qa_type": "object"}
+{"question": "阿紫命令游坦之将头伸进哪里？", "answer": "铁笼中", "doc_chunk_id": "tlbb_1607", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "铁笼"], "qa_type": "object"}
+{"question": "阿紫称呼游坦之为什么？", "answer": "铁丑", "doc_chunk_id": "tlbb_1607", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "铁丑"], "qa_type": "character"}
+{"question": "游坦之头上戴着什么？", "answer": "铁罩", "doc_chunk_id": "tlbb_1608", "tool": "keyword_search", "entities": ["游坦之", "铁罩"], "qa_type": "object"}
+{"question": "阿紫用什么语言吩咐室里？", "answer": "契丹话", "doc_chunk_id": "tlbb_1608", "tool": "keyword_search", "entities": ["阿紫", "室里", "契丹话"], "qa_type": "object"}
+{"question": "阿紫今天鞭打游坦之的总鞭数超过多少鞭？", "answer": "三十鞭", "doc_chunk_id": "tlbb_1609", "tool": "keyword_search", "entities": ["阿紫", "游坦之"], "qa_type": "action_result"}
+{"question": "阿紫命令游坦之将脑袋伸进哪里？", "answer": "笼子", "doc_chunk_id": "tlbb_1609", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "笼子"], "qa_type": "object"}
+{"question": "游坦之向阿紫请求什么？", "answer": "做她的奴仆", "doc_chunk_id": "tlbb_1611", "tool": "keyword_search", "entities": ["游坦之", "阿紫"], "qa_type": "action_result"}
+{"question": "游坦之头上戴的是什么？", "answer": "铁罩", "doc_chunk_id": "tlbb_1611", "tool": "keyword_search", "entities": ["游坦之", "铁罩"], "qa_type": "object"}
+{"question": "阿紫从小在哪个门派长大？", "answer": "星宿派", "doc_chunk_id": "tlbb_1613", "tool": "keyword_search", "entities": ["阿紫", "星宿派"], "qa_type": "place"}
+{"question": "萧峰是阿紫的什么人？", "answer": "姊夫", "doc_chunk_id": "tlbb_1613", "tool": "keyword_search", "entities": ["萧峰", "阿紫"], "qa_type": "relation"}
+{"question": "阿紫折磨游坦之是为了什么？", "answer": "发泄心中郁闷之情", "doc_chunk_id": "tlbb_1614", "tool": "keyword_search", "entities": ["阿紫", "游坦之"], "qa_type": "action_result"}
+{"question": "阿紫命令室里对游坦之做什么？", "answer": "再抽他三十鞭", "doc_chunk_id": "tlbb_1615", "tool": "keyword_search", "entities": ["阿紫", "室里", "游坦之"], "qa_type": "action_result"}
+{"question": "室里用什么鞭打游坦之？", "answer": "鞭子", "doc_chunk_id": "tlbb_1615", "tool": "keyword_search", "entities": ["室里", "游坦之", "鞭子"], "qa_type": "object"}
+{"question": "阿紫命令谁打游坦之？", "answer": "室里", "doc_chunk_id": "tlbb_1616", "tool": "keyword_search", "entities": ["阿紫", "室里", "游坦之"], "qa_type": "character"}
+{"question": "阿紫命令打游坦之多少鞭？", "answer": "一百鞭", "doc_chunk_id": "tlbb_1616", "tool": "keyword_search", "entities": ["阿紫", "游坦之"], "qa_type": "action_result"}
+{"question": "阿紫命令谁鞭打游坦之？", "answer": "室里", "doc_chunk_id": "tlbb_1617", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "室里", "鞭打"], "qa_type": "character"}
+{"question": "游坦之头上戴了什么？", "answer": "铁罩", "doc_chunk_id": "tlbb_1617", "tool": "keyword_search", "entities": ["游坦之", "铁罩"], "qa_type": "object"}
+{"question": "游坦之头上戴了什么？", "answer": "铁罩", "doc_chunk_id": "tlbb_1618", "tool": "keyword_search", "entities": ["游坦之", "铁罩"], "qa_type": "object"}
+{"question": "游坦之被阿紫叫唤后，转身走向她时发生了什么？", "answer": "摔了一跤", "doc_chunk_id": "tlbb_1618", "tool": "keyword_search", "entities": ["游坦之", "阿紫"], "qa_type": "action_result"}
+{"question": "游坦之的涕泪落在书页上后，显出了什么武功秘籍的图形？", "answer": "欲三摩地断行成就神足经", "doc_chunk_id": "tlbb_1628", "tool": "keyword_search", "entities": ["游坦之", "欲三摩地断行成就神足经", "书页"], "qa_type": "object"}
+{"question": "阿紫带游坦之到荒僻之处诱捕毒虫时，使用了什么器具？", "answer": "神木王鼎", "doc_chunk_id": "tlbb_1628", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "神木王鼎", "毒虫"], "qa_type": "object"}
+{"question": "阿紫取出什么东西罩在木鼎上？", "answer": "锦缎", "doc_chunk_id": "tlbb_1631", "tool": "keyword_search", "entities": ["阿紫", "木鼎", "锦缎"], "qa_type": "object"}
+{"question": "焦痕在什么地方消失了？", "answer": "溪边", "doc_chunk_id": "tlbb_1631", "tool": "keyword_search", "entities": ["焦痕", "溪边"], "qa_type": "place"}
+{"question": "游坦之称是谁叫他下的号令？", "answer": "全冠清", "doc_chunk_id": "tlbb_2410", "tool": "keyword_search", "entities": ["游坦之", "全冠清", "号令"], "qa_type": "character"}
+{"question": "吴长老质问包不同不肯转交什么？", "answer": "西夏国的榜文", "doc_chunk_id": "tlbb_2410", "tool": "keyword_search", "entities": ["吴长老", "包不同", "西夏国的榜文"], "qa_type": "object"}
+{"question": "乔峰在担任丐帮帮主时与包不同交手的结果是什么？", "answer": "勉强胜了包不同半招", "doc_chunk_id": "tlbb_2416", "tool": "keyword_search", "entities": ["乔峰", "包不同", "丐帮帮主"], "qa_type": "action_result"}
+{"question": "全冠清此时已升为什么职位？", "answer": "九袋长老", "doc_chunk_id": "tlbb_2416", "tool": "keyword_search", "entities": ["全冠清", "九袋长老"], "qa_type": "character"}
+{"question": "全冠清此时已升为什么职务？", "answer": "九袋长老", "doc_chunk_id": "tlbb_2417", "tool": "keyword_search", "entities": ["全冠清"], "qa_type": "character"}
+{"question": "全冠清提议由哪位少林大师与吕长老共同发号施令？", "answer": "玄寂大师", "doc_chunk_id": "tlbb_2417", "tool": "keyword_search", "entities": ["全冠清", "玄寂大师"], "qa_type": "character"}
+{"question": "黄绢上的世系表中，写在“慕容复”之上的人是谁？", "answer": "慕容博", "doc_chunk_id": "tlbb_2431", "tool": "keyword_search", "entities": ["黄绢", "世系表", "慕容复", "慕容博"], "qa_type": "character"}
+{"question": "鸠摩智称慕容博是什么身份？", "answer": "大燕王孙", "doc_chunk_id": "tlbb_2431", "tool": "keyword_search", "entities": ["鸠摩智", "慕容博", "大燕王孙"], "qa_type": "character"}
+{"question": "萧峰曾孤身进入何处为一名无亲无故的少女求医？", "answer": "聚贤庄", "doc_chunk_id": "tlbb_2433", "tool": "keyword_search", "entities": ["萧峰", "少女", "聚贤庄"], "qa_type": "place"}
+{"question": "萧峰一掌击碎了什么？", "answer": "木几", "doc_chunk_id": "tlbb_2433", "tool": "keyword_search", "entities": ["萧峰", "木几"], "qa_type": "object"}
+{"question": "萧远山第一晚到少林寺藏经阁借阅了哪本武功秘籍？", "answer": "《无相劫指谱》", "doc_chunk_id": "tlbb_2436", "tool": "keyword_search", "entities": ["萧远山", "藏经阁", "无相劫指谱"], "qa_type": "object"}
+{"question": "萧远山第二次到藏经阁借阅的武功秘籍是什么？", "answer": "《善勇猛拳法》", "doc_chunk_id": "tlbb_2436", "tool": "keyword_search", "entities": ["萧远山", "藏经阁", "善勇猛拳法"], "qa_type": "object"}
+{"question": "段誉昏迷醒后记得自己遭了谁的暗算？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2459", "tool": "keyword_search", "entities": ["段誉", "鸠摩智"], "qa_type": "character"}
+{"question": "段誉当年在无量宫中遇到的少女是谁？", "answer": "钟灵", "doc_chunk_id": "tlbb_2459", "tool": "keyword_search", "entities": ["段誉", "钟灵", "无量宫"], "qa_type": "character"}
+{"question": "钟灵的那双葱绿鞋上绣了什么花？", "answer": "黄色小花", "doc_chunk_id": "tlbb_2460", "tool": "keyword_search", "entities": ["钟灵", "葱绿鞋", "黄色小花"], "qa_type": "object"}
+{"question": "段誉出了什么地方后没再来瞧钟灵？", "answer": "万劫谷", "doc_chunk_id": "tlbb_2460", "tool": "keyword_search", "entities": ["段誉", "钟灵", "万劫谷"], "qa_type": "place"}
+{"question": "那晚上段誉和他爹走后，钟灵的母亲发生了什么？", "answer": "晕了过去", "doc_chunk_id": "tlbb_2461", "tool": "keyword_search", "entities": ["钟灵的母亲", "段誉", "段正淳"], "qa_type": "action_result"}
+{"question": "段正淳说段誉是什么身份？", "answer": "镇南王世子", "doc_chunk_id": "tlbb_2461", "tool": "keyword_search", "entities": ["段正淳", "段誉"], "qa_type": "character"}
+{"question": "岳老三是段誉的什么人？", "answer": "徒儿", "doc_chunk_id": "tlbb_2462", "tool": "keyword_search", "entities": ["岳老三", "段誉"], "qa_type": "relation"}
+{"question": "钟灵听到各路好汉要上哪座寺院？", "answer": "少林寺", "doc_chunk_id": "tlbb_2462", "tool": "keyword_search", "entities": ["钟灵", "各路好汉", "少林寺"], "qa_type": "place"}
+{"question": "钟灵给段誉端来了什么？", "answer": "一碗鸡汤", "doc_chunk_id": "tlbb_2465", "tool": "keyword_search", "entities": ["钟灵", "段誉", "鸡汤"], "qa_type": "object"}
+{"question": "段誉在昏迷中叫了谁的名字？", "answer": "王姑娘", "doc_chunk_id": "tlbb_2465", "tool": "keyword_search", "entities": ["段誉", "王姑娘"], "qa_type": "character"}
+{"question": "段誉先前被谁用“火焰刀”斩伤？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2472", "tool": "keyword_search", "entities": ["段誉", "鸠摩智", "火焰刀"], "qa_type": "character"}
+{"question": "阿紫命令游坦之挖出谁的眼珠？", "answer": "钟灵", "doc_chunk_id": "tlbb_2472", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "钟灵"], "qa_type": "character"}
+{"question": "大理的褚万里是被谁气死的？", "answer": "阿紫", "doc_chunk_id": "tlbb_2483", "tool": "keyword_search", "entities": ["褚万里", "阿紫"], "qa_type": "character"}
+{"question": "灵鹫宫用来救治段誉的伤药叫什么？", "answer": "九转熊蛇丸", "doc_chunk_id": "tlbb_2483", "tool": "keyword_search", "entities": ["段誉", "灵鹫宫", "九转熊蛇丸"], "qa_type": "object"}
+{"question": "萧峰在炕边桌子的抽屉里拿起了什么？", "answer": "木虎", "doc_chunk_id": "tlbb_2484", "tool": "keyword_search", "entities": ["萧峰", "木虎", "抽屉"], "qa_type": "object"}
+{"question": "阿紫用剑劈烂了什么？", "answer": "纺车", "doc_chunk_id": "tlbb_2484", "tool": "keyword_search", "entities": ["阿紫", "纺车", "剑"], "qa_type": "object"}
+{"question": "萧远山和慕容博在少林寺成为了什么关系？", "answer": "师兄弟", "doc_chunk_id": "tlbb_2487", "tool": "keyword_search", "entities": ["萧远山", "慕容博", "少林寺"], "qa_type": "relation"}
+{"question": "萧峰藏身的山洞位于什么旁边？", "answer": "少林寺", "doc_chunk_id": "tlbb_2487", "tool": "keyword_search", "entities": ["萧峰", "山洞", "少林寺"], "qa_type": "place"}
+{"question": "阳天部由谁率领？", "answer": "符敏仪", "doc_chunk_id": "tlbb_2491", "tool": "keyword_search", "entities": ["阳天部", "符敏仪"], "qa_type": "character"}
+{"question": "段誉叹气时想念的人是谁？", "answer": "王语嫣", "doc_chunk_id": "tlbb_2491", "tool": "keyword_search", "entities": ["段誉", "王语嫣"], "qa_type": "character"}
+{"question": "虚竹与梦姑是在何处相会的？", "answer": "西夏兴州皇宫的冰窖", "doc_chunk_id": "tlbb_2495", "tool": "keyword_search", "entities": ["虚竹", "梦姑", "西夏兴州皇宫冰窖"], "qa_type": "place"}
+{"question": "童姥将梅兰竹菊四剑视为什么人？", "answer": "祖孙", "doc_chunk_id": "tlbb_2495", "tool": "keyword_search", "entities": ["童姥", "梅兰竹菊四剑"], "qa_type": "relation"}
+{"question": "阿紫恳求萧峰带她去哪里？", "answer": "灵鹫宫", "doc_chunk_id": "tlbb_2497", "tool": "keyword_search", "entities": ["阿紫", "萧峰", "灵鹫宫"], "qa_type": "place"}
+{"question": "萧峰决定请谁为阿紫医治眼睛？", "answer": "虚竹", "doc_chunk_id": "tlbb_2497", "tool": "keyword_search", "entities": ["萧峰", "阿紫", "虚竹"], "qa_type": "character"}
+{"question": "段誉接到父亲的书信后，信中命他到西夏后做什么？", "answer": "娶西夏公主为妻", "doc_chunk_id": "tlbb_2500", "tool": "keyword_search", "entities": ["段誉", "父亲", "书信", "西夏公主"], "qa_type": "action_result"}
+{"question": "巴天石从怀中取出并递给段誉的是什么？", "answer": "一封书信", "doc_chunk_id": "tlbb_2500", "tool": "keyword_search", "entities": ["巴天石", "段誉", "书信"], "qa_type": "object"}
+{"question": "巴天石奉给萧峰的礼物是什么？", "answer": "碧玉雕琢的狮子", "doc_chunk_id": "tlbb_2502", "tool": "keyword_search", "entities": ["巴天石", "萧峰", "碧玉雕琢的狮子"], "qa_type": "object"}
+{"question": "朱丹臣呈给虚竹的礼物是什么？", "answer": "象牙扇子", "doc_chunk_id": "tlbb_2502", "tool": "keyword_search", "entities": ["朱丹臣", "虚竹", "象牙扇子"], "qa_type": "object"}
+{"question": "武林中人齐往哪里进发，试图成为西夏驸马？", "answer": "兴州", "doc_chunk_id": "tlbb_2504", "tool": "keyword_search", "entities": ["武林中人", "西夏公主", "兴州"], "qa_type": "place"}
+{"question": "左首大汉使用的兵刃是什么？", "answer": "八角铜锤", "doc_chunk_id": "tlbb_2507", "tool": "keyword_search", "entities": ["左首大汉", "八角铜锤"], "qa_type": "object"}
+{"question": "持杵大汉使用的兵刃是什么？", "answer": "铁杵", "doc_chunk_id": "tlbb_2507", "tool": "keyword_search", "entities": ["持杵大汉", "铁杵"], "qa_type": "object"}
+{"question": "段誉用什么武功吸取两条大汉的内力？", "answer": "北冥神功", "doc_chunk_id": "tlbb_2511", "tool": "keyword_search", "entities": ["段誉", "北冥神功", "两条大汉"], "qa_type": "object"}
+{"question": "木婉清声称钟灵是她的什么人？", "answer": "亲妹子", "doc_chunk_id": "tlbb_2511", "tool": "keyword_search", "entities": ["木婉清", "钟灵", "亲妹子"], "qa_type": "relation"}
+{"question": "段誉在马上看到转过身来的少女是谁？", "answer": "王语嫣", "doc_chunk_id": "tlbb_2516", "tool": "keyword_search", "entities": ["段誉", "王语嫣"], "qa_type": "character"}
+{"question": "那个头大身矮的胖子正在砍什么树？", "answer": "松树", "doc_chunk_id": "tlbb_2516", "tool": "keyword_search", "entities": ["矮胖子", "松树"], "qa_type": "object"}
+{"question": "南海鳄神是段誉的什么人？", "answer": "徒弟", "doc_chunk_id": "tlbb_2520", "tool": "keyword_search", "entities": ["南海鳄神", "段誉"], "qa_type": "relation"}
+{"question": "南海鳄神现下自称什么？", "answer": "岳老二", "doc_chunk_id": "tlbb_2521", "tool": "keyword_search", "entities": ["南海鳄神", "岳老二"], "qa_type": "character"}
+{"question": "王语嫣做出了什么寻死举动？", "answer": "跳崖自尽", "doc_chunk_id": "tlbb_2521", "tool": "keyword_search", "entities": ["王语嫣", "跳崖"], "qa_type": "action_result"}
+{"question": "这个时候西夏的都城是哪里？", "answer": "兴州", "doc_chunk_id": "tlbb_2525", "tool": "keyword_search", "entities": ["西夏", "兴州"], "qa_type": "place"}
+{"question": "段誉在庙中夜晚因想着谁而失眠？", "answer": "王语嫣", "doc_chunk_id": "tlbb_2525", "tool": "keyword_search", "entities": ["段誉", "王语嫣"], "qa_type": "character"}
+{"question": "段誉使用什么轻功抢到白衣人背后？", "answer": "凌波微步", "doc_chunk_id": "tlbb_2526", "tool": "keyword_search", "entities": ["段誉", "凌波微步"], "qa_type": "object"}
+{"question": "王语嫣曾在何处对段誉嗔恼？", "answer": "少室山", "doc_chunk_id": "tlbb_2526", "tool": "keyword_search", "entities": ["王语嫣", "段誉", "少室山"], "qa_type": "place"}
+{"question": "段誉请求王语嫣原谅时做了什么动作？", "answer": "跪下", "doc_chunk_id": "tlbb_2527", "tool": "keyword_search", "entities": ["段誉", "王语嫣"], "qa_type": "action_result"}
+{"question": "段誉认为王语嫣烦恼是因为他得罪了谁？", "answer": "慕容公子", "doc_chunk_id": "tlbb_2527", "tool": "keyword_search", "entities": ["段誉", "王语嫣", "慕容公子"], "qa_type": "character"}
+{"question": "慕容复要去做什么？", "answer": "做西夏驸马", "doc_chunk_id": "tlbb_2528", "tool": "keyword_search", "entities": ["慕容复", "西夏驸马"], "qa_type": "action_result"}
+{"question": "谁劝王语嫣说为了兴复大燕不能顾儿女私情？", "answer": "公冶二哥", "doc_chunk_id": "tlbb_2528", "tool": "keyword_search", "entities": ["公冶二哥", "王语嫣", "兴复大燕"], "qa_type": "character"}
+{"question": "段誉想到自己能陪王语嫣去荒山孤岛后，做出了什么举动？", "answer": "手舞足蹈", "doc_chunk_id": "tlbb_2529", "tool": "keyword_search", "entities": ["段誉", "王语嫣", "荒山孤岛", "手舞足蹈"], "qa_type": "action_result"}
+{"question": "王语嫣最初指责段誉什么？", "answer": "幸灾乐祸", "doc_chunk_id": "tlbb_2529", "tool": "keyword_search", "entities": ["王语嫣", "段誉", "幸灾乐祸"], "qa_type": "action_result"}
+{"question": "王语嫣与慕容公子是什么亲戚关系？", "answer": "中表之亲", "doc_chunk_id": "tlbb_2530", "tool": "keyword_search", "entities": ["王语嫣", "慕容公子"], "qa_type": "relation"}
+{"question": "段誉决定去劝慕容公子做什么？", "answer": "不可去做西夏驸马", "doc_chunk_id": "tlbb_2530", "tool": "keyword_search", "entities": ["段誉", "慕容公子", "西夏驸马"], "qa_type": "action_result"}
+{"question": "段誉打算劝告谁？", "answer": "慕容公子", "doc_chunk_id": "tlbb_2531", "tool": "keyword_search", "entities": ["段誉", "慕容公子"], "qa_type": "character"}
+{"question": "段誉要劝慕容公子不要做什么？", "answer": "做西夏驸马", "doc_chunk_id": "tlbb_2531", "tool": "keyword_search", "entities": ["段誉", "慕容公子", "西夏驸马"], "qa_type": "action_result"}
+{"question": "段誉在大理国的身份是什么？", "answer": "王子", "doc_chunk_id": "tlbb_2533", "tool": "keyword_search", "entities": ["段誉", "大理国"], "qa_type": "character"}
+{"question": "段誉在少室山用哪门武功打得慕容复全无招架之力？", "answer": "六脉神剑", "doc_chunk_id": "tlbb_2533", "tool": "keyword_search", "entities": ["段誉", "少室山", "慕容复", "六脉神剑"], "qa_type": "object"}
+{"question": "段誉说他爹爹命他娶谁？", "answer": "西夏公主", "doc_chunk_id": "tlbb_2537", "tool": "keyword_search", "entities": ["段誉", "西夏公主"], "qa_type": "character"}
+{"question": "深夜，是谁抓住段誉的后心并带他跃上屋顶？", "answer": "慕容复", "doc_chunk_id": "tlbb_2542", "tool": "keyword_search", "entities": ["段誉", "慕容复"], "qa_type": "character"}
+{"question": "深夜，慕容复带着段誉奔驰时，最初走在什么路上？", "answer": "青石板街道", "doc_chunk_id": "tlbb_2542", "tool": "keyword_search", "entities": ["慕容复", "青石板街道"], "qa_type": "place"}
+{"question": "深夜，慕容复将段誉重重摔在了什么地方？", "answer": "黄土小径", "doc_chunk_id": "tlbb_2543", "tool": "keyword_search", "entities": ["慕容复", "段誉", "黄土小径"], "qa_type": "place"}
+{"question": "慕容复与王姑娘是什么关系？", "answer": "表兄妹", "doc_chunk_id": "tlbb_2543", "tool": "keyword_search", "entities": ["慕容复", "王姑娘"], "qa_type": "relation"}
+{"question": "慕容复为分散段誉的注意力，谎称谁来了？", "answer": "王语嫣", "doc_chunk_id": "tlbb_2545", "tool": "keyword_search", "entities": ["慕容复", "段誉", "王语嫣"], "qa_type": "character"}
+{"question": "慕容复将段誉扔进了什么里？", "answer": "枯井", "doc_chunk_id": "tlbb_2545", "tool": "keyword_search", "entities": ["慕容复", "段誉", "枯井"], "qa_type": "place"}
+{"question": "慕容复将段誉投入了什么井？", "answer": "枯井", "doc_chunk_id": "tlbb_2546", "tool": "keyword_search", "entities": ["慕容复", "段誉", "枯井"], "qa_type": "place"}
+{"question": "王语嫣是慕容复的什么人？", "answer": "表妹", "doc_chunk_id": "tlbb_2546", "tool": "keyword_search", "entities": ["王语嫣", "慕容复"], "qa_type": "relation"}
+{"question": "在太湖畔的碾房中，假扮西夏武士李延宗的是谁？", "answer": "慕容复", "doc_chunk_id": "tlbb_2548", "tool": "keyword_search", "entities": ["慕容复", "西夏武士李延宗", "太湖畔碾房"], "qa_type": "character"}
+{"question": "在太湖畔碾房那日，王语嫣中了西夏人放的什么？", "answer": "毒雾", "doc_chunk_id": "tlbb_2548", "tool": "keyword_search", "entities": ["王语嫣", "毒雾", "西夏人"], "qa_type": "object"}
+{"question": "慕容复假扮的西夏武士叫什么名字？", "answer": "李延宗", "doc_chunk_id": "tlbb_2549", "tool": "keyword_search", "entities": ["慕容复", "李延宗"], "qa_type": "character"}
+{"question": "慕容复在何处丢尽了脸面？", "answer": "少室山", "doc_chunk_id": "tlbb_2549", "tool": "keyword_search", "entities": ["慕容复", "少室山"], "qa_type": "place"}
+{"question": "慕容复和王语嫣是什么关系？", "answer": "表兄妹", "doc_chunk_id": "tlbb_2551", "tool": "keyword_search", "entities": ["慕容复", "王语嫣"], "qa_type": "relation"}
+{"question": "王语嫣问慕容复是否要去做哪里的驸马？", "answer": "西夏", "doc_chunk_id": "tlbb_2551", "tool": "keyword_search", "entities": ["王语嫣", "慕容复", "西夏驸马"], "qa_type": "place"}
+{"question": "王语嫣和慕容复是什么关系？", "answer": "表兄妹", "doc_chunk_id": "tlbb_2552", "tool": "keyword_search", "entities": ["王语嫣", "慕容复"], "qa_type": "relation"}
+{"question": "王语嫣跳崖后被谁救起？", "answer": "云中鹤", "doc_chunk_id": "tlbb_2552", "tool": "keyword_search", "entities": ["王语嫣", "云中鹤"], "qa_type": "character"}
+{"question": "王语嫣最后做了什么动作？", "answer": "跳井", "doc_chunk_id": "tlbb_2553", "tool": "keyword_search", "entities": ["王语嫣", "井"], "qa_type": "action_result"}
+{"question": "鸠摩智是哪国国师？", "answer": "吐蕃", "doc_chunk_id": "tlbb_2554", "tool": "keyword_search", "entities": ["鸠摩智"], "qa_type": "character"}
+{"question": "鸠摩智和吐蕃小王子是什么关系？", "answer": "师徒", "doc_chunk_id": "tlbb_2554", "tool": "keyword_search", "entities": ["鸠摩智", "吐蕃小王子"], "qa_type": "relation"}
+{"question": "鸠摩智与吐蕃国小王子是什么关系？", "answer": "师徒", "doc_chunk_id": "tlbb_2555", "tool": "keyword_search", "entities": ["鸠摩智", "吐蕃国小王子"], "qa_type": "relation"}
+{"question": "鸠摩智所说的吐蕃国小王子必胜的成算是什么？", "answer": "将争做驸马的人一个个料理了", "doc_chunk_id": "tlbb_2555", "tool": "keyword_search", "entities": ["鸠摩智", "吐蕃国小王子", "驸马"], "qa_type": "action_result"}
+{"question": "鸠摩智劝慕容复离开什么地方？", "answer": "西夏", "doc_chunk_id": "tlbb_2556", "tool": "keyword_search", "entities": ["鸠摩智", "慕容复", "西夏"], "qa_type": "place"}
+{"question": "慕容复与王姑娘是什么关系？", "answer": "表兄妹", "doc_chunk_id": "tlbb_2556", "tool": "keyword_search", "entities": ["慕容复", "王姑娘"], "qa_type": "relation"}
+{"question": "鸠摩智左手一探，抓向慕容复的什么部位？", "answer": "面门", "doc_chunk_id": "tlbb_2558", "tool": "keyword_search", "entities": ["鸠摩智", "慕容复", "面门"], "qa_type": "action_result"}
+{"question": "慕容复擅长的借力打力之法叫什么？", "answer": "斗转星移", "doc_chunk_id": "tlbb_2558", "tool": "keyword_search", "entities": ["慕容复", "斗转星移"], "qa_type": "object"}
+{"question": "鸠摩智用什么方式唤来了吐蕃武士？", "answer": "撮唇大声作哨", "doc_chunk_id": "tlbb_2559", "tool": "keyword_search", "entities": ["鸠摩智", "吐蕃武士"], "qa_type": "action_result"}
+{"question": "鸠摩智命令四名吐蕃武士如何处置慕容复？", "answer": "拿去砍了", "doc_chunk_id": "tlbb_2559", "tool": "keyword_search", "entities": ["鸠摩智", "慕容复", "吐蕃武士"], "qa_type": "action_result"}
+{"question": "吐蕃国王派遣小王子前往何处求亲？", "answer": "兴州", "doc_chunk_id": "tlbb_2561", "tool": "keyword_search", "entities": ["吐蕃国王", "小王子", "兴州"], "qa_type": "place"}
+{"question": "吐蕃的国师是谁？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2561", "tool": "keyword_search", "entities": ["吐蕃", "国师", "鸠摩智"], "qa_type": "character"}
+{"question": "慕容复擒住了谁？", "answer": "段誉", "doc_chunk_id": "tlbb_2562", "tool": "keyword_search", "entities": ["慕容复", "段誉"], "qa_type": "character"}
+{"question": "谁擒住了慕容复？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2562", "tool": "keyword_search", "entities": ["鸠摩智", "慕容复"], "qa_type": "character"}
+{"question": "鸠摩智掉入井中的物品是什么？", "answer": "辛”字《小无相功》", "doc_chunk_id": "tlbb_2564", "tool": "keyword_search", "entities": ["鸠摩智", "井", "辛字小无相功"], "qa_type": "object"}
+{"question": "鸠摩智从曼陀山庄偷来的《小无相功》缺少了哪一本？", "answer": "庚”字第七本", "doc_chunk_id": "tlbb_2564", "tool": "keyword_search", "entities": ["鸠摩智", "曼陀山庄", "庚字第七本"], "qa_type": "object"}
+{"question": "鸠摩智摔下时，脑袋撞上了什么？", "answer": "井圈内缘的砖头", "doc_chunk_id": "tlbb_2565", "tool": "keyword_search", "entities": ["鸠摩智", "井圈内缘", "砖头"], "qa_type": "object"}
+{"question": "用大石将井口牢牢封死的人是谁？", "answer": "四名吐蕃武士", "doc_chunk_id": "tlbb_2565", "tool": "keyword_search", "entities": ["吐蕃武士", "大石", "井口"], "qa_type": "character"}
+{"question": "王语嫣决定不再嫁给谁？", "answer": "表哥", "doc_chunk_id": "tlbb_2570", "tool": "keyword_search", "entities": ["王语嫣", "表哥"], "qa_type": "action_result"}
+{"question": "段誉喜悦之下背靠着什么？", "answer": "井栏", "doc_chunk_id": "tlbb_2570", "tool": "keyword_search", "entities": ["段誉", "井栏"], "qa_type": "object"}
+{"question": "王语嫣今日与段誉定下了什么约定？", "answer": "三生之约", "doc_chunk_id": "tlbb_2571", "tool": "keyword_search", "entities": ["王语嫣", "段誉", "三生之约"], "qa_type": "action_result"}
+{"question": "王语嫣说真正爱她、把她看得比自己性命还重的人是谁？", "answer": "段誉", "doc_chunk_id": "tlbb_2571", "tool": "keyword_search", "entities": ["王语嫣", "段誉"], "qa_type": "character"}
+{"question": "落入井中的人是谁？", "answer": "慕容复", "doc_chunk_id": "tlbb_2572", "tool": "keyword_search", "entities": ["慕容复", "井"], "qa_type": "character"}
+{"question": "慕容复将要做哪里的驸马？", "answer": "西夏", "doc_chunk_id": "tlbb_2572", "tool": "keyword_search", "entities": ["慕容复", "西夏"], "qa_type": "place"}
+{"question": "点中慕容复穴道的人是谁？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2573", "tool": "keyword_search", "entities": ["慕容复", "鸠摩智"], "qa_type": "character"}
+{"question": "从慕容复身旁落下的书是什么？", "answer": "《小无相功》", "doc_chunk_id": "tlbb_2573", "tool": "keyword_search", "entities": ["慕容复", "小无相功"], "qa_type": "object"}
+{"question": "谁扣住了段誉的咽喉？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2575", "tool": "keyword_search", "entities": ["鸠摩智", "段誉"], "qa_type": "character"}
+{"question": "慕容复心想段誉在何处打得他面目无光？", "answer": "少室山", "doc_chunk_id": "tlbb_2575", "tool": "keyword_search", "entities": ["慕容复", "段誉", "少室山"], "qa_type": "place"}
+{"question": "巴天石和朱丹臣次晨发现谁不见了？", "answer": "段誉", "doc_chunk_id": "tlbb_2576", "tool": "keyword_search", "entities": ["巴天石", "朱丹臣", "段誉"], "qa_type": "character"}
+{"question": "朱丹臣说段誉以前迷上哪位姑娘后半夜偷偷溜走？", "answer": "木婉清", "doc_chunk_id": "tlbb_2576", "tool": "keyword_search", "entities": ["朱丹臣", "段誉", "木婉清"], "qa_type": "character"}
+{"question": "木姑娘是段公子的什么人？", "answer": "亲妹子", "doc_chunk_id": "tlbb_2578", "tool": "keyword_search", "entities": ["木姑娘", "段公子"], "qa_type": "relation"}
+{"question": "谁提议让木姑娘女扮男装去赴宴？", "answer": "梅剑", "doc_chunk_id": "tlbb_2578", "tool": "keyword_search", "entities": ["梅剑", "木姑娘"], "qa_type": "character"}
+{"question": "萧峰在大辽担任什么官职？", "answer": "南院大王", "doc_chunk_id": "tlbb_2579", "tool": "keyword_search", "entities": ["萧峰", "大辽", "南院大王"], "qa_type": "character"}
+{"question": "巴天石在大理国担任什么官职？", "answer": "司空", "doc_chunk_id": "tlbb_2579", "tool": "keyword_search", "entities": ["巴天石", "大理国", "司空"], "qa_type": "character"}
+{"question": "木婉清称呼巴天石为什么？", "answer": "巴司空", "doc_chunk_id": "tlbb_2580", "tool": "keyword_search", "entities": ["木婉清", "巴天石"], "qa_type": "character"}
+{"question": "木婉清在生气时掀翻了什么？", "answer": "桌子", "doc_chunk_id": "tlbb_2580", "tool": "keyword_search", "entities": ["木婉清", "桌子"], "qa_type": "object"}
+{"question": "木婉清在众人面前自称是谁？", "answer": "段誉", "doc_chunk_id": "tlbb_2582", "tool": "keyword_search", "entities": ["木婉清", "段誉"], "qa_type": "character"}
+{"question": "巴天石吩咐朱丹臣送什么给陶尚书？", "answer": "五百两黄金", "doc_chunk_id": "tlbb_2582", "tool": "keyword_search", "entities": ["巴天石", "朱丹臣", "陶尚书", "五百两黄金"], "qa_type": "object"}
+{"question": "礼部尚书将谁让到西首席上？", "answer": "木婉清", "doc_chunk_id": "tlbb_2584", "tool": "keyword_search", "entities": ["礼部尚书", "木婉清", "西首席"], "qa_type": "character"}
+{"question": "中和殿东边席上高坐的是谁？", "answer": "吐蕃国的宗赞王子", "doc_chunk_id": "tlbb_2584", "tool": "keyword_search", "entities": ["中和殿", "东边席", "宗赞王子"], "qa_type": "character"}
+{"question": "银川公主居住在哪里？", "answer": "青凤阁", "doc_chunk_id": "tlbb_2588", "tool": "keyword_search", "entities": ["银川公主", "青凤阁"], "qa_type": "place"}
+{"question": "赫连铁树官封什么大将军？", "answer": "征东大将军", "doc_chunk_id": "tlbb_2588", "tool": "keyword_search", "entities": ["赫连铁树", "征东大将军"], "qa_type": "character"}
+{"question": "木婉清在假山旁认出的容貌绝美的青年公子是谁？", "answer": "王语嫣", "doc_chunk_id": "tlbb_2589", "tool": "keyword_search", "entities": ["木婉清", "王语嫣", "假山"], "qa_type": "character"}
+{"question": "段誉告诉木婉清他被人投在了哪里？", "answer": "烂泥井", "doc_chunk_id": "tlbb_2589", "tool": "keyword_search", "entities": ["段誉", "烂泥井"], "qa_type": "place"}
+{"question": "谁扼住了段誉的咽喉？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2591", "tool": "keyword_search", "entities": ["鸠摩智", "段誉"], "qa_type": "character"}
+{"question": "段誉的什么武功吸了王语嫣的内力？", "answer": "北冥神功", "doc_chunk_id": "tlbb_2591", "tool": "keyword_search", "entities": ["段誉", "王语嫣", "北冥神功"], "qa_type": "object"}
+{"question": "午牌时分，第一个在井底醒转的人是谁？", "answer": "王语嫣", "doc_chunk_id": "tlbb_2593", "tool": "keyword_search", "entities": ["王语嫣", "午牌时分", "井底"], "qa_type": "character"}
+{"question": "王语嫣醒转后立即想到了谁？", "answer": "段誉", "doc_chunk_id": "tlbb_2593", "tool": "keyword_search", "entities": ["王语嫣", "段誉"], "qa_type": "character"}
+{"question": "在深井之中，王语嫣最初以为段誉是被谁杀死的？", "answer": "鸠摩智", "doc_chunk_id": "tlbb_2594", "tool": "keyword_search", "entities": ["王语嫣", "段誉", "鸠摩智"], "qa_type": "character"}
+{"question": "鸠摩智声称自己险些死在谁的手里？", "answer": "段誉", "doc_chunk_id": "tlbb_2594", "tool": "keyword_search", "entities": ["鸠摩智", "段誉"], "qa_type": "character"}
+{"question": "段誉和王语嫣在何处将衣服鞋袜弄干？", "answer": "石边上", "doc_chunk_id": "tlbb_2599", "tool": "keyword_search", "entities": ["段誉", "王语嫣", "石边上"], "qa_type": "place"}
+{"question": "慕容复在迎宾馆外称跟谁打了一架？", "answer": "吐蕃武士", "doc_chunk_id": "tlbb_2599", "tool": "keyword_search", "entities": ["慕容复", "吐蕃武士", "迎宾馆"], "qa_type": "character"}
+{"question": "段誉、慕容复、王语嫣三人在花园中遇到了谁？", "answer": "木婉清", "doc_chunk_id": "tlbb_2602", "tool": "keyword_search", "entities": ["段誉", "慕容复", "王语嫣", "木婉清", "花园"], "qa_type": "character"}
+{"question": "谁引导众人来到青凤阁前？", "answer": "赫连铁树", "doc_chunk_id": "tlbb_2602", "tool": "keyword_search", "entities": ["赫连铁树", "青凤阁", "众人"], "qa_type": "character"}
+{"question": "众人进入青凤阁时，木婉清和王语嫣留在了哪里？", "answer": "厅中", "doc_chunk_id": "tlbb_2608", "tool": "keyword_search", "entities": ["木婉清", "王语嫣", "青凤阁", "厅中"], "qa_type": "place"}
+{"question": "王语嫣催促段誉进去相助谁？", "answer": "慕容复", "doc_chunk_id": "tlbb_2608", "tool": "keyword_search", "entities": ["王语嫣", "段誉", "慕容复"], "qa_type": "character"}
+{"question": "宫女带众人经过的深涧叫什么名字？", "answer": "幽兰涧", "doc_chunk_id": "tlbb_2609", "tool": "keyword_search", "entities": ["宫女", "幽兰涧"], "qa_type": "place"}
+{"question": "谁携住段誉的手走过钢索？", "answer": "巴天石", "doc_chunk_id": "tlbb_2609", "tool": "keyword_search", "entities": ["巴天石", "段誉", "钢索"], "qa_type": "character"}
+{"question": "李秋水将旧居让给了谁？", "answer": "银川公主", "doc_chunk_id": "tlbb_2610", "tool": "keyword_search", "entities": ["李秋水", "银川公主"], "qa_type": "character"}
+{"question": "段誉和谁并肩走进山洞？", "answer": "萧峰", "doc_chunk_id": "tlbb_2610", "tool": "keyword_search", "entities": ["段誉", "萧峰"], "qa_type": "character"}
+{"question": "宫女告知众人，他们所在之处是什么地方？", "answer": "公主殿下的内书房", "doc_chunk_id": "tlbb_2611", "tool": "keyword_search", "entities": ["宫女", "公主", "内书房"], "qa_type": "place"}
+{"question": "萧峰在公主内书房中一直注视的人是谁？", "answer": "绿衫宫女", "doc_chunk_id": "tlbb_2611", "tool": "keyword_search", "entities": ["萧峰", "绿衫宫女"], "qa_type": "character"}
+{"question": "在公主书房中，宫女告诉包不同，谁认为那些字画写得极好？", "answer": "公主殿下", "doc_chunk_id": "tlbb_2612", "tool": "keyword_search", "entities": ["宫女", "包不同", "字画", "公主殿下"], "qa_type": "character"}
+{"question": "虚竹认出的石室武功图形属于哪位人物？", "answer": "李秋水", "doc_chunk_id": "tlbb_2614", "tool": "keyword_search", "entities": ["虚竹", "李秋水", "武功图形"], "qa_type": "character"}
+{"question": "段誉放回武功秘谱后，去观看了哪一幅图画？", "answer": "《湖畔舞剑图》", "doc_chunk_id": "tlbb_2614", "tool": "keyword_search", "entities": ["段誉", "《湖畔舞剑图》"], "qa_type": "object"}
+{"question": "谁警告包不同壁画图形看不得？", "answer": "晓蕾", "doc_chunk_id": "tlbb_2615", "tool": "keyword_search", "entities": ["晓蕾", "包不同", "壁画图形"], "qa_type": "character"}
+{"question": "萧峰发现众人看壁上图形后做了什么？", "answer": "喝令众人别看", "doc_chunk_id": "tlbb_2615", "tool": "keyword_search", "entities": ["萧峰", "众人", "壁上图形"], "qa_type": "action_result"}
+{"question": "谁将椅子背拗下捏成碎片掷出，熄灭了书房中的灯火？", "answer": "萧峰", "doc_chunk_id": "tlbb_2616", "tool": "keyword_search", "entities": ["萧峰", "椅子背", "碎片", "书房", "灯火"], "qa_type": "character"}
+{"question": "萧峰和众人沉迷观看壁上图形时所在的房间是什么地方？", "answer": "书房", "doc_chunk_id": "tlbb_2616", "tool": "keyword_search", "entities": ["萧峰", "众人", "书房", "图形"], "qa_type": "place"}
+{"question": "公主赠礼时，段誉决意拣取哪一幅作品？", "answer": "《湖畔舞剑图》", "doc_chunk_id": "tlbb_2618", "tool": "keyword_search", "entities": ["段誉", "《湖畔舞剑图》"], "qa_type": "object"}
+{"question": "宫女说众人可退出到何处用茶休息？", "answer": "凝香殿", "doc_chunk_id": "tlbb_2618", "tool": "keyword_search", "entities": ["宫女", "凝香殿"], "qa_type": "place"}
+{"question": "段誉决意拣取哪幅图？", "answer": "《湖畔舞剑图》", "doc_chunk_id": "tlbb_2619", "tool": "keyword_search", "entities": ["段誉", "《湖畔舞剑图》"], "qa_type": "object"}
+{"question": "宗赞王子向公主提议什么？", "answer": "换个地方见面", "doc_chunk_id": "tlbb_2619", "tool": "keyword_search", "entities": ["宗赞王子", "公主"], "qa_type": "action_result"}
+{"question": "包不同一生中在什么地方最快乐逍遥？", "answer": "瓷器店", "doc_chunk_id": "tlbb_2620", "tool": "keyword_search", "entities": ["包不同", "瓷器店"], "qa_type": "place"}
+{"question": "包不同生平最爱的人叫什么名字？", "answer": "包不靓", "doc_chunk_id": "tlbb_2620", "tool": "keyword_search", "entities": ["包不同", "包不靓"], "qa_type": "character"}
+{"question": "包不同称自己的女儿叫什么名字？", "answer": "包不靓", "doc_chunk_id": "tlbb_2621", "tool": "keyword_search", "entities": ["包不同", "包不靓"], "qa_type": "character"}
+{"question": "段誉自称一生之中在何处最快乐逍遥？", "answer": "一口枯井的烂泥之中", "doc_chunk_id": "tlbb_2621", "tool": "keyword_search", "entities": ["段誉", "枯井", "烂泥"], "qa_type": "place"}
+{"question": "宫女问段誉生平最爱之人时，段誉原本想回答谁的名字？", "answer": "王语嫣", "doc_chunk_id": "tlbb_2622", "tool": "keyword_search", "entities": ["段誉", "宫女", "王语嫣"], "qa_type": "action_result"}
+{"question": "慕容复自称来自何地？", "answer": "姑苏燕子坞", "doc_chunk_id": "tlbb_2624", "tool": "keyword_search", "entities": ["慕容复", "姑苏燕子坞"], "qa_type": "place"}
+{"question": "萧峰与慕容复同赴何处？", "answer": "青凤阁", "doc_chunk_id": "tlbb_2624", "tool": "keyword_search", "entities": ["萧峰", "慕容复", "青凤阁"], "qa_type": "place"}
+{"question": "在少林寺前，慕容复被萧峰怎样了？", "answer": "重重摔在地下", "doc_chunk_id": "tlbb_2625", "tool": "keyword_search", "entities": ["慕容复", "萧峰", "少林寺"], "qa_type": "action_result"}
+{"question": "萧峰在大辽担任什么官职？", "answer": "南院大王", "doc_chunk_id": "tlbb_2625", "tool": "keyword_search", "entities": ["萧峰", "大辽"], "qa_type": "character"}
+{"question": "慕容复回答宫女他真正快乐的时间是什么时候？", "answer": "将来", "doc_chunk_id": "tlbb_2626", "tool": "keyword_search", "entities": ["慕容复", "宫女"], "qa_type": "action_result"}
+{"question": "慕容复对宫女问他最爱之人时的回答是什么？", "answer": "没有最爱之人", "doc_chunk_id": "tlbb_2626", "tool": "keyword_search", "entities": ["慕容复", "宫女"], "qa_type": "action_result"}
+{"question": "萧峰听到西夏宫女要问三个问题后做了什么？", "answer": "转身出了石室", "doc_chunk_id": "tlbb_2627", "tool": "keyword_search", "entities": ["萧峰", "西夏宫女", "石室"], "qa_type": "action_result"}
+{"question": "虚竹的道号是什么？", "answer": "虚竹子", "doc_chunk_id": "tlbb_2627", "tool": "keyword_search", "entities": ["虚竹"], "qa_type": "character"}
+{"question": "虚竹生平最快乐的地方是哪里？", "answer": "一个黑暗的冰窖之中", "doc_chunk_id": "tlbb_2628", "tool": "keyword_search", "entities": ["虚竹", "黑暗的冰窖"], "qa_type": "place"}
+{"question": "虚竹称呼那位与他相认的女子为什么？", "answer": "梦姑", "doc_chunk_id": "tlbb_2628", "tool": "keyword_search", "entities": ["虚竹", "梦姑"], "qa_type": "character"}
+{"question": "那少女称呼虚竹为什么？", "answer": "梦郎", "doc_chunk_id": "tlbb_2629", "tool": "keyword_search", "entities": ["少女", "虚竹", "梦郎"], "qa_type": "character"}
+{"question": "众人来到兴州的目的是什么？", "answer": "做驸马", "doc_chunk_id": "tlbb_2629", "tool": "keyword_search", "entities": ["众人", "兴州", "驸马"], "qa_type": "action_result"}
+{"question": "段誉取得了哪一幅书画卷轴？", "answer": "《湖畔舞剑图》", "doc_chunk_id": "tlbb_2630", "tool": "keyword_search", "entities": ["段誉", "《湖畔舞剑图》"], "qa_type": "object"}
+{"question": "虚竹留给段誉的书笺上署名是什么？", "answer": "二哥", "doc_chunk_id": "tlbb_2630", "tool": "keyword_search", "entities": ["虚竹", "段誉", "书笺", "二哥"], "qa_type": "relation"}
+{"question": "段誉收到的信上署名是什么？", "answer": "二哥", "doc_chunk_id": "tlbb_2631", "tool": "keyword_search", "entities": ["段誉", "信", "二哥"], "qa_type": "character"}
+{"question": "宗赞王子被段誉内力反弹后摔在了什么物品上？", "answer": "茶几", "doc_chunk_id": "tlbb_2631", "tool": "keyword_search", "entities": ["宗赞王子", "段誉", "茶几"], "qa_type": "object"}
+{"question": "宗赞被段誉摔出去后撞翻了什么？", "answer": "七八张茶几", "doc_chunk_id": "tlbb_2633", "tool": "keyword_search", "entities": ["宗赞", "段誉", "茶几"], "qa_type": "object"}
+{"question": "木婉清提到的陷阱布在什么地方？", "answer": "蜀南一带", "doc_chunk_id": "tlbb_2633", "tool": "keyword_search", "entities": ["木婉清", "陷阱", "蜀南一带"], "qa_type": "place"}
+{"question": "巴天石探问公主择婿结果的结果是什么？", "answer": "不得要领", "doc_chunk_id": "tlbb_2635", "tool": "keyword_search", "entities": ["巴天石", "公主", "择婿结果"], "qa_type": "action_result"}
+{"question": "巴天石出了兴州城的哪个门？", "answer": "南门", "doc_chunk_id": "tlbb_2635", "tool": "keyword_search", "entities": ["巴天石", "兴州城", "南门"], "qa_type": "place"}
+{"question": "秦红棉和阮星竹在哪里狠斗了一场？", "answer": "梓潼", "doc_chunk_id": "tlbb_2636", "tool": "keyword_search", "entities": ["秦红棉", "阮星竹", "梓潼"], "qa_type": "place"}
+{"question": "木婉清的母亲是谁？", "answer": "秦红棉", "doc_chunk_id": "tlbb_2636", "tool": "keyword_search", "entities": ["木婉清", "秦红棉"], "qa_type": "character"}
+{"question": "木婉清和钟灵是什么关系？", "answer": "姐妹", "doc_chunk_id": "tlbb_2639", "tool": "keyword_search", "entities": ["木婉清", "钟灵"], "qa_type": "relation"}
+{"question": "段誉等人在成都闲逛数日是为了等谁？", "answer": "段正淳", "doc_chunk_id": "tlbb_2639", "tool": "keyword_search", "entities": ["段誉", "成都", "段正淳"], "qa_type": "character"}
+{"question": "段誉在题词中将“一”字改成了什么字？", "answer": "二", "doc_chunk_id": "tlbb_2641", "tool": "keyword_search", "entities": ["段誉", "一", "二"], "qa_type": "action_result"}
+{"question": "贾老者将段誉称为什么？", "answer": "余公子", "doc_chunk_id": "tlbb_2641", "tool": "keyword_search", "entities": ["贾老者", "段誉", "余公子"], "qa_type": "character"}
+{"question": "巴天石和朱丹臣在对方殷勤相待之时必定细心查察什么？", "answer": "酒饭之中是否下了毒", "doc_chunk_id": "tlbb_2644", "tool": "keyword_search", "entities": ["巴天石", "朱丹臣", "酒饭", "毒"], "qa_type": "action_result"}
+{"question": "朱丹臣说草海眼下什么瘴气初起？", "answer": "榴花瘴", "doc_chunk_id": "tlbb_2644", "tool": "keyword_search", "entities": ["朱丹臣", "草海", "榴花瘴"], "qa_type": "object"}
+{"question": "谁提议让王语嫣去跟那聋哑老婆婆打交道？", "answer": "朱丹臣", "doc_chunk_id": "tlbb_2647", "tool": "keyword_search", "entities": ["朱丹臣", "王语嫣", "聋哑老婆婆"], "qa_type": "character"}
+{"question": "王语嫣取了一锭什么给那老婆婆？", "answer": "银子", "doc_chunk_id": "tlbb_2647", "tool": "keyword_search", "entities": ["王语嫣", "老婆婆", "银子"], "qa_type": "object"}
+{"question": "谁用双刀碰撞的方式点燃了纸媒？", "answer": "巴天石", "doc_chunk_id": "tlbb_2652", "tool": "keyword_search", "entities": ["巴天石", "双刀", "纸媒"], "qa_type": "character"}
+{"question": "段誉在木屋柱子上看到的对联上联是什么？", "answer": "春沟水动茶花", "doc_chunk_id": "tlbb_2652", "tool": "keyword_search", "entities": ["段誉", "木屋", "柱子", "对联", "上联"], "qa_type": "object"}
+{"question": "段誉在对联的“花”字下填写了什么字？", "answer": "白", "doc_chunk_id": "tlbb_2653", "tool": "keyword_search", "entities": ["段誉", "对联", "花", "白"], "qa_type": "action_result"}
+{"question": "段誉在对联的“谷”字下填写了什么字？", "answer": "云", "doc_chunk_id": "tlbb_2653", "tool": "keyword_search", "entities": ["段誉", "对联", "谷", "云"], "qa_type": "action_result"}
+{"question": "蜜蜂袭击木屋时，谁抢过去关窗？", "answer": "巴天石", "doc_chunk_id": "tlbb_2655", "tool": "keyword_search", "entities": ["巴天石", "窗"], "qa_type": "character"}
+{"question": "朱丹臣在屋外马匹被蜜蜂刺时准备去做什么？", "answer": "割断缰绳", "doc_chunk_id": "tlbb_2655", "tool": "keyword_search", "entities": ["朱丹臣", "缰绳", "蜜蜂", "马"], "qa_type": "action_result"}
+{"question": "段誉与段正淳是什么关系？", "answer": "父子", "doc_chunk_id": "tlbb_2657", "tool": "keyword_search", "entities": ["段誉", "段正淳"], "qa_type": "relation"}
+{"question": "段誉口中被塞了什么东西？", "answer": "大麻核", "doc_chunk_id": "tlbb_2657", "tool": "keyword_search", "entities": ["段誉", "大麻核"], "qa_type": "object"}
+{"question": "王夫人与段誉的父亲是什么关系？", "answer": "旧情人", "doc_chunk_id": "tlbb_2661", "tool": "keyword_search", "entities": ["王夫人", "段誉的父亲"], "qa_type": "relation"}
+{"question": "王夫人喜爱什么花？", "answer": "茶花", "doc_chunk_id": "tlbb_2661", "tool": "keyword_search", "entities": ["王夫人", "茶花"], "qa_type": "object"}
+{"question": "毒蜂来袭时，王语嫣在谁的怀抱之中？", "answer": "段誉", "doc_chunk_id": "tlbb_2662", "tool": "keyword_search", "entities": ["王语嫣", "段誉", "毒蜂"], "qa_type": "character"}
+{"question": "慕容复称王夫人为什么？", "answer": "舅母", "doc_chunk_id": "tlbb_2662", "tool": "keyword_search", "entities": ["慕容复", "王夫人"], "qa_type": "relation"}
+{"question": "窗外说“非也，非也”的人是谁？", "answer": "包不同", "doc_chunk_id": "tlbb_2663", "tool": "keyword_search", "entities": ["包不同"], "qa_type": "character"}
+{"question": "王夫人将那女仆派往了哪里？", "answer": "太湖的东山别墅", "doc_chunk_id": "tlbb_2663", "tool": "keyword_search", "entities": ["王夫人", "女仆", "太湖东山别墅"], "qa_type": "place"}
+{"question": "包不同的女儿叫什么名字？", "answer": "包不靓", "doc_chunk_id": "tlbb_2664", "tool": "keyword_search", "entities": ["包不同", "包不靓"], "qa_type": "character"}
+{"question": "慕容复称呼王夫人为什么？", "answer": "舅妈", "doc_chunk_id": "tlbb_2664", "tool": "keyword_search", "entities": ["慕容复", "王夫人"], "qa_type": "relation"}
+{"question": "慕容复是王夫人的什么亲戚？", "answer": "甥儿", "doc_chunk_id": "tlbb_2665", "tool": "keyword_search", "entities": ["慕容复", "王夫人"], "qa_type": "relation"}
+{"question": "王夫人问慕容复是否到过什么地方？", "answer": "草海的木屋", "doc_chunk_id": "tlbb_2665", "tool": "keyword_search", "entities": ["王夫人", "慕容复", "草海的木屋"], "qa_type": "place"}
+{"question": "王夫人策划的圈套叫什么计策？", "answer": "醉人蜂之计", "doc_chunk_id": "tlbb_2666", "tool": "keyword_search", "entities": ["王夫人", "醉人蜂之计"], "qa_type": "object"}
+{"question": "王夫人养了几百窝蜜蜂的地点是哪里？", "answer": "曼陀山庄", "doc_chunk_id": "tlbb_2666", "tool": "keyword_search", "entities": ["王夫人", "蜜蜂", "曼陀山庄"], "qa_type": "place"}
+{"question": "王夫人设置字画缺笔缺字是为了识别谁？", "answer": "大理段王爷", "doc_chunk_id": "tlbb_2667", "tool": "keyword_search", "entities": ["王夫人", "字画缺笔", "大理段王爷"], "qa_type": "character"}
+{"question": "王夫人在木屋的什么地方藏了药料？", "answer": "木柱中", "doc_chunk_id": "tlbb_2667", "tool": "keyword_search", "entities": ["王夫人", "木柱", "药料"], "qa_type": "place"}
+{"question": "慕容复称呼王夫人什么？", "answer": "舅妈", "doc_chunk_id": "tlbb_2672", "tool": "keyword_search", "entities": ["慕容复", "王夫人"], "qa_type": "relation"}
+{"question": "王夫人曾说过要将段誉斩成多少块？", "answer": "十七八块", "doc_chunk_id": "tlbb_2672", "tool": "keyword_search", "entities": ["王夫人", "段誉"], "qa_type": "action_result"}
+{"question": "慕容复提到的姓秦的女人是谁？", "answer": "秦红棉", "doc_chunk_id": "tlbb_2678", "tool": "keyword_search", "entities": ["慕容复", "秦红棉"], "qa_type": "character"}
+{"question": "慕容复提到的钟夫人是谁？", "answer": "甘宝宝", "doc_chunk_id": "tlbb_2678", "tool": "keyword_search", "entities": ["慕容复", "钟夫人", "甘宝宝"], "qa_type": "character"}
+{"question": "慕容复称呼王夫人为什么？", "answer": "舅妈", "doc_chunk_id": "tlbb_2679", "tool": "keyword_search", "entities": ["慕容复", "王夫人"], "qa_type": "relation"}
+{"question": "镇南王在何处被段延庆一网打尽？", "answer": "双凤驿边红沙滩", "doc_chunk_id": "tlbb_2679", "tool": "keyword_search", "entities": ["镇南王", "段延庆", "双凤驿边红沙滩"], "qa_type": "place"}
+{"question": "段延庆将风波恶的单刀震成了多少截？", "answer": "十余截", "doc_chunk_id": "tlbb_2681", "tool": "keyword_search", "entities": ["段延庆", "风波恶", "单刀"], "qa_type": "action_result"}
+{"question": "段延庆将风波恶挑出了多远？", "answer": "十余丈外", "doc_chunk_id": "tlbb_2681", "tool": "keyword_search", "entities": ["段延庆", "风波恶"], "qa_type": "action_result"}
+{"question": "慕容复险些自刎是在什么地方被段誉逼迫的？", "answer": "少室山", "doc_chunk_id": "tlbb_2682", "tool": "keyword_search", "entities": ["慕容复", "段誉", "少室山"], "qa_type": "place"}
+{"question": "段延庆亲眼目睹段誉在少室山上用什么武功逼得慕容复狼狈不堪？", "answer": "六脉神剑", "doc_chunk_id": "tlbb_2682", "tool": "keyword_search", "entities": ["段延庆", "段誉", "慕容复", "少室山", "六脉神剑"], "qa_type": "object"}
+{"question": "慕容复称呼王夫人为什么？", "answer": "舅母", "doc_chunk_id": "tlbb_2683", "tool": "keyword_search", "entities": ["慕容复", "王夫人"], "qa_type": "relation"}
+{"question": "段誉被谁擒住了？", "answer": "王夫人", "doc_chunk_id": "tlbb_2683", "tool": "keyword_search", "entities": ["段誉", "王夫人"], "qa_type": "character"}
+{"question": "慕容复是什么皇裔？", "answer": "大燕皇裔", "doc_chunk_id": "tlbb_2684", "tool": "keyword_search", "entities": ["慕容复", "大燕"], "qa_type": "character"}
+{"question": "慕容复向段延庆请求借兵多少？", "answer": "一万", "doc_chunk_id": "tlbb_2684", "tool": "keyword_search", "entities": ["慕容复", "段延庆", "借兵"], "qa_type": "action_result"}
+{"question": "王夫人购置那座庄子的目的是什么？", "answer": "擒拿段正淳", "doc_chunk_id": "tlbb_2687", "tool": "keyword_search", "entities": ["王夫人", "段正淳", "庄子"], "qa_type": "action_result"}
+{"question": "段正淳觉得庄内的茶花布置和哪里一模一样？", "answer": "姑苏曼陀山庄", "doc_chunk_id": "tlbb_2687", "tool": "keyword_search", "entities": ["段正淳", "茶花", "姑苏曼陀山庄"], "qa_type": "place"}
+{"question": "王夫人与段正淳所生的女儿叫什么？", "answer": "语嫣", "doc_chunk_id": "tlbb_2691", "tool": "keyword_search", "entities": ["王夫人", "段正淳", "语嫣"], "qa_type": "character"}
+{"question": "段誉和语嫣是什么关系？", "answer": "兄妹", "doc_chunk_id": "tlbb_2691", "tool": "keyword_search", "entities": ["段誉", "语嫣"], "qa_type": "relation"}
+{"question": "段延庆让南海鳄神取出什么武器来剪去段誉的头？", "answer": "鳄嘴剪", "doc_chunk_id": "tlbb_2692", "tool": "keyword_search", "entities": ["段延庆", "南海鳄神", "鳄嘴剪", "段誉"], "qa_type": "object"}
+{"question": "段延庆用什么武器刺穿了南海鳄神的后背？", "answer": "钢杖", "doc_chunk_id": "tlbb_2692", "tool": "keyword_search", "entities": ["段延庆", "南海鳄神", "钢杖"], "qa_type": "object"}
+{"question": "段延庆用什么武器刺中南海鳄神要害？", "answer": "钢杖", "doc_chunk_id": "tlbb_2693", "tool": "keyword_search", "entities": ["段延庆", "南海鳄神", "钢杖"], "qa_type": "object"}
+{"question": "南海鳄神死后，谁把他的尸体拖了出去？", "answer": "云中鹤", "doc_chunk_id": "tlbb_2693", "tool": "keyword_search", "entities": ["云中鹤", "南海鳄神"], "qa_type": "character"}
+{"question": "段延庆挣扎着来到了哪里？", "answer": "天龙寺外", "doc_chunk_id": "tlbb_2695", "tool": "keyword_search", "entities": ["段延庆", "天龙寺"], "qa_type": "place"}
+{"question": "枯荣大师是段延庆的什么人？", "answer": "亲叔父", "doc_chunk_id": "tlbb_2695", "tool": "keyword_search", "entities": ["枯荣大师", "段延庆"], "qa_type": "relation"}
+{"question": "月亮升到中天时，段延庆看见了什么？", "answer": "一个白衣女子", "doc_chunk_id": "tlbb_2696", "tool": "keyword_search", "entities": ["段延庆", "白衣女子", "月亮", "中天"], "qa_type": "character"}
+{"question": "段延庆以为白衣女子是谁？", "answer": "观音菩萨", "doc_chunk_id": "tlbb_2696", "tool": "keyword_search", "entities": ["段延庆", "白衣女子", "观音菩萨"], "qa_type": "character"}
+{"question": "白衣女子解去罗衫后，投身在谁的怀里？", "answer": "段延庆", "doc_chunk_id": "tlbb_2698", "tool": "keyword_search", "entities": ["白衣女子", "段延庆"], "qa_type": "character"}
+{"question": "段延庆每处伤口中有什么在爬动？", "answer": "蛆虫", "doc_chunk_id": "tlbb_2698", "tool": "keyword_search", "entities": ["段延庆", "伤口", "蛆虫"], "qa_type": "object"}
+{"question": "在天龙寺外、菩提树下，段延庆以为的白衣观音的真实身份是谁？", "answer": "镇南王妃", "doc_chunk_id": "tlbb_2701", "tool": "keyword_search", "entities": ["天龙寺", "菩提树", "段延庆", "镇南王妃"], "qa_type": "character"}
+{"question": "段誉颈中的小金牌一面刻着什么字？", "answer": "长命百岁", "doc_chunk_id": "tlbb_2701", "tool": "keyword_search", "entities": ["段誉", "金牌", "长命百岁"], "qa_type": "object"}
+{"question": "慕容复请求段延庆收他做什么？", "answer": "义子", "doc_chunk_id": "tlbb_2707", "tool": "keyword_search", "entities": ["慕容复", "段延庆"], "qa_type": "relation"}
+{"question": "段延庆打算在身中的毒性解除后对慕容复做什么？", "answer": "杀了他", "doc_chunk_id": "tlbb_2707", "tool": "keyword_search", "entities": ["段延庆", "慕容复", "毒药"], "qa_type": "action_result"}
+{"question": "包不同是慕容复的什么人？", "answer": "亲信心腹", "doc_chunk_id": "tlbb_2710", "tool": "keyword_search", "entities": ["包不同", "慕容复"], "qa_type": "relation"}
+{"question": "慕容复在包不同未说完话时对他做了什么？", "answer": "一掌打在他背心", "doc_chunk_id": "tlbb_2710", "tool": "keyword_search", "entities": ["慕容复", "包不同"], "qa_type": "action_result"}
+{"question": "风波恶离开时扛起了谁的尸身？", "answer": "包不同", "doc_chunk_id": "tlbb_2713", "tool": "keyword_search", "entities": ["风波恶", "包不同"], "qa_type": "character"}
+{"question": "慕容复认段延庆为什么？", "answer": "义父", "doc_chunk_id": "tlbb_2713", "tool": "keyword_search", "entities": ["慕容复", "段延庆"], "qa_type": "relation"}
+{"question": "慕容复取出什么物品准备为段延庆解毒？", "answer": "小瓷瓶", "doc_chunk_id": "tlbb_2714", "tool": "keyword_search", "entities": ["慕容复", "小瓷瓶"], "qa_type": "object"}
+{"question": "慕容复想要先杀死谁？", "answer": "段誉", "doc_chunk_id": "tlbb_2714", "tool": "keyword_search", "entities": ["慕容复", "段誉"], "qa_type": "character"}
+{"question": "段正淳当年送给王夫人什么花？", "answer": "曼陀罗花", "doc_chunk_id": "tlbb_2722", "tool": "keyword_search", "entities": ["段正淳", "王夫人", "曼陀罗花"], "qa_type": "object"}
+{"question": "段正淳和王夫人约定去何处看玉像？", "answer": "大理无量山的石洞", "doc_chunk_id": "tlbb_2722", "tool": "keyword_search", "entities": ["段正淳", "王夫人", "大理无量山", "石洞"], "qa_type": "place"}
+{"question": "慕容复称呼段延庆为什么？", "answer": "义父", "doc_chunk_id": "tlbb_2723", "tool": "keyword_search", "entities": ["慕容复", "段延庆"], "qa_type": "relation"}
+{"question": "段誉口中被塞了什么？", "answer": "麻核", "doc_chunk_id": "tlbb_2723", "tool": "keyword_search", "entities": ["段誉", "麻核"], "qa_type": "object"}
+{"question": "慕容复要刺杀段夫人时，谁出言阻止？", "answer": "段延庆", "doc_chunk_id": "tlbb_2724", "tool": "keyword_search", "entities": ["慕容复", "段夫人", "段延庆"], "qa_type": "character"}
+{"question": "段誉从地下弹起后做了什么？", "answer": "撞向慕容复小腹", "doc_chunk_id": "tlbb_2724", "tool": "keyword_search", "entities": ["段誉", "慕容复"], "qa_type": "action_result"}
+{"question": "段正淳用剑刺入了自己的什么部位？", "answer": "心脏", "doc_chunk_id": "tlbb_2730", "tool": "keyword_search", "entities": ["段正淳", "剑", "心脏"], "qa_type": "action_result"}
+{"question": "段誉要杀段延庆时捡起了什么武器？", "answer": "钢杖", "doc_chunk_id": "tlbb_2730", "tool": "keyword_search", "entities": ["段誉", "段延庆", "钢杖"], "qa_type": "object"}
+{"question": "段誉的亲生父亲是谁？", "answer": "段延庆", "doc_chunk_id": "tlbb_2731", "tool": "keyword_search", "entities": ["段誉", "段延庆", "段夫人"], "qa_type": "character"}
+{"question": "段延庆要求段誉给他什么？", "answer": "解药", "doc_chunk_id": "tlbb_2731", "tool": "keyword_search", "entities": ["段延庆", "段誉", "解药"], "qa_type": "object"}
+{"question": "段延庆是段誉的什么人？", "answer": "生身之父", "doc_chunk_id": "tlbb_2733", "tool": "keyword_search", "entities": ["段延庆", "段誉"], "qa_type": "relation"}
+{"question": "段延庆用来戳段誉背部的兵器是什么？", "answer": "钢杖", "doc_chunk_id": "tlbb_2733", "tool": "keyword_search", "entities": ["段延庆", "钢杖"], "qa_type": "object"}
+{"question": "段誉看到饿死的百姓后，对自己做了什么？", "answer": "击打自己面颊", "doc_chunk_id": "tlbb_2742", "tool": "keyword_search", "entities": ["段誉", "击打面颊"], "qa_type": "action_result"}
+{"question": "巴天石为丧葬提供了多少白银？", "answer": "五十两", "doc_chunk_id": "tlbb_2742", "tool": "keyword_search", "entities": ["巴天石", "白银"], "qa_type": "object"}
+{"question": "王语嫣与段誉是什么关系？", "answer": "兄妹", "doc_chunk_id": "tlbb_2744", "tool": "keyword_search", "entities": ["王语嫣", "段誉"], "qa_type": "relation"}
+{"question": "段誉提议让王语嫣在哪里居住？", "answer": "大理", "doc_chunk_id": "tlbb_2744", "tool": "keyword_search", "entities": ["段誉", "王语嫣", "大理"], "qa_type": "place"}
+{"question": "木婉清去西夏皇宫做了什么？", "answer": "代段誉求亲", "doc_chunk_id": "tlbb_2745", "tool": "keyword_search", "entities": ["木婉清", "西夏皇宫", "段誉"], "qa_type": "action_result"}
+{"question": "在听香水榭，谁赶走了段誉？", "answer": "包不同", "doc_chunk_id": "tlbb_2745", "tool": "keyword_search", "entities": ["包不同", "段誉", "听香水榭"], "qa_type": "character"}
+{"question": "赵煦与太皇太后是什么关系？", "answer": "祖孙", "doc_chunk_id": "tlbb_2752", "tool": "keyword_search", "entities": ["赵煦", "太皇太后"], "qa_type": "relation"}
+{"question": "在奏章中称赞太皇太后为“女中尧舜”的是谁？", "answer": "辽国宰相", "doc_chunk_id": "tlbb_2752", "tool": "keyword_search", "entities": ["太皇太后", "辽国宰相", "奏章"], "qa_type": "character"}
+{"question": "赵煦拔剑将身旁的什么劈为两截？", "answer": "一张椅子", "doc_chunk_id": "tlbb_2755", "tool": "keyword_search", "entities": ["赵煦", "椅子"], "qa_type": "object"}
+{"question": "赵煦幻想收复哪片失地？", "answer": "燕云十六州", "doc_chunk_id": "tlbb_2755", "tool": "keyword_search", "entities": ["赵煦", "燕云十六州"], "qa_type": "place"}
+{"question": "太皇太后建议赵煦时常阅读什么书？", "answer": "《资治通鉴》", "doc_chunk_id": "tlbb_2756", "tool": "keyword_search", "entities": ["太皇太后", "赵煦", "《资治通鉴》"], "qa_type": "object"}
+{"question": "赵煦在得到太皇太后夸奖后做了什么动作？", "answer": "还剑入鞘", "doc_chunk_id": "tlbb_2756", "tool": "keyword_search", "entities": ["赵煦", "剑"], "qa_type": "action_result"}
+{"question": "赵煦亲理政务后做的第一件事是什么？", "answer": "将礼部尚书苏轼贬为定州知府", "doc_chunk_id": "tlbb_2757", "tool": "keyword_search", "entities": ["赵煦", "苏轼", "礼部尚书", "定州知府"], "qa_type": "action_result"}
+{"question": "太皇太后指着赵煦时，赵煦连退了几步？", "answer": "三步", "doc_chunk_id": "tlbb_2757", "tool": "keyword_search", "entities": ["太皇太后", "赵煦"], "qa_type": "action_result"}
+{"question": "赵煦将苏轼贬到何处？", "answer": "定州", "doc_chunk_id": "tlbb_2758", "tool": "keyword_search", "entities": ["赵煦", "苏轼", "定州"], "qa_type": "place"}
+{"question": "范祖禹担任什么官职？", "answer": "翰林学士", "doc_chunk_id": "tlbb_2758", "tool": "keyword_search", "entities": ["范祖禹", "翰林学士"], "qa_type": "character"}
+{"question": "谁在赵煦亲政之初上了一封字迹肥腴挺拔的奏章？", "answer": "苏轼", "doc_chunk_id": "tlbb_2759", "tool": "keyword_search", "entities": ["赵煦", "苏轼", "奏章"], "qa_type": "character"}
+{"question": "在赵煦斥责苏辙时，越众而出为苏辙辩解的大臣是谁？", "answer": "范纯仁", "doc_chunk_id": "tlbb_2763", "tool": "keyword_search", "entities": ["赵煦", "苏辙", "范纯仁"], "qa_type": "character"}
+{"question": "苏辙被赵煦斥责后，下殿来到何处待罪？", "answer": "庭中", "doc_chunk_id": "tlbb_2763", "tool": "keyword_search", "entities": ["苏辙", "庭中"], "qa_type": "place"}
+{"question": "耶律洪基在南郊射猎时射倒了多少人？", "answer": "六名汉人", "doc_chunk_id": "tlbb_2765", "tool": "keyword_search", "entities": ["耶律洪基", "南郊", "汉人"], "qa_type": "action_result"}
+{"question": "耶律洪基使用的弓是什么？", "answer": "镶金嵌玉的铁胎弓", "doc_chunk_id": "tlbb_2765", "tool": "keyword_search", "entities": ["耶律洪基", "镶金嵌玉的铁胎弓"], "qa_type": "object"}
+{"question": "耶律洪基封阿紫为什么公主？", "answer": "平南公主", "doc_chunk_id": "tlbb_2768", "tool": "keyword_search", "entities": ["耶律洪基", "阿紫", "平南公主"], "qa_type": "object"}
+{"question": "耶律洪基封了阿紫什么公主称号？", "answer": "平南公主", "doc_chunk_id": "tlbb_2769", "tool": "keyword_search", "entities": ["耶律洪基", "阿紫", "平南公主"], "qa_type": "action_result"}
+{"question": "萧峰待阿紫犹如自己的什么人？", "answer": "亲妹", "doc_chunk_id": "tlbb_2769", "tool": "keyword_search", "entities": ["萧峰", "阿紫"], "qa_type": "relation"}
+{"question": "耶律洪基封萧峰为什么官职？", "answer": "南院大王", "doc_chunk_id": "tlbb_2773", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰", "南院大王"], "qa_type": "character"}
+{"question": "萧峰此番西行的目的是什么？", "answer": "瞧西夏公主招亲的热闹", "doc_chunk_id": "tlbb_2773", "tool": "keyword_search", "entities": ["萧峰", "西夏公主招亲"], "qa_type": "action_result"}
+{"question": "耶律洪基晋封萧峰为什么爵位？", "answer": "宋王", "doc_chunk_id": "tlbb_2774", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰", "宋王"], "qa_type": "action_result"}
+{"question": "耶律洪基任命萧峰为什么军职？", "answer": "平南大元帅", "doc_chunk_id": "tlbb_2774", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰", "平南大元帅"], "qa_type": "action_result"}
+{"question": "耶律洪基提到赵煦将哪位大臣贬斥了？", "answer": "苏大胡子", "doc_chunk_id": "tlbb_2775", "tool": "keyword_search", "entities": ["耶律洪基", "赵煦", "苏大胡子"], "qa_type": "character"}
+{"question": "萧峰向耶律洪基求恳何事？", "answer": "收回南征的圣意", "doc_chunk_id": "tlbb_2776", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基", "南征"], "qa_type": "action_result"}
+{"question": "萧峰与耶律洪基是什么关系？", "answer": "结义兄弟", "doc_chunk_id": "tlbb_2776", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基"], "qa_type": "relation"}
+{"question": "耶律洪基和萧峰是什么关系？", "answer": "结义兄弟", "doc_chunk_id": "tlbb_2777", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰"], "qa_type": "relation"}
+{"question": "耶律洪基想让萧峰担任什么职务？", "answer": "平南大元帅", "doc_chunk_id": "tlbb_2777", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰", "平南大元帅"], "qa_type": "action_result"}
+{"question": "萧峰当日杀死的丐帮好朋友是谁？", "answer": "奚长老", "doc_chunk_id": "tlbb_2780", "tool": "keyword_search", "entities": ["萧峰", "奚长老", "丐帮"], "qa_type": "character"}
+{"question": "阿紫的爹爹是哪国人？", "answer": "大理国人", "doc_chunk_id": "tlbb_2780", "tool": "keyword_search", "entities": ["阿紫", "爹爹", "大理国"], "qa_type": "character"}
+{"question": "萧峰在什么地点打死了阿朱？", "answer": "小桥边", "doc_chunk_id": "tlbb_2781", "tool": "keyword_search", "entities": ["萧峰", "阿朱", "小桥边", "大雷雨之夜"], "qa_type": "place"}
+{"question": "阿紫自己说，在她眼睛瞎了的时候，对萧峰采取了什么行为？", "answer": "不来亲近", "doc_chunk_id": "tlbb_2781", "tool": "keyword_search", "entities": ["阿紫", "萧峰", "眼睛瞎"], "qa_type": "action_result"}
+{"question": "萧峰说自己一生只喜欢过哪一个女子？", "answer": "阿朱", "doc_chunk_id": "tlbb_2782", "tool": "keyword_search", "entities": ["萧峰", "阿朱"], "qa_type": "character"}
+{"question": "阿紫称呼萧峰为什么？", "answer": "姊夫", "doc_chunk_id": "tlbb_2782", "tool": "keyword_search", "entities": ["阿紫", "萧峰"], "qa_type": "relation"}
+{"question": "丐帮帮主庄聚贤的真实身份是谁？", "answer": "游坦之", "doc_chunk_id": "tlbb_2783", "tool": "keyword_search", "entities": ["庄聚贤", "游坦之"], "qa_type": "character"}
+{"question": "游坦之的父亲是谁？", "answer": "游驹", "doc_chunk_id": "tlbb_2783", "tool": "keyword_search", "entities": ["游坦之", "游驹"], "qa_type": "relation"}
+{"question": "阿紫在何处请虚竹子治眼？", "answer": "缥缈峰灵鹫宫", "doc_chunk_id": "tlbb_2784", "tool": "keyword_search", "entities": ["阿紫", "虚竹子", "缥缈峰灵鹫宫"], "qa_type": "place"}
+{"question": "萧峰和虚竹子是什么关系？", "answer": "结拜兄弟", "doc_chunk_id": "tlbb_2784", "tool": "keyword_search", "entities": ["萧峰", "虚竹子"], "qa_type": "relation"}
+{"question": "谁毒坏了阿紫的眼睛？", "answer": "丁春秋", "doc_chunk_id": "tlbb_2785", "tool": "keyword_search", "entities": ["阿紫", "丁春秋"], "qa_type": "character"}
+{"question": "萧峰是阿紫的什么人？", "answer": "姐夫", "doc_chunk_id": "tlbb_2785", "tool": "keyword_search", "entities": ["萧峰", "阿紫"], "qa_type": "relation"}
+{"question": "耶律洪基宣召阿紫原本是要她做什么？", "answer": "劝萧峰奉旨南征", "doc_chunk_id": "tlbb_2787", "tool": "keyword_search", "entities": ["耶律洪基", "阿紫", "萧峰", "宣召", "南征"], "qa_type": "action_result"}
+{"question": "阿紫在见到耶律洪基时，开口便要放弃什么封号？", "answer": "平南公主", "doc_chunk_id": "tlbb_2787", "tool": "keyword_search", "entities": ["阿紫", "耶律洪基", "平南公主"], "qa_type": "character"}
+{"question": "耶律洪基调动兵马要去捉拿谁？", "answer": "萧峰", "doc_chunk_id": "tlbb_2790", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰"], "qa_type": "character"}
+{"question": "阿紫在帐中坐在什么上面？", "answer": "骆驼鞍子", "doc_chunk_id": "tlbb_2790", "tool": "keyword_search", "entities": ["阿紫", "骆驼鞍子"], "qa_type": "object"}
+{"question": "阿紫在城头恍然大悟自己中了谁的诡计？", "answer": "穆贵妃", "doc_chunk_id": "tlbb_2797", "tool": "keyword_search", "entities": ["阿紫", "穆贵妃"], "qa_type": "character"}
+{"question": "萧峰中毒倒地后，阿紫称他为什么？", "answer": "姊夫", "doc_chunk_id": "tlbb_2797", "tool": "keyword_search", "entities": ["阿紫", "萧峰"], "qa_type": "relation"}
+{"question": "阿紫给萧峰喝的是什么？", "answer": "毒药", "doc_chunk_id": "tlbb_2798", "tool": "keyword_search", "entities": ["阿紫", "萧峰", "毒药"], "qa_type": "object"}
+{"question": "阿紫称呼萧峰为什么？", "answer": "姊夫", "doc_chunk_id": "tlbb_2798", "tool": "keyword_search", "entities": ["阿紫", "萧峰", "姊夫"], "qa_type": "relation"}
+{"question": "萧峰在白马桥上时，阿紫做了什么？", "answer": "跳入河中", "doc_chunk_id": "tlbb_2800", "tool": "keyword_search", "entities": ["萧峰", "阿紫", "白马桥", "河"], "qa_type": "action_result"}
+{"question": "在回王府途中，谁扶着萧峰上马？", "answer": "一名将军", "doc_chunk_id": "tlbb_2800", "tool": "keyword_search", "entities": ["萧峰", "将军"], "qa_type": "character"}
+{"question": "皇帝下旨只拿谁？", "answer": "萧峰", "doc_chunk_id": "tlbb_2801", "tool": "keyword_search", "entities": ["皇帝", "萧峰"], "qa_type": "character"}
+{"question": "阿紫从哪里遁走？", "answer": "水中", "doc_chunk_id": "tlbb_2801", "tool": "keyword_search", "entities": ["阿紫", "水中"], "qa_type": "place"}
+{"question": "假扮成说客来见萧峰的人是谁？", "answer": "阿紫", "doc_chunk_id": "tlbb_2805", "tool": "keyword_search", "entities": ["萧峰", "说客", "阿紫"], "qa_type": "character"}
+{"question": "囚禁萧峰的是谁？", "answer": "皇上", "doc_chunk_id": "tlbb_2806", "tool": "keyword_search", "entities": ["萧峰", "皇上"], "qa_type": "character"}
+{"question": "亲兵管带命令众亲兵怎么做？", "answer": "不得移动一步", "doc_chunk_id": "tlbb_2806", "tool": "keyword_search", "entities": ["亲兵管带", "众亲兵"], "qa_type": "action_result"}
+{"question": "虚竹、段誉和萧峰是什么关系？", "answer": "结义兄弟", "doc_chunk_id": "tlbb_2820", "tool": "keyword_search", "entities": ["虚竹", "段誉", "萧峰"], "qa_type": "relation"}
+{"question": "袭击辽军背后的军队举着什么旗帜？", "answer": "白旗", "doc_chunk_id": "tlbb_2820", "tool": "keyword_search", "entities": ["辽军", "白旗"], "qa_type": "object"}
+{"question": "范骅在大理国担任什么官职？", "answer": "司马", "doc_chunk_id": "tlbb_2821", "tool": "keyword_search", "entities": ["范骅", "大理国", "司马"], "qa_type": "character"}
+{"question": "萧峰认为是哪个部族的朋友突袭了辽军后阵？", "answer": "女真部族", "doc_chunk_id": "tlbb_2821", "tool": "keyword_search", "entities": ["萧峰", "女真部族", "辽军"], "qa_type": "character"}
+{"question": "完颜阿骨打递给萧峰什么东西？", "answer": "皮袋", "doc_chunk_id": "tlbb_2823", "tool": "keyword_search", "entities": ["完颜阿骨打", "萧峰", "皮袋"], "qa_type": "object"}
+{"question": "谁提议去长白山边打猎？", "answer": "完颜阿骨打", "doc_chunk_id": "tlbb_2823", "tool": "keyword_search", "entities": ["完颜阿骨打", "长白山"], "qa_type": "character"}
+{"question": "萧峰在长白山为谁治伤？", "answer": "阿紫", "doc_chunk_id": "tlbb_2824", "tool": "keyword_search", "entities": ["萧峰", "阿紫", "长白山"], "qa_type": "character"}
+{"question": "阿骨打提议与萧峰一同去何处打猎喝酒？", "answer": "长白山边", "doc_chunk_id": "tlbb_2824", "tool": "keyword_search", "entities": ["阿骨打", "萧峰", "长白山边"], "qa_type": "place"}
+{"question": "萧峰自称是什么人？", "answer": "契丹人", "doc_chunk_id": "tlbb_2826", "tool": "keyword_search", "entities": ["萧峰"], "qa_type": "character"}
+{"question": "萧峰与虚竹是什么关系？", "answer": "义结金兰的兄弟", "doc_chunk_id": "tlbb_2826", "tool": "keyword_search", "entities": ["萧峰", "虚竹"], "qa_type": "relation"}
+{"question": "萧峰教给虚竹的棒法叫什么？", "answer": "打狗棒法", "doc_chunk_id": "tlbb_2827", "tool": "keyword_search", "entities": ["萧峰", "虚竹", "打狗棒法"], "qa_type": "object"}
+{"question": "萧峰让虚竹日后将打狗棒法和降龙二十八掌转授给什么人？", "answer": "丐帮帮主", "doc_chunk_id": "tlbb_2827", "tool": "keyword_search", "entities": ["萧峰", "虚竹", "丐帮帮主"], "qa_type": "character"}
+{"question": "段誉吟诵的诗的作者是谁？", "answer": "李白", "doc_chunk_id": "tlbb_2839", "tool": "keyword_search", "entities": ["段誉", "李白"], "qa_type": "character"}
+{"question": "萧峰的契丹祖先与匈奴是什么关系？", "answer": "同族", "doc_chunk_id": "tlbb_2839", "tool": "keyword_search", "entities": ["萧峰", "契丹", "匈奴"], "qa_type": "relation"}
+{"question": "面对辽军来袭，范骅对群豪提出了什么建议？", "answer": "暂且避让", "doc_chunk_id": "tlbb_2841", "tool": "keyword_search", "entities": ["范骅", "辽军", "群豪"], "qa_type": "action_result"}
+{"question": "群豪向西急驰后，这一晚他们不再做什么？", "answer": "歇宿", "doc_chunk_id": "tlbb_2841", "tool": "keyword_search", "entities": ["群豪"], "qa_type": "action_result"}
+{"question": "萧峰在大辽的官职是什么？", "answer": "南院大王", "doc_chunk_id": "tlbb_2845", "tool": "keyword_search", "entities": ["萧峰", "南院大王"], "qa_type": "character"}
+{"question": "辽军将士听到萧峰的话后，有什么反应？", "answer": "人人变色", "doc_chunk_id": "tlbb_2845", "tool": "keyword_search", "entities": ["辽军将士", "萧峰"], "qa_type": "action_result"}
+{"question": "虚竹抓住了耶律洪基的什么部位？", "answer": "右腕", "doc_chunk_id": "tlbb_2847", "tool": "keyword_search", "entities": ["虚竹", "耶律洪基", "右腕"], "qa_type": "action_result"}
+{"question": "段誉冲入辽军阵中时施展了什么步法？", "answer": "凌波微步", "doc_chunk_id": "tlbb_2847", "tool": "keyword_search", "entities": ["段誉", "凌波微步", "辽军"], "qa_type": "object"}
+{"question": "萧峰与耶律洪基是什么关系？", "answer": "结义兄弟", "doc_chunk_id": "tlbb_2850", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基"], "qa_type": "relation"}
+{"question": "虚竹和段誉绕到了谁的身后？", "answer": "萧峰", "doc_chunk_id": "tlbb_2852", "tool": "keyword_search", "entities": ["虚竹", "段誉", "萧峰"], "qa_type": "character"}
+{"question": "耶律洪基下令班师的地点是哪里？", "answer": "南京", "doc_chunk_id": "tlbb_2853", "tool": "keyword_search", "entities": ["耶律洪基", "南京", "班师"], "qa_type": "place"}
+{"question": "萧峰用什么插入自己心口？", "answer": "两截断箭", "doc_chunk_id": "tlbb_2853", "tool": "keyword_search", "entities": ["萧峰", "断箭"], "qa_type": "object"}
+{"question": "阿紫称呼萧峰为什么？", "answer": "姊夫", "doc_chunk_id": "tlbb_2856", "tool": "keyword_search", "entities": ["阿紫", "萧峰"], "qa_type": "relation"}
+{"question": "在萧峰遗体旁，阿紫对萧峰的尸体做了什么？", "answer": "抱起", "doc_chunk_id": "tlbb_2856", "tool": "keyword_search", "entities": ["阿紫", "萧峰尸体"], "qa_type": "action_result"}
+{"question": "游坦之曾化名什么？", "answer": "庄聚贤", "doc_chunk_id": "tlbb_2857", "tool": "keyword_search", "entities": ["游坦之", "庄聚贤"], "qa_type": "character"}
+{"question": "被游坦之逼迫领路来寻阿紫的人是谁？", "answer": "乌老大", "doc_chunk_id": "tlbb_2857", "tool": "keyword_search", "entities": ["游坦之", "乌老大", "阿紫"], "qa_type": "character"}
+{"question": "阿紫最终怎么了？", "answer": "摔下深谷", "doc_chunk_id": "tlbb_2859", "tool": "keyword_search", "entities": ["阿紫", "深谷"], "qa_type": "action_result"}
+{"question": "段誉抓住了阿紫的什么？", "answer": "衣袖的一角", "doc_chunk_id": "tlbb_2859", "tool": "keyword_search", "entities": ["段誉", "阿紫", "衣袖"], "qa_type": "object"}
+{"question": "镇守雁门关的指挥使是谁？", "answer": "张将军", "doc_chunk_id": "tlbb_2860", "tool": "keyword_search", "entities": ["雁门关", "指挥使", "张将军"], "qa_type": "character"}
+{"question": "张将军将捷表快马送往何处？", "answer": "汴梁", "doc_chunk_id": "tlbb_2860", "tool": "keyword_search", "entities": ["张将军", "捷表", "汴梁"], "qa_type": "place"}
+{"question": "天山童姥的师妹是谁？", "answer": "李秋水", "doc_chunk_id": "tlbb_2863", "tool": "keyword_search", "entities": ["天山童姥", "李秋水"], "qa_type": "character"}
+{"question": "巴天石赏给采集燕窝的怒族人多少银子？", "answer": "十两银子", "doc_chunk_id": "tlbb_2865", "tool": "keyword_search", "entities": ["巴天石", "怒族人", "银子"], "qa_type": "action_result"}
+{"question": "大理宪宗宣仁帝段誉登基时使用的年号是什么？", "answer": "日新", "doc_chunk_id": "tlbb_2877", "tool": "keyword_search", "entities": ["段誉", "日新"], "qa_type": "object"}
+{"question": "段正兴在即位次年改元的年号是什么？", "answer": "永贞", "doc_chunk_id": "tlbb_2877", "tool": "keyword_search", "entities": ["段正兴", "永贞"], "qa_type": "object"}
+{"question": "1999年云南丽江举行的首届中国名人“炎黄杯”围棋赛的发起人之一是谁？", "answer": "金庸", "doc_chunk_id": "tlbb_2878", "tool": "keyword_search", "entities": ["1999年", "云南丽江", "炎黄杯", "围棋赛", "金庸"], "qa_type": "character"}
+{"question": "金庸在修订《天龙八部》时常常浮起谁的面貌？", "answer": "陈世骧先生", "doc_chunk_id": "tlbb_2879", "tool": "keyword_search", "entities": ["金庸", "天龙八部", "陈世骧"], "qa_type": "character"}
+{"question": "陈世骧先生手里拿着什么？", "answer": "烟斗", "doc_chunk_id": "tlbb_2879", "tool": "keyword_search", "entities": ["陈世骧", "烟斗"], "qa_type": "object"}
+{"question": "骧的内子在信件中做了什么？", "answer": "附笔问好", "doc_chunk_id": "tlbb_2890", "tool": "keyword_search", "entities": ["骧", "内子"], "qa_type": "action_result"}
+{"question": "《鲁滨逊飘流记》中出现的仆人叫什么名字？", "answer": "星期五", "doc_chunk_id": "xajh_0001", "tool": "keyword_search", "entities": ["《鲁滨逊飘流记》", "星期五"], "qa_type": "character"}
+{"question": "林平之的坐骑叫什么名字？", "answer": "小雪龙", "doc_chunk_id": "xajh_0015", "tool": "keyword_search", "entities": ["林平之", "小雪龙"], "qa_type": "object"}
+{"question": "林平之的外婆在何地觅得大宛名驹？", "answer": "洛阳", "doc_chunk_id": "xajh_0015", "tool": "keyword_search", "entities": ["林平之的外婆", "大宛名驹", "洛阳"], "qa_type": "place"}
+{"question": "林平之的相貌像谁？", "answer": "他母亲", "doc_chunk_id": "xajh_0019", "tool": "keyword_search", "entities": ["林平之", "母亲"], "qa_type": "relation"}
+{"question": "林平之摔向姓余汉子的是什么东西？", "answer": "锡酒壶", "doc_chunk_id": "xajh_0019", "tool": "keyword_search", "entities": ["林平之", "姓余汉子", "锡酒壶"], "qa_type": "object"}
+{"question": "林平之被姓余的一拳打中了什么部位？", "answer": "胸口", "doc_chunk_id": "xajh_0021", "tool": "keyword_search", "entities": ["林平之", "姓余的", "胸口"], "qa_type": "action_result"}
+{"question": "林平之和姓余的打斗到了哪里？", "answer": "酒店外", "doc_chunk_id": "xajh_0021", "tool": "keyword_search", "entities": ["林平之", "姓余的", "酒店外"], "qa_type": "place"}
+{"question": "林平之用何物刺入了姓余汉子的小腹？", "answer": "一把匕首", "doc_chunk_id": "xajh_0022", "tool": "keyword_search", "entities": ["林平之", "姓余汉子", "匕首"], "qa_type": "object"}
+{"question": "林平之将匕首插入了谁的小腹？", "answer": "姓余汉子", "doc_chunk_id": "xajh_0022", "tool": "keyword_search", "entities": ["林平之", "匕首", "姓余汉子"], "qa_type": "character"}
+{"question": "史镖头将尸首埋在了什么地方？", "answer": "酒店后面的菜园", "doc_chunk_id": "xajh_0025", "tool": "keyword_search", "entities": ["史镖头", "尸首", "菜园"], "qa_type": "place"}
+{"question": "少镖头料理大盗后保得哪个地方一方平安？", "answer": "福州府", "doc_chunk_id": "xajh_0025", "tool": "keyword_search", "entities": ["少镖头", "福州府"], "qa_type": "place"}
+{"question": "林震南和林平之是什么关系？", "answer": "父子", "doc_chunk_id": "xajh_0029", "tool": "keyword_search", "entities": ["林震南", "林平之"], "qa_type": "relation"}
+{"question": "林震南想把福威镖局的镖路从湖北再拓展到哪个省？", "answer": "四川", "doc_chunk_id": "xajh_0029", "tool": "keyword_search", "entities": ["林震南", "福威镖局", "四川"], "qa_type": "place"}
+{"question": "说话者让林平之结交谁？", "answer": "四位青城弟子", "doc_chunk_id": "xajh_0031", "tool": "keyword_search", "entities": ["说话者", "林平之", "四位青城弟子"], "qa_type": "character"}
+{"question": "林平之决定先将杀人之事告诉谁？", "answer": "娘", "doc_chunk_id": "xajh_0031", "tool": "keyword_search", "entities": ["林平之", "娘", "杀人之事"], "qa_type": "character"}
+{"question": "林震南和夫人商量为谁准备生日礼物？", "answer": "大舅子", "doc_chunk_id": "xajh_0032", "tool": "keyword_search", "entities": ["林震南", "夫人", "大舅子"], "qa_type": "character"}
+{"question": "谁向林震南报告白二的死讯？", "answer": "陈七", "doc_chunk_id": "xajh_0032", "tool": "keyword_search", "entities": ["陈七", "白二", "林震南"], "qa_type": "character"}
+{"question": "余观主派弟子到福威镖局做什么？", "answer": "回拜", "doc_chunk_id": "xajh_0033", "tool": "keyword_search", "entities": ["余观主", "福威镖局", "弟子"], "qa_type": "action_result"}
+{"question": "林远图创下了什么剑法？", "answer": "七十二路辟邪剑法", "doc_chunk_id": "xajh_0033", "tool": "keyword_search", "entities": ["林远图", "七十二路辟邪剑法"], "qa_type": "object"}
+{"question": "林震南与林平之是什么关系？", "answer": "父子", "doc_chunk_id": "xajh_0034", "tool": "keyword_search", "entities": ["林震南", "林平之"], "qa_type": "relation"}
+{"question": "趟子手陈七奔进来报告谁又死了？", "answer": "郑镖头", "doc_chunk_id": "xajh_0034", "tool": "keyword_search", "entities": ["陈七", "郑镖头"], "qa_type": "character"}
+{"question": "郑镖头死在哪里？", "answer": "马厩里", "doc_chunk_id": "xajh_0035", "tool": "keyword_search", "entities": ["郑镖头", "马厩"], "qa_type": "place"}
+{"question": "郑镖头死时双手抓着什么？", "answer": "马鞍", "doc_chunk_id": "xajh_0035", "tool": "keyword_search", "entities": ["郑镖头", "马鞍"], "qa_type": "object"}
+{"question": "林平之是用什么武器杀死那个汉子的？", "answer": "匕首", "doc_chunk_id": "xajh_0036", "tool": "keyword_search", "entities": ["林平之", "匕首", "汉子"], "qa_type": "object"}
+{"question": "林平之将那个汉子的尸体埋在了哪里？", "answer": "菜园", "doc_chunk_id": "xajh_0036", "tool": "keyword_search", "entities": ["林平之", "汉子", "菜园"], "qa_type": "place"}
+{"question": "林平之等五人骑马出城后向哪个方向行去？", "answer": "向北", "doc_chunk_id": "xajh_0040", "tool": "keyword_search", "entities": ["林平之", "向北"], "qa_type": "action_result"}
+{"question": "林震南吩咐谁去掘出埋在菜园的死尸？", "answer": "陈七", "doc_chunk_id": "xajh_0040", "tool": "keyword_search", "entities": ["林震南", "陈七", "菜园", "死尸"], "qa_type": "character"}
+{"question": "菜园中掘出的尸身是谁？", "answer": "史镖头", "doc_chunk_id": "xajh_0041", "tool": "keyword_search", "entities": ["菜园", "史镖头"], "qa_type": "character"}
+{"question": "林平之在少女房中找到了什么物品？", "answer": "一块绿色帕子", "doc_chunk_id": "xajh_0041", "tool": "keyword_search", "entities": ["林平之", "少女房", "绿色帕子"], "qa_type": "object"}
+{"question": "林平之与林震南是什么关系？", "answer": "父子", "doc_chunk_id": "xajh_0043", "tool": "keyword_search", "entities": ["林平之", "林震南"], "qa_type": "relation"}
+{"question": "林震南让人把史镖头的尸身移到什么地方？", "answer": "屋中", "doc_chunk_id": "xajh_0043", "tool": "keyword_search", "entities": ["林震南", "史镖头", "屋中"], "qa_type": "place"}
+{"question": "林震南在桌上重重一拍，震断了什么桌子的一条腿？", "answer": "花梨木八仙桌", "doc_chunk_id": "xajh_0045", "tool": "keyword_search", "entities": ["林震南", "花梨木八仙桌"], "qa_type": "object"}
+{"question": "林夫人的父亲是谁？", "answer": "王元霸", "doc_chunk_id": "xajh_0045", "tool": "keyword_search", "entities": ["林夫人", "王元霸"], "qa_type": "character"}
+{"question": "当晚林平之睡在哪里？", "answer": "父母房外榻上", "doc_chunk_id": "xajh_0047", "tool": "keyword_search", "entities": ["林平之", "父母房外榻上"], "qa_type": "place"}
+{"question": "林震南夫妇睡觉时将什么放在枕边？", "answer": "兵刃", "doc_chunk_id": "xajh_0047", "tool": "keyword_search", "entities": ["林震南夫妇", "兵刃"], "qa_type": "object"}
+{"question": "半夜叫醒林平之去找林震南的人是谁？", "answer": "林夫人", "doc_chunk_id": "xajh_0061", "tool": "keyword_search", "entities": ["林平之", "林夫人", "林震南"], "qa_type": "character"}
+{"question": "林平之母子经过大厅时，镖师们正在做什么？", "answer": "掷骰子赌博", "doc_chunk_id": "xajh_0061", "tool": "keyword_search", "entities": ["大厅", "镖师", "掷骰子赌博"], "qa_type": "action_result"}
+{"question": "林夫人提议连夜动身去什么地方？", "answer": "洛阳", "doc_chunk_id": "xajh_0063", "tool": "keyword_search", "entities": ["林夫人", "洛阳"], "qa_type": "place"}
+{"question": "林震南的什么剑法对付黑道中的盗贼绰绰有余？", "answer": "七十二路辟邪剑法", "doc_chunk_id": "xajh_0063", "tool": "keyword_search", "entities": ["林震南", "七十二路辟邪剑法"], "qa_type": "object"}
+{"question": "林平之在收拾包裹时，左手从案上取过了什么？", "answer": "一只玉马", "doc_chunk_id": "xajh_0064", "tool": "keyword_search", "entities": ["林平之", "玉马"], "qa_type": "object"}
+{"question": "林平之在收拾包裹时，右手卷了什么？", "answer": "一张豹皮", "doc_chunk_id": "xajh_0064", "tool": "keyword_search", "entities": ["林平之", "豹皮"], "qa_type": "object"}
+{"question": "林震南一家原计划前往哪个城市？", "answer": "洛阳", "doc_chunk_id": "xajh_0066", "tool": "keyword_search", "entities": ["林震南", "王夫人", "洛阳"], "qa_type": "place"}
+{"question": "林震南一家离开福州城后最终到达了什么地方？", "answer": "南屿", "doc_chunk_id": "xajh_0066", "tool": "keyword_search", "entities": ["林震南", "南屿"], "qa_type": "place"}
+{"question": "林震南在松林中询问姓名的人是谁？", "answer": "方人智", "doc_chunk_id": "xajh_0070", "tool": "keyword_search", "entities": ["林震南", "方人智"], "qa_type": "character"}
+{"question": "方人智从松林中走出时手里拿着什么？", "answer": "折扇", "doc_chunk_id": "xajh_0070", "tool": "keyword_search", "entities": ["方人智", "折扇"], "qa_type": "object"}
+{"question": "林震南的哪个部位被于人豪刺中？", "answer": "右膝", "doc_chunk_id": "xajh_0074", "tool": "keyword_search", "entities": ["林震南", "于人豪", "右膝", "剑"], "qa_type": "action_result"}
+{"question": "贾人达要把林平之一路打到什么地方？", "answer": "四川青城山", "doc_chunk_id": "xajh_0074", "tool": "keyword_search", "entities": ["贾人达", "林平之", "四川青城山"], "qa_type": "place"}
+{"question": "方人智和于师弟使的剑法叫什么名字？", "answer": "七十二路辟邪剑法", "doc_chunk_id": "xajh_0076", "tool": "keyword_search", "entities": ["方人智", "于师弟", "七十二路辟邪剑法"], "qa_type": "object"}
+{"question": "方人智如何称呼林震南？", "answer": "林镖头", "doc_chunk_id": "xajh_0076", "tool": "keyword_search", "entities": ["方人智", "林震南", "林镖头"], "qa_type": "character"}
+{"question": "方人智和贾人达是什么关系？", "answer": "师兄弟", "doc_chunk_id": "xajh_0080", "tool": "keyword_search", "entities": ["方人智", "贾人达"], "qa_type": "relation"}
+{"question": "方人智的师父千叮万嘱要拿到手的人是谁？", "answer": "姓林的夫妇", "doc_chunk_id": "xajh_0080", "tool": "keyword_search", "entities": ["师父", "姓林的夫妇"], "qa_type": "character"}
+{"question": "林平之将火把掷入了哪里？", "answer": "池塘", "doc_chunk_id": "xajh_0082", "tool": "keyword_search", "entities": ["林平之", "火把", "池塘"], "qa_type": "place"}
+{"question": "林平之的父母被押往何处？", "answer": "青城山", "doc_chunk_id": "xajh_0082", "tool": "keyword_search", "entities": ["林平之", "父母", "青城山"], "qa_type": "place"}
+{"question": "农妇给了林平之什么食物？", "answer": "玉米棒子", "doc_chunk_id": "xajh_0084", "tool": "keyword_search", "entities": ["农妇", "林平之", "玉米棒子"], "qa_type": "object"}
+{"question": "林平之踩到了什么导致摔倒？", "answer": "一堆牛粪", "doc_chunk_id": "xajh_0084", "tool": "keyword_search", "entities": ["林平之", "牛粪"], "qa_type": "object"}
+{"question": "福威镖局长沙分局门首的金字招牌处于什么状态？", "answer": "倒转着悬挂", "doc_chunk_id": "xajh_0086", "tool": "keyword_search", "entities": ["福威镖局", "长沙分局", "金字招牌"], "qa_type": "action_result"}
+{"question": "福威镖局长沙分局右首旗杆上悬挂着什么？", "answer": "一条女子花裤", "doc_chunk_id": "xajh_0086", "tool": "keyword_search", "entities": ["福威镖局", "长沙分局", "右首旗杆", "女子花裤"], "qa_type": "object"}
+{"question": "申师哥打算送给刘正风什么礼物？", "answer": "一对玉马", "doc_chunk_id": "xajh_0089", "tool": "keyword_search", "entities": ["申师哥", "刘正风", "玉马"], "qa_type": "object"}
+{"question": "姓申的和姓吉的是什么关系？", "answer": "师兄弟", "doc_chunk_id": "xajh_0089", "tool": "keyword_search", "entities": ["姓申的", "姓吉的"], "qa_type": "relation"}
+{"question": "谁找到了镖局中的金银珠宝？", "answer": "申师哥", "doc_chunk_id": "xajh_0090", "tool": "keyword_search", "entities": ["姓申的", "镖局", "金银珠宝"], "qa_type": "character"}
+{"question": "张镖头睡觉房间的隔壁屋里放了什么？", "answer": "一口死人棺材", "doc_chunk_id": "xajh_0090", "tool": "keyword_search", "entities": ["张镖头", "棺材", "房间"], "qa_type": "object"}
+{"question": "姓吉的将什么从窗中泼出淋了林平之一身？", "answer": "洗脚水", "doc_chunk_id": "xajh_0093", "tool": "keyword_search", "entities": ["姓吉的", "林平之", "洗脚水"], "qa_type": "object"}
+{"question": "师父传令本门弟子到哪里聚齐？", "answer": "衡山", "doc_chunk_id": "xajh_0093", "tool": "keyword_search", "entities": ["师父", "本门弟子", "衡山"], "qa_type": "place"}
+{"question": "林平之离开镖局后前往的城门叫什么？", "answer": "南门", "doc_chunk_id": "xajh_0095", "tool": "keyword_search", "entities": ["林平之", "镖局", "南门"], "qa_type": "place"}
+{"question": "林平之在第五个小包里的锦缎盒子中发现了什么玉器？", "answer": "一对羊脂玉马", "doc_chunk_id": "xajh_0095", "tool": "keyword_search", "entities": ["林平之", "第五个小包", "锦缎盒子", "羊脂玉马"], "qa_type": "object"}
+{"question": "刘三爷是哪个门派的人？", "answer": "衡山派", "doc_chunk_id": "xajh_0099", "tool": "keyword_search", "entities": ["刘三爷", "衡山派"], "qa_type": "character"}
+{"question": "刘三爷打算做什么？", "answer": "金盆洗手", "doc_chunk_id": "xajh_0099", "tool": "keyword_search", "entities": ["刘三爷", "金盆洗手"], "qa_type": "action_result"}
+{"question": "矮胖汉子声称刘三爷金盆洗手是为了避免什么？", "answer": "衡山派发生门户之争", "doc_chunk_id": "xajh_0101", "tool": "keyword_search", "entities": ["矮胖汉子", "刘三爷", "金盆洗手", "衡山派", "门户之争"], "qa_type": "action_result"}
+{"question": "外界传言刘三爷是衡山派的什么？", "answer": "第二把高手", "doc_chunk_id": "xajh_0101", "tool": "keyword_search", "entities": ["刘三爷", "衡山派", "第二把高手"], "qa_type": "character"}
+{"question": "刘三爷决定通过什么方式来避免与师兄莫大先生争虚名？", "answer": "金盆洗手", "doc_chunk_id": "xajh_0102", "tool": "keyword_search", "entities": ["刘三爷", "莫大先生", "金盆洗手"], "qa_type": "action_result"}
+{"question": "刘三爷与莫大先生是什么关系？", "answer": "师兄弟", "doc_chunk_id": "xajh_0102", "tool": "keyword_search", "entities": ["刘三爷", "莫大先生"], "qa_type": "relation"}
+{"question": "那个喝骂胡琴老者“鬼叫一般，嘈些什么”的矮胖子是什么身份？", "answer": "说话之人", "doc_chunk_id": "xajh_0103", "tool": "keyword_search", "entities": ["矮胖子"], "qa_type": "character"}
+{"question": "莫大先生的外号是什么？", "answer": "潇湘夜雨", "doc_chunk_id": "xajh_0106", "tool": "keyword_search", "entities": ["莫大先生"], "qa_type": "character"}
+{"question": "莫大先生在衡山城茶馆中一剑削断了几只茶杯？", "answer": "七只", "doc_chunk_id": "xajh_0106", "tool": "keyword_search", "entities": ["莫大先生", "茶杯", "衡山城茶馆"], "qa_type": "action_result"}
+{"question": "卖酒少女和老者是什么关系？", "answer": "师兄妹", "doc_chunk_id": "xajh_0108", "tool": "keyword_search", "entities": ["卖酒少女", "老者"], "qa_type": "relation"}
+{"question": "老者乔装成少女的什么亲属？", "answer": "祖父", "doc_chunk_id": "xajh_0108", "tool": "keyword_search", "entities": ["老者", "卖酒少女"], "qa_type": "relation"}
+{"question": "少女在茶馆中指出的“潇湘夜雨”是哪位人物？", "answer": "莫大先生", "doc_chunk_id": "xajh_0109", "tool": "keyword_search", "entities": ["少女", "莫大先生"], "qa_type": "character"}
+{"question": "在茶馆中，少女把躲藏起来的众人称作什么？", "answer": "下三滥", "doc_chunk_id": "xajh_0109", "tool": "keyword_search", "entities": ["少女", "众人"], "qa_type": "action_result"}
+{"question": "四师哥与大师哥昨日在何处分手？", "answer": "衡阳", "doc_chunk_id": "xajh_0110", "tool": "keyword_search", "entities": ["四师哥", "大师哥", "衡阳"], "qa_type": "place"}
+{"question": "少女是大师哥的什么人？", "answer": "师妹", "doc_chunk_id": "xajh_0110", "tool": "keyword_search", "entities": ["少女", "大师哥"], "qa_type": "relation"}
+{"question": "令狐冲为喝叫化子的猴儿酒，拿出了什么物品？", "answer": "一两银子", "doc_chunk_id": "xajh_0113", "tool": "keyword_search", "entities": ["令狐冲", "叫化子", "猴儿酒", "一两银子"], "qa_type": "object"}
+{"question": "六猴儿说小师妹昨天如果在哪个地方，就能亲眼见到令狐冲喝酒的功夫？", "answer": "衡阳", "doc_chunk_id": "xajh_0113", "tool": "keyword_search", "entities": ["六猴儿", "小师妹", "衡阳", "令狐冲"], "qa_type": "place"}
+{"question": "泰山派掌门人是谁？", "answer": "天门真人", "doc_chunk_id": "xajh_0117", "tool": "keyword_search", "entities": ["泰山派", "天门真人"], "qa_type": "character"}
+{"question": "听到“青城派余观主”六个字胸口重重一震的人是谁？", "answer": "林平之", "doc_chunk_id": "xajh_0117", "tool": "keyword_search", "entities": ["林平之", "青城派余观主"], "qa_type": "character"}
+{"question": "陆大有在华山派同门中排行第几？", "answer": "第六", "doc_chunk_id": "xajh_0118", "tool": "keyword_search", "entities": ["陆大有", "华山派"], "qa_type": "character"}
+{"question": "谁将侯人英、洪人雄从酒楼上踢了下来？", "answer": "大师哥", "doc_chunk_id": "xajh_0119", "tool": "keyword_search", "entities": ["大师哥", "侯人英", "洪人雄"], "qa_type": "character"}
+{"question": "大师哥被罚在大门外跪了多久？", "answer": "一日一夜", "doc_chunk_id": "xajh_0119", "tool": "keyword_search", "entities": ["大师哥", "师父"], "qa_type": "action_result"}
+{"question": "青城派的掌门是谁？", "answer": "余观主", "doc_chunk_id": "xajh_0128", "tool": "keyword_search", "entities": ["青城派", "余观主"], "qa_type": "character"}
+{"question": "谁将侯人英踢下楼？", "answer": "大师哥", "doc_chunk_id": "xajh_0128", "tool": "keyword_search", "entities": ["大师哥", "侯人英"], "qa_type": "character"}
+{"question": "次日清晨，余观主将劳德诺送到了哪里？", "answer": "松风观大门口", "doc_chunk_id": "xajh_0130", "tool": "keyword_search", "entities": ["余观主", "劳德诺", "松风观"], "qa_type": "place"}
+{"question": "接见劳德诺的当晚，余观主做了什么？", "answer": "设筵请了劳德诺", "doc_chunk_id": "xajh_0130", "tool": "keyword_search", "entities": ["余观主", "劳德诺"], "qa_type": "action_result"}
+{"question": "林远图是林震南的什么人？", "answer": "祖父", "doc_chunk_id": "xajh_0132", "tool": "keyword_search", "entities": ["林远图", "林震南"], "qa_type": "relation"}
+{"question": "长青子少年时曾栽在谁的剑下？", "answer": "林远图", "doc_chunk_id": "xajh_0132", "tool": "keyword_search", "entities": ["长青子", "林远图", "辟邪剑法"], "qa_type": "character"}
+{"question": "长青子曾败给哪位武林前辈？", "answer": "林远图", "doc_chunk_id": "xajh_0133", "tool": "keyword_search", "entities": ["长青子", "林远图"], "qa_type": "character"}
+{"question": "华山派师祖和长青子钻研辟邪剑法数月后，是否找到了破绽？", "answer": "没有破解的把握", "doc_chunk_id": "xajh_0133", "tool": "keyword_search", "entities": ["华山派师祖", "长青子", "辟邪剑法"], "qa_type": "action_result"}
+{"question": "青城派掌门余沧海率领弟子练习的是什么剑法？", "answer": "辟邪剑法", "doc_chunk_id": "xajh_0134", "tool": "keyword_search", "entities": ["余沧海", "青城派", "辟邪剑法"], "qa_type": "object"}
+{"question": "林远图的儿子叫什么名字？", "answer": "林仲雄", "doc_chunk_id": "xajh_0134", "tool": "keyword_search", "entities": ["林远图", "林仲雄"], "qa_type": "character"}
+{"question": "陆大有把第一碗馄饨给了谁？", "answer": "劳德诺", "doc_chunk_id": "xajh_0140", "tool": "keyword_search", "entities": ["陆大有", "劳德诺", "馄饨"], "qa_type": "character"}
+{"question": "卖馄饨的老人先煮好了几碗馄饨？", "answer": "五碗", "doc_chunk_id": "xajh_0140", "tool": "keyword_search", "entities": ["卖馄饨的老人", "馄饨"], "qa_type": "action_result"}
+{"question": "傍晚时分，劳德诺和小师妹为了察看青城派，躲进了福威镖局的什么地方？", "answer": "菜园子", "doc_chunk_id": "xajh_0141", "tool": "keyword_search", "entities": ["劳德诺", "小师妹", "福威镖局", "菜园子"], "qa_type": "place"}
+{"question": "华山弟子认为青城派在福威镖局里寻找什么？", "answer": "辟邪剑法的剑谱", "doc_chunk_id": "xajh_0141", "tool": "keyword_search", "entities": ["华山弟子", "青城派", "福威镖局", "辟邪剑法的剑谱"], "qa_type": "object"}
+{"question": "余沧海的师父是谁？", "answer": "长青子", "doc_chunk_id": "xajh_0142", "tool": "keyword_search", "entities": ["余沧海", "长青子"], "qa_type": "character"}
+{"question": "劳德诺认为余沧海来福州的主旨是什么？", "answer": "得那部剑谱", "doc_chunk_id": "xajh_0142", "tool": "keyword_search", "entities": ["劳德诺", "余沧海", "福州", "剑谱"], "qa_type": "action_result"}
+{"question": "戴子声称余沧海想要达到什么目的？", "answer": "使得青城剑法天下无敌", "doc_chunk_id": "xajh_0144", "tool": "keyword_search", "entities": ["戴子", "余沧海", "青城剑法"], "qa_type": "action_result"}
+{"question": "在茶馆前大声喝令令狐冲出来的人是谁？", "answer": "老尼姑", "doc_chunk_id": "xajh_0144", "tool": "keyword_search", "entities": ["老尼姑", "令狐冲", "茶馆"], "qa_type": "character"}
+{"question": "恒山白云庵的庵主是谁？", "answer": "定逸师太", "doc_chunk_id": "xajh_0145", "tool": "keyword_search", "entities": ["恒山白云庵", "定逸师太"], "qa_type": "character"}
+{"question": "定逸师太指控令狐冲做了什么？", "answer": "掳走了她的小徒儿", "doc_chunk_id": "xajh_0145", "tool": "keyword_search", "entities": ["定逸师太", "令狐冲", "小徒儿"], "qa_type": "action_result"}
+{"question": "泰山派天松道长在衡阳城见到令狐冲和仪琳饮酒的酒楼叫什么？", "answer": "回雁楼", "doc_chunk_id": "xajh_0146", "tool": "keyword_search", "entities": ["天松道长", "衡阳城", "令狐冲", "仪琳", "回雁楼"], "qa_type": "place"}
+{"question": "在回雁楼与令狐冲、仪琳一起饮酒的另一个人是谁？", "answer": "田伯光", "doc_chunk_id": "xajh_0146", "tool": "keyword_search", "entities": ["回雁楼", "令狐冲", "仪琳", "田伯光"], "qa_type": "character"}
+{"question": "向大年和米为义是谁的弟子？", "answer": "刘三爷", "doc_chunk_id": "xajh_0149", "tool": "keyword_search", "entities": ["向大年", "米为义", "刘三爷"], "qa_type": "character"}
+{"question": "定逸师太属于哪个门派？", "answer": "恒山派", "doc_chunk_id": "xajh_0149", "tool": "keyword_search", "entities": ["定逸师太", "恒山派"], "qa_type": "character"}
+{"question": "何三七的出身地点是哪里？", "answer": "浙南雁荡山", "doc_chunk_id": "xajh_0150", "tool": "keyword_search", "entities": ["何三七", "浙南雁荡山"], "qa_type": "place"}
+{"question": "何三七卖的馄饨多少钱一碗？", "answer": "十文钱", "doc_chunk_id": "xajh_0150", "tool": "keyword_search", "entities": ["何三七", "馄饨", "十文钱"], "qa_type": "action_result"}
+{"question": "谁把劳德诺叫进内室？", "answer": "向大年", "doc_chunk_id": "xajh_0154", "tool": "keyword_search", "entities": ["向大年", "劳德诺"], "qa_type": "character"}
+{"question": "泰山派的掌门人是谁？", "answer": "天门道人", "doc_chunk_id": "xajh_0154", "tool": "keyword_search", "entities": ["泰山派", "天门道人"], "qa_type": "character"}
+{"question": "灵珊称呼谁为“三师哥”？", "answer": "梁发", "doc_chunk_id": "xajh_0155", "tool": "keyword_search", "entities": ["灵珊", "梁发"], "qa_type": "character"}
+{"question": "林平之心想谁正在被寻找？", "answer": "令狐冲", "doc_chunk_id": "xajh_0155", "tool": "keyword_search", "entities": ["林平之", "令狐冲"], "qa_type": "character"}
+{"question": "天松道人和迟百城今日大清早去了哪里喝酒？", "answer": "衡阳回雁楼", "doc_chunk_id": "xajh_0157", "tool": "keyword_search", "entities": ["天松道人", "迟百城", "衡阳回雁楼"], "qa_type": "place"}
+{"question": "迟百城是谁的弟子？", "answer": "天门道人", "doc_chunk_id": "xajh_0157", "tool": "keyword_search", "entities": ["迟百城", "天门道人"], "qa_type": "relation"}
+{"question": "仪琳说令狐冲怎么了？", "answer": "已经死了", "doc_chunk_id": "xajh_0166", "tool": "keyword_search", "entities": ["仪琳", "令狐冲"], "qa_type": "action_result"}
+{"question": "仪琳指认谁是杀死令狐冲的凶手？", "answer": "罗人杰", "doc_chunk_id": "xajh_0166", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "罗人杰"], "qa_type": "character"}
+{"question": "令狐冲与谁同归于尽？", "answer": "罗人杰", "doc_chunk_id": "xajh_0167", "tool": "keyword_search", "entities": ["令狐冲", "罗人杰"], "qa_type": "character"}
+{"question": "仪琳的师父是谁？", "answer": "定逸", "doc_chunk_id": "xajh_0167", "tool": "keyword_search", "entities": ["仪琳", "定逸"], "qa_type": "character"}
+{"question": "闻先生是哪里人？", "answer": "陕南", "doc_chunk_id": "xajh_0168", "tool": "keyword_search", "entities": ["闻先生", "陕南"], "qa_type": "place"}
+{"question": "仪琳的身份是什么？", "answer": "小尼姑", "doc_chunk_id": "xajh_0168", "tool": "keyword_search", "entities": ["仪琳", "小尼姑"], "qa_type": "character"}
+{"question": "昨日下午，仪琳随师父和众师姊前往哪里？", "answer": "衡阳", "doc_chunk_id": "xajh_0169", "tool": "keyword_search", "entities": ["仪琳", "师父", "众师姊", "衡阳"], "qa_type": "place"}
+{"question": "昨日下午，仪琳被点中穴道后，被放入了什么地方？", "answer": "山洞", "doc_chunk_id": "xajh_0169", "tool": "keyword_search", "entities": ["仪琳", "山洞"], "qa_type": "place"}
+{"question": "仪琳的师父是谁？", "answer": "定逸师太", "doc_chunk_id": "xajh_0170", "tool": "keyword_search", "entities": ["仪琳", "定逸师太"], "qa_type": "character"}
+{"question": "罗人杰是哪一派弟子？", "answer": "青城派", "doc_chunk_id": "xajh_0170", "tool": "keyword_search", "entities": ["罗人杰", "青城派"], "qa_type": "character"}
+{"question": "在仪琳的讲述中，田伯光对她做了什么使她无法继续反抗？", "answer": "点了穴道", "doc_chunk_id": "xajh_0173", "tool": "keyword_search", "entities": ["田伯光", "仪琳", "穴道"], "qa_type": "action_result"}
+{"question": "仪琳告诉定逸师太，救她的人是谁？", "answer": "令狐冲", "doc_chunk_id": "xajh_0175", "tool": "keyword_search", "entities": ["仪琳", "定逸", "令狐冲"], "qa_type": "character"}
+{"question": "令狐冲抱起仪琳后躲到了哪里？", "answer": "草丛里", "doc_chunk_id": "xajh_0175", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "山洞", "草丛"], "qa_type": "place"}
+{"question": "令狐冲抱起仪琳蹿进了哪里？", "answer": "山洞", "doc_chunk_id": "xajh_0177", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "山洞"], "qa_type": "place"}
+{"question": "仪琳衣袋里的治伤灵药叫什么？", "answer": "天香断续胶", "doc_chunk_id": "xajh_0177", "tool": "keyword_search", "entities": ["仪琳", "天香断续胶"], "qa_type": "object"}
+{"question": "仪琳奔到天明时望见了哪座城？", "answer": "衡阳城", "doc_chunk_id": "xajh_0185", "tool": "keyword_search", "entities": ["仪琳", "衡阳城"], "qa_type": "place"}
+{"question": "仪琳和田伯光来到的酒楼叫什么名字？", "answer": "回雁楼", "doc_chunk_id": "xajh_0185", "tool": "keyword_search", "entities": ["仪琳", "田伯光", "回雁楼"], "qa_type": "place"}
+{"question": "定逸是仪琳的什么人？", "answer": "师父", "doc_chunk_id": "xajh_0189", "tool": "keyword_search", "entities": ["定逸", "仪琳"], "qa_type": "relation"}
+{"question": "刘正风认为令狐冲与田伯光胡说的目的是什么？", "answer": "救仪琳", "doc_chunk_id": "xajh_0189", "tool": "keyword_search", "entities": ["刘正风", "令狐冲", "田伯光", "仪琳"], "qa_type": "action_result"}
+{"question": "刘正风说令狐冲编造言语是为了欺骗谁？", "answer": "田伯光", "doc_chunk_id": "xajh_0191", "tool": "keyword_search", "entities": ["刘正风", "令狐冲", "田伯光"], "qa_type": "character"}
+{"question": "刘正风说再过一日他要做什么？", "answer": "金盆洗手", "doc_chunk_id": "xajh_0191", "tool": "keyword_search", "entities": ["刘正风", "金盆洗手"], "qa_type": "action_result"}
+{"question": "仪琳的师父是谁？", "answer": "定逸", "doc_chunk_id": "xajh_0204", "tool": "keyword_search", "entities": ["仪琳", "定逸"], "qa_type": "character"}
+{"question": "在令狐冲所述的排名中，田伯光站着打的排名是多少？", "answer": "第十四", "doc_chunk_id": "xajh_0205", "tool": "keyword_search", "entities": ["令狐冲", "田伯光", "排名"], "qa_type": "action_result"}
+{"question": "五岳剑派五位掌门聚会谈论武林高手排名是在什么地方？", "answer": "华山", "doc_chunk_id": "xajh_0205", "tool": "keyword_search", "entities": ["五岳剑派", "掌门", "聚会", "华山"], "qa_type": "place"}
+{"question": "令狐冲称自己那套坐着打、姿势难看的剑法叫什么？", "answer": "茅厕剑法", "doc_chunk_id": "xajh_0206", "tool": "keyword_search", "entities": ["令狐冲", "茅厕剑法"], "qa_type": "object"}
+{"question": "令狐冲称谁为“站着打天下第十四”？", "answer": "田伯光", "doc_chunk_id": "xajh_0206", "tool": "keyword_search", "entities": ["令狐冲", "田伯光"], "qa_type": "character"}
+{"question": "仪琳当时在什么地方窥探令狐冲与田伯光的比斗？", "answer": "屋顶", "doc_chunk_id": "xajh_0211", "tool": "keyword_search", "entities": ["仪琳", "屋顶"], "qa_type": "place"}
+{"question": "仪琳在酒楼为令狐冲做了什么？", "answer": "斟了一碗酒", "doc_chunk_id": "xajh_0213", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "酒", "酒楼"], "qa_type": "action_result"}
+{"question": "令狐冲所称青城派最高明的功夫是什么？", "answer": "屁股向后平沙落雁式", "doc_chunk_id": "xajh_0213", "tool": "keyword_search", "entities": ["令狐冲", "青城派", "屁股向后平沙落雁式"], "qa_type": "object"}
+{"question": "罗人杰第一拳打在了令狐师兄的什么部位？", "answer": "鼻子", "doc_chunk_id": "xajh_0214", "tool": "keyword_search", "entities": ["罗人杰", "令狐师兄", "鼻子"], "qa_type": "action_result"}
+{"question": "令狐师兄踢中了罗人杰的什么部位？", "answer": "后臀", "doc_chunk_id": "xajh_0214", "tool": "keyword_search", "entities": ["令狐师兄", "罗人杰", "后臀"], "qa_type": "action_result"}
+{"question": "罗人杰被令狐冲踢中后臀后发生了什么？", "answer": "直滚下楼", "doc_chunk_id": "xajh_0215", "tool": "keyword_search", "entities": ["令狐冲", "罗人杰", "后臀", "滚下楼"], "qa_type": "action_result"}
+{"question": "罗人杰的师弟姓什么？", "answer": "黎", "doc_chunk_id": "xajh_0215", "tool": "keyword_search", "entities": ["罗人杰", "黎师弟"], "qa_type": "character"}
+{"question": "罗人杰用什么东西刺伤了令狐冲？", "answer": "长剑", "doc_chunk_id": "xajh_0216", "tool": "keyword_search", "entities": ["罗人杰", "令狐冲", "长剑"], "qa_type": "object"}
+{"question": "令狐冲在重伤时告诉仪琳的大秘密是关于什么物品？", "answer": "辟邪剑谱", "doc_chunk_id": "xajh_0216", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "辟邪剑谱"], "qa_type": "object"}
+{"question": "余沧海的身份是什么？", "answer": "青城派掌门", "doc_chunk_id": "xajh_0220", "tool": "keyword_search", "entities": ["余沧海", "青城派"], "qa_type": "character"}
+{"question": "申人俊的师父是谁？", "answer": "余沧海", "doc_chunk_id": "xajh_0220", "tool": "keyword_search", "entities": ["申人俊", "余沧海"], "qa_type": "relation"}
+{"question": "余沧海在刘正风的金盆洗手大会上看到驼子后，怀疑他是谁？", "answer": "木高峰", "doc_chunk_id": "xajh_0221", "tool": "keyword_search", "entities": ["余沧海", "驼子", "木高峰", "金盆洗手大会"], "qa_type": "character"}
+{"question": "在刘正风的金盆洗手大会上，那个驼子实际上是谁？", "answer": "林平之", "doc_chunk_id": "xajh_0221", "tool": "keyword_search", "entities": ["驼子", "林平之", "金盆洗手大会"], "qa_type": "character"}
+{"question": "林平之对刘正风自称的姓氏是什么？", "answer": "木", "doc_chunk_id": "xajh_0222", "tool": "keyword_search", "entities": ["林平之", "刘正风", "姓氏"], "qa_type": "action_result"}
+{"question": "林平之声称“塞北明驼”木高峰是他的什么人？", "answer": "长辈", "doc_chunk_id": "xajh_0222", "tool": "keyword_search", "entities": ["林平之", "塞北明驼", "木高峰", "关系"], "qa_type": "relation"}
+{"question": "在刘正风府上，余沧海抓住了哪个年轻人的手腕？", "answer": "林平之", "doc_chunk_id": "xajh_0224", "tool": "keyword_search", "entities": ["余沧海", "林平之", "刘正风", "手腕"], "qa_type": "character"}
+{"question": "林平之被余沧海捏得手腕剧痛时，有没有哼声？", "answer": "哼也没哼一声", "doc_chunk_id": "xajh_0224", "tool": "keyword_search", "entities": ["林平之", "余沧海", "手腕"], "qa_type": "action_result"}
+{"question": "余沧海抓住林平之时，从厅口进来并自报姓名的驼背人是谁？", "answer": "木高峰", "doc_chunk_id": "xajh_0225", "tool": "keyword_search", "entities": ["余沧海", "林平之", "木高峰", "厅口"], "qa_type": "character"}
+{"question": "木高峰两次拍打林平之肩膀后，余沧海的手最终怎么了？", "answer": "放开了手", "doc_chunk_id": "xajh_0225", "tool": "keyword_search", "entities": ["木高峰", "余沧海", "林平之", "拍肩"], "qa_type": "action_result"}
+{"question": "林平之当众称呼木高峰为什么？", "answer": "爷爷", "doc_chunk_id": "xajh_0228", "tool": "keyword_search", "entities": ["林平之", "木高峰"], "qa_type": "relation"}
+{"question": "余沧海计划与木高峰交战时，前一百招采取什么策略？", "answer": "只守不攻", "doc_chunk_id": "xajh_0228", "tool": "keyword_search", "entities": ["余沧海", "木高峰"], "qa_type": "action_result"}
+{"question": "木高峰看到的矮小道人是什么身份？", "answer": "青城派掌门", "doc_chunk_id": "xajh_0229", "tool": "keyword_search", "entities": ["矮小道人", "青城派"], "qa_type": "character"}
+{"question": "木高峰在内心自称什么？", "answer": "驼子", "doc_chunk_id": "xajh_0229", "tool": "keyword_search", "entities": ["木高峰", "驼子"], "qa_type": "character"}
+{"question": "罗人杰是哪个门派的弟子？", "answer": "青城派", "doc_chunk_id": "xajh_0237", "tool": "keyword_search", "entities": ["罗人杰", "青城派"], "qa_type": "character"}
+{"question": "罗人杰见到那个受伤的好人后做了什么？", "answer": "刺他一剑", "doc_chunk_id": "xajh_0237", "tool": "keyword_search", "entities": ["罗人杰", "受伤的好人"], "qa_type": "action_result"}
+{"question": "仪琳抱着令狐冲的尸体在哪里晕倒？", "answer": "荷塘之旁", "doc_chunk_id": "xajh_0239", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "荷塘"], "qa_type": "place"}
+{"question": "仪琳醒转后发现令狐冲的尸体怎么了？", "answer": "不见了", "doc_chunk_id": "xajh_0239", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "尸体"], "qa_type": "action_result"}
+{"question": "仪琳与令狐冲是什么关系？", "answer": "师兄妹", "doc_chunk_id": "xajh_0241", "tool": "keyword_search", "entities": ["仪琳", "令狐冲"], "qa_type": "relation"}
+{"question": "令狐冲曾骂仪琳什么？", "answer": "倒霉的小尼姑", "doc_chunk_id": "xajh_0241", "tool": "keyword_search", "entities": ["令狐冲", "仪琳"], "qa_type": "action_result"}
+{"question": "曲非烟向仪琳索要什么物品？", "answer": "天香断续胶", "doc_chunk_id": "xajh_0246", "tool": "keyword_search", "entities": ["曲非烟", "仪琳", "天香断续胶"], "qa_type": "object"}
+{"question": "曲非烟索要天香断续胶的目的是什么？", "answer": "救一个人", "doc_chunk_id": "xajh_0246", "tool": "keyword_search", "entities": ["曲非烟", "天香断续胶", "救人"], "qa_type": "action_result"}
+{"question": "曲非烟让仪琳用什么药给受伤之人治伤？", "answer": "天香断续胶", "doc_chunk_id": "xajh_0253", "tool": "keyword_search", "entities": ["曲非烟", "仪琳", "天香断续胶"], "qa_type": "object"}
+{"question": "仪琳要找谁的尸首？", "answer": "令狐冲", "doc_chunk_id": "xajh_0253", "tool": "keyword_search", "entities": ["仪琳", "令狐冲"], "qa_type": "character"}
+{"question": "在黑暗中，曲非烟递给仪琳什么东西？", "answer": "茶杯", "doc_chunk_id": "xajh_0256", "tool": "keyword_search", "entities": ["曲非烟", "仪琳", "茶杯"], "qa_type": "object"}
+{"question": "仪琳塞入受伤之人口中的治伤药丸叫什么？", "answer": "白云熊胆丸", "doc_chunk_id": "xajh_0256", "tool": "keyword_search", "entities": ["仪琳", "受伤的人", "白云熊胆丸"], "qa_type": "object"}
+{"question": "田伯光答应输了拜谁为师？", "answer": "令狐冲", "doc_chunk_id": "xajh_0258", "tool": "keyword_search", "entities": ["田伯光", "令狐冲"], "qa_type": "character"}
+{"question": "令狐冲死后，仪琳做了什么？", "answer": "抱着尸身乱走", "doc_chunk_id": "xajh_0258", "tool": "keyword_search", "entities": ["令狐冲", "仪琳"], "qa_type": "action_result"}
+{"question": "谁低声问仪琳为什么愿意为令狐冲而死？", "answer": "曲非烟", "doc_chunk_id": "xajh_0259", "tool": "keyword_search", "entities": ["曲非烟", "仪琳", "令狐冲"], "qa_type": "character"}
+{"question": "曲非烟最后打着了什么？", "answer": "火", "doc_chunk_id": "xajh_0259", "tool": "keyword_search", "entities": ["曲非烟", "火"], "qa_type": "action_result"}
+{"question": "床上躺着的人是谁？", "answer": "令狐冲", "doc_chunk_id": "xajh_0260", "tool": "keyword_search", "entities": ["仪琳", "曲非烟", "令狐冲", "床"], "qa_type": "character"}
+{"question": "仪琳认为最终救了令狐冲的人是谁？", "answer": "曲非烟的爷爷", "doc_chunk_id": "xajh_0260", "tool": "keyword_search", "entities": ["仪琳", "曲非烟", "令狐冲", "爷爷"], "qa_type": "character"}
+{"question": "在外边高处呼唤仪琳的人是谁？", "answer": "定逸师太", "doc_chunk_id": "xajh_0261", "tool": "keyword_search", "entities": ["定逸师太", "仪琳"], "qa_type": "character"}
+{"question": "仪琳发现自己身处什么地方？", "answer": "妓院", "doc_chunk_id": "xajh_0261", "tool": "keyword_search", "entities": ["仪琳", "妓院"], "qa_type": "place"}
+{"question": "田伯光自称杀了一个人，怀疑此人可能是青城派的谁？", "answer": "彭人骐", "doc_chunk_id": "xajh_0263", "tool": "keyword_search", "entities": ["田伯光", "青城派", "彭人骐"], "qa_type": "character"}
+{"question": "余沧海与田伯光最初在哪里交手？", "answer": "房中", "doc_chunk_id": "xajh_0263", "tool": "keyword_search", "entities": ["余沧海", "田伯光", "房中"], "qa_type": "place"}
+{"question": "余沧海在群玉院中与谁相斗？", "answer": "田伯光", "doc_chunk_id": "xajh_0264", "tool": "keyword_search", "entities": ["余沧海", "田伯光", "群玉院"], "qa_type": "character"}
+{"question": "谁伸手按住了仪琳的嘴？", "answer": "曲非烟", "doc_chunk_id": "xajh_0264", "tool": "keyword_search", "entities": ["仪琳", "曲非烟"], "qa_type": "character"}
+{"question": "在妓院中，谁抓住了仪琳的手腕阻止她拔剑自刎？", "answer": "曲非烟", "doc_chunk_id": "xajh_0265", "tool": "keyword_search", "entities": ["仪琳", "曲非烟", "长剑"], "qa_type": "character"}
+{"question": "令狐冲用来遮掩胸前血迹和伤口的是哪件衣物？", "answer": "大氅", "doc_chunk_id": "xajh_0265", "tool": "keyword_search", "entities": ["令狐冲", "大氅", "伤口"], "qa_type": "object"}
+{"question": "令狐冲与余沧海对话时身处何处？", "answer": "妓院", "doc_chunk_id": "xajh_0267", "tool": "keyword_search", "entities": ["令狐冲", "余沧海", "妓院"], "qa_type": "place"}
+{"question": "余沧海命令谁去揭开帐子？", "answer": "洪人雄", "doc_chunk_id": "xajh_0267", "tool": "keyword_search", "entities": ["余沧海", "洪人雄", "帐子"], "qa_type": "character"}
+{"question": "洪人雄对帐子做了什么？", "answer": "挑开帐子", "doc_chunk_id": "xajh_0268", "tool": "keyword_search", "entities": ["洪人雄", "帐子"], "qa_type": "action_result"}
+{"question": "大红锦被上绣着什么？", "answer": "双鸳鸯", "doc_chunk_id": "xajh_0268", "tool": "keyword_search", "entities": ["大红锦被", "双鸳鸯"], "qa_type": "object"}
+{"question": "在刘正风府中假扮驼子的是谁？", "answer": "林平之", "doc_chunk_id": "xajh_0270", "tool": "keyword_search", "entities": ["林平之", "刘正风府", "驼子"], "qa_type": "character"}
+{"question": "谁在林平之的驼背上轻轻一拍？", "answer": "木高峰", "doc_chunk_id": "xajh_0270", "tool": "keyword_search", "entities": ["木高峰", "林平之"], "qa_type": "character"}
+{"question": "木高峰和林平之在群玉院外躲在什么后面窥看？", "answer": "一株树后", "doc_chunk_id": "xajh_0272", "tool": "keyword_search", "entities": ["木高峰", "林平之", "群玉院"], "qa_type": "place"}
+{"question": "余沧海命令洪人雄先杀的人是谁？", "answer": "林平之", "doc_chunk_id": "xajh_0274", "tool": "keyword_search", "entities": ["余沧海", "洪人雄", "林平之"], "qa_type": "character"}
+{"question": "令狐冲在哪里杀了罗人杰？", "answer": "回雁楼", "doc_chunk_id": "xajh_0274", "tool": "keyword_search", "entities": ["令狐冲", "罗人杰", "回雁楼"], "qa_type": "place"}
+{"question": "余沧海抓住了林平之的哪只手腕？", "answer": "右腕", "doc_chunk_id": "xajh_0275", "tool": "keyword_search", "entities": ["余沧海", "林平之", "右腕"], "qa_type": "action_result"}
+{"question": "木高峰格开余沧海长剑时，手中多了一柄什么兵器？", "answer": "弯刀", "doc_chunk_id": "xajh_0275", "tool": "keyword_search", "entities": ["木高峰", "余沧海", "长剑", "弯刀"], "qa_type": "object"}
+{"question": "定逸师太与恒山派群尼向西搜去是为了找谁？", "answer": "仪琳", "doc_chunk_id": "xajh_0277", "tool": "keyword_search", "entities": ["定逸师太", "仪琳", "向西搜去"], "qa_type": "character"}
+{"question": "刘正风率领众弟子向哪个方向搜去？", "answer": "东南方", "doc_chunk_id": "xajh_0277", "tool": "keyword_search", "entities": ["刘正风", "东南方"], "qa_type": "action_result"}
+{"question": "木高峰的绰号是什么？", "answer": "塞北明驼", "doc_chunk_id": "xajh_0278", "tool": "keyword_search", "entities": ["木高峰"], "qa_type": "character"}
+{"question": "林平之推断木高峰想从他身上得到什么？", "answer": "辟邪剑谱", "doc_chunk_id": "xajh_0278", "tool": "keyword_search", "entities": ["林平之", "木高峰", "辟邪剑谱"], "qa_type": "object"}
+{"question": "岳不群出现时手中拿着什么？", "answer": "折扇", "doc_chunk_id": "xajh_0282", "tool": "keyword_search", "entities": ["岳不群", "折扇"], "qa_type": "object"}
+{"question": "木高峰见到岳不群脸上显现什么颜色的气体？", "answer": "紫气", "doc_chunk_id": "xajh_0285", "tool": "keyword_search", "entities": ["木高峰", "岳不群", "紫气"], "qa_type": "object"}
+{"question": "林平之跪地请求岳不群做什么？", "answer": "收录门墙", "doc_chunk_id": "xajh_0285", "tool": "keyword_search", "entities": ["林平之", "岳不群", "收录门墙"], "qa_type": "action_result"}
+{"question": "林平之的父母被哪一派擒住？", "answer": "青城派", "doc_chunk_id": "xajh_0286", "tool": "keyword_search", "entities": ["林平之", "父母", "青城派"], "qa_type": "character"}
+{"question": "岳灵珊是岳不群的什么人？", "answer": "女儿", "doc_chunk_id": "xajh_0286", "tool": "keyword_search", "entities": ["岳灵珊", "岳不群"], "qa_type": "relation"}
+{"question": "岳灵珊曾乔装改扮到哪里卖酒？", "answer": "福州城外", "doc_chunk_id": "xajh_0287", "tool": "keyword_search", "entities": ["岳灵珊", "福州城外"], "qa_type": "place"}
+{"question": "岳灵珊说大师哥被谁打了一掌？", "answer": "余沧海", "doc_chunk_id": "xajh_0287", "tool": "keyword_search", "entities": ["岳灵珊", "大师哥", "余沧海"], "qa_type": "character"}
+{"question": "在院子中低声叫“大师哥”的人是谁？", "answer": "陆大有", "doc_chunk_id": "xajh_0289", "tool": "keyword_search", "entities": ["陆大有", "令狐冲"], "qa_type": "character"}
+{"question": "曲非烟在令狐冲的要求下做了什么？", "answer": "关上门窗", "doc_chunk_id": "xajh_0289", "tool": "keyword_search", "entities": ["曲非烟", "令狐冲", "门窗"], "qa_type": "action_result"}
+{"question": "仪琳喂令狐冲服用的药物名称是什么？", "answer": "白云熊胆丸", "doc_chunk_id": "xajh_0291", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "白云熊胆丸"], "qa_type": "object"}
+{"question": "仪琳让令狐冲静养多长时间？", "answer": "十二个时辰", "doc_chunk_id": "xajh_0291", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "静养"], "qa_type": "action_result"}
+{"question": "仪琳失手掉落令狐冲后，用了哪一招将他托住？", "answer": "敬捧宝经", "doc_chunk_id": "xajh_0294", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "敬捧宝经"], "qa_type": "object"}
+{"question": "仪琳认为令狐冲伤口麻痒是什么迹象？", "answer": "痊愈", "doc_chunk_id": "xajh_0294", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "伤口麻痒", "痊愈"], "qa_type": "action_result"}
+{"question": "令狐冲说他的师父到了哪里？", "answer": "衡山城", "doc_chunk_id": "xajh_0296", "tool": "keyword_search", "entities": ["令狐冲", "师父", "衡山城"], "qa_type": "place"}
+{"question": "令狐冲和仪琳将青城派摔得屁股向后的招式戏称为什么？", "answer": "青城派的平沙落雁式", "doc_chunk_id": "xajh_0296", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "青城派", "平沙落雁式"], "qa_type": "object"}
+{"question": "今年元宵，岳灵珊出的灯谜的谜底是什么？", "answer": "狐", "doc_chunk_id": "xajh_0299", "tool": "keyword_search", "entities": ["岳灵珊", "灯谜", "狐"], "qa_type": "object"}
+{"question": "今年元宵聚会时，坐在岳灵珊左边的人是谁？", "answer": "陆大有", "doc_chunk_id": "xajh_0299", "tool": "keyword_search", "entities": ["岳灵珊", "陆大有", "元宵聚会"], "qa_type": "character"}
+{"question": "令狐冲赞叹“真好看”指的是什么？", "answer": "彩虹", "doc_chunk_id": "xajh_0300", "tool": "keyword_search", "entities": ["令狐冲", "彩虹"], "qa_type": "object"}
+{"question": "令狐冲提议去看什么？", "answer": "瀑布", "doc_chunk_id": "xajh_0301", "tool": "keyword_search", "entities": ["令狐冲", "瀑布"], "qa_type": "place"}
+{"question": "令狐冲拾起什么用来支撑行走？", "answer": "断枝", "doc_chunk_id": "xajh_0301", "tool": "keyword_search", "entities": ["令狐冲", "断枝"], "qa_type": "object"}
+{"question": "令狐冲故意把田伯光武功排名排得高是为了什么？", "answer": "引他开心", "doc_chunk_id": "xajh_0304", "tool": "keyword_search", "entities": ["令狐冲", "田伯光"], "qa_type": "action_result"}
+{"question": "令狐冲的师娘曾说恒山派师伯剑法胜过谁？", "answer": "令狐冲的师父", "doc_chunk_id": "xajh_0304", "tool": "keyword_search", "entities": ["师娘", "恒山派师伯", "令狐冲师父"], "qa_type": "action_result"}
+{"question": "小师妹给令狐冲和她一起试出来的剑法取了什么名字？", "answer": "冲灵剑法", "doc_chunk_id": "xajh_0306", "tool": "keyword_search", "entities": ["小师妹", "令狐冲", "冲灵剑法"], "qa_type": "object"}
+{"question": "令狐冲提到自己曾被谁打得全无还手之力？", "answer": "田伯光", "doc_chunk_id": "xajh_0306", "tool": "keyword_search", "entities": ["令狐冲", "田伯光"], "qa_type": "character"}
+{"question": "坐着刺苍蝇的剑法是谁创的？", "answer": "令狐冲", "doc_chunk_id": "xajh_0307", "tool": "keyword_search", "entities": ["令狐冲", "坐着刺苍蝇的剑法"], "qa_type": "character"}
+{"question": "令狐冲将自创剑法的事告诉了谁？", "answer": "田伯光", "doc_chunk_id": "xajh_0307", "tool": "keyword_search", "entities": ["令狐冲", "田伯光", "自创剑法"], "qa_type": "character"}
+{"question": "令狐冲最后做了什么？", "answer": "入了梦乡", "doc_chunk_id": "xajh_0308", "tool": "keyword_search", "entities": ["令狐冲"], "qa_type": "action_result"}
+{"question": "说话者与令狐冲是什么关系？", "answer": "师兄弟", "doc_chunk_id": "xajh_0308", "tool": "keyword_search", "entities": ["说话者", "令狐冲"], "qa_type": "relation"}
+{"question": "仪琳折了什么为令狐冲赶开蚊蝇小虫？", "answer": "带叶的树枝", "doc_chunk_id": "xajh_0309", "tool": "keyword_search", "entities": ["仪琳", "带叶的树枝", "令狐冲", "蚊蝇小虫"], "qa_type": "object"}
+{"question": "令狐冲让仪琳去衡山城的什么地方通知师弟？", "answer": "刘师叔家里", "doc_chunk_id": "xajh_0309", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "衡山城", "刘师叔家", "师弟"], "qa_type": "place"}
+{"question": "仪琳说令狐冲心中记着的是谁？", "answer": "他的小师妹", "doc_chunk_id": "xajh_0310", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "小师妹"], "qa_type": "character"}
+{"question": "令狐冲在心里将仪琳与谁比较美貌？", "answer": "灵珊妹子", "doc_chunk_id": "xajh_0310", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "灵珊妹子"], "qa_type": "character"}
+{"question": "令狐冲的六师弟叫什么名字？", "answer": "陆大有", "doc_chunk_id": "xajh_0313", "tool": "keyword_search", "entities": ["令狐冲", "六师弟", "陆大有"], "qa_type": "character"}
+{"question": "仪琳在哪里看到《百喻经》？", "answer": "藏经阁", "doc_chunk_id": "xajh_0313", "tool": "keyword_search", "entities": ["仪琳", "百喻经", "藏经阁"], "qa_type": "place"}
+{"question": "《百喻经》是谁作的？", "answer": "伽斯那", "doc_chunk_id": "xajh_0314", "tool": "keyword_search", "entities": ["《百喻经》", "伽斯那"], "qa_type": "character"}
+{"question": "种田人用什么打秃子？", "answer": "犁", "doc_chunk_id": "xajh_0314", "tool": "keyword_search", "entities": ["种田人", "秃子", "犁"], "qa_type": "object"}
+{"question": "令狐冲提到让婴儿公主快速长大的外搽药物是什么？", "answer": "天香断续胶", "doc_chunk_id": "xajh_0315", "tool": "keyword_search", "entities": ["令狐冲", "天香断续胶"], "qa_type": "object"}
+{"question": "令狐冲提到让婴儿公主快速长大的内服药物是什么？", "answer": "白云熊胆丸", "doc_chunk_id": "xajh_0315", "tool": "keyword_search", "entities": ["令狐冲", "白云熊胆丸"], "qa_type": "object"}
+{"question": "仪琳提到令狐冲比哪本书中的御医聪明？", "answer": "《百喻经》", "doc_chunk_id": "xajh_0316", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "《百喻经》"], "qa_type": "object"}
+{"question": "令狐冲计划请几个裁缝为仪琳赶制公主衣服？", "answer": "四个", "doc_chunk_id": "xajh_0316", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "裁缝", "公主衣服"], "qa_type": "action_result"}
+{"question": "令狐冲要仪琳说笑话的目的是什么？", "answer": "哄得她破涕为笑", "doc_chunk_id": "xajh_0317", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "说笑话"], "qa_type": "action_result"}
+{"question": "在仪琳的梦中，抓住她手臂的是谁？", "answer": "师父", "doc_chunk_id": "xajh_0317", "tool": "keyword_search", "entities": ["仪琳", "师父", "梦中"], "qa_type": "character"}
+{"question": "仪琳在梦中吓得大叫时呼唤的人是谁？", "answer": "令狐师兄", "doc_chunk_id": "xajh_0318", "tool": "keyword_search", "entities": ["仪琳", "令狐师兄"], "qa_type": "character"}
+{"question": "仪琳从怀中取出什么物品为令狐冲抹去额上汗珠？", "answer": "布帕", "doc_chunk_id": "xajh_0318", "tool": "keyword_search", "entities": ["仪琳", "令狐冲", "布帕"], "qa_type": "object"}
+{"question": "仪琳正在念诵的经文是什么？", "answer": "《妙法莲华经观世音普门品》", "doc_chunk_id": "xajh_0319", "tool": "keyword_search", "entities": ["仪琳", "《妙法莲华经观世音普门品》"], "qa_type": "object"}
+{"question": "听到仪琳念经后，令狐冲有什么反应？", "answer": "笑了出来", "doc_chunk_id": "xajh_0319", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "笑声"], "qa_type": "action_result"}
+{"question": "令狐冲在什么声音中入了睡乡？", "answer": "念佛声", "doc_chunk_id": "xajh_0321", "tool": "keyword_search", "entities": ["令狐冲", "念佛声"], "qa_type": "action_result"}
+{"question": "令狐冲听到的佛号是在向哪位菩萨祈求？", "answer": "观世音菩萨", "doc_chunk_id": "xajh_0321", "tool": "keyword_search", "entities": ["令狐冲", "观世音菩萨"], "qa_type": "character"}
+{"question": "岳不群在收录林平之后的第二天，率领弟子去了哪里？", "answer": "刘府", "doc_chunk_id": "xajh_0322", "tool": "keyword_search", "entities": ["岳不群", "林平之", "刘府"], "qa_type": "place"}
+{"question": "这天是刘正风的什么日子？", "answer": "金盆洗手正日", "doc_chunk_id": "xajh_0322", "tool": "keyword_search", "entities": ["刘正风", "金盆洗手"], "qa_type": "action_result"}
+{"question": "刘正风被朝廷授予了什么官职？", "answer": "参将", "doc_chunk_id": "xajh_0325", "tool": "keyword_search", "entities": ["刘正风", "参将"], "qa_type": "action_result"}
+{"question": "刘正风的妹夫叫什么名字？", "answer": "方千驹", "doc_chunk_id": "xajh_0325", "tool": "keyword_search", "entities": ["刘正风", "方千驹"], "qa_type": "character"}
+{"question": "刘正风被皇帝封为什么官职？", "answer": "参将", "doc_chunk_id": "xajh_0326", "tool": "keyword_search", "entities": ["刘正风", "皇帝", "参将"], "qa_type": "action_result"}
+{"question": "刘正风送给张大人的圆盘中装的是什么？", "answer": "黄金", "doc_chunk_id": "xajh_0326", "tool": "keyword_search", "entities": ["刘正风", "张大人", "圆盘", "黄金"], "qa_type": "object"}
+{"question": "费彬与左冷禅是什么关系？", "answer": "第四师弟", "doc_chunk_id": "xajh_0336", "tool": "keyword_search", "entities": ["费彬", "左冷禅"], "qa_type": "relation"}
+{"question": "费彬将金盆踹成了什么样子？", "answer": "平平的一片", "doc_chunk_id": "xajh_0336", "tool": "keyword_search", "entities": ["费彬", "金盆"], "qa_type": "action_result"}
+{"question": "费彬被刘正风发现时躲在什么地方？", "answer": "屋顶", "doc_chunk_id": "xajh_0337", "tool": "keyword_search", "entities": ["费彬", "屋顶"], "qa_type": "place"}
+{"question": "刘正风是哪个门派的弟子？", "answer": "衡山派", "doc_chunk_id": "xajh_0337", "tool": "keyword_search", "entities": ["刘正风", "衡山派"], "qa_type": "character"}
+{"question": "刘正风与莫大先生是什么关系？", "answer": "师兄弟", "doc_chunk_id": "xajh_0339", "tool": "keyword_search", "entities": ["刘正风", "莫大先生"], "qa_type": "relation"}
+{"question": "费彬要求谁出来说个明白？", "answer": "莫大先生", "doc_chunk_id": "xajh_0339", "tool": "keyword_search", "entities": ["费彬", "莫大先生"], "qa_type": "character"}
+{"question": "谁被称为“当世第一高手”？", "answer": "东方不败", "doc_chunk_id": "xajh_0341", "tool": "keyword_search", "entities": ["东方不败"], "qa_type": "character"}
+{"question": "刘正风称曲洋是他生平唯一的什么？", "answer": "知己", "doc_chunk_id": "xajh_0341", "tool": "keyword_search", "entities": ["刘正风", "曲洋"], "qa_type": "relation"}
+{"question": "刘正风称曲洋是自己的什么人？", "answer": "生平唯一知己", "doc_chunk_id": "xajh_0342", "tool": "keyword_search", "entities": ["刘正风", "曲洋"], "qa_type": "relation"}
+{"question": "左冷禅要求刘正风在多长时间内杀死曲洋？", "answer": "一个月", "doc_chunk_id": "xajh_0342", "tool": "keyword_search", "entities": ["左冷禅", "刘正风", "曲洋"], "qa_type": "action_result"}
+{"question": "曲洋擅长什么乐器？", "answer": "七弦琴", "doc_chunk_id": "xajh_0343", "tool": "keyword_search", "entities": ["曲洋", "七弦琴"], "qa_type": "object"}
+{"question": "刘正风认为当世抚琴奏乐无人及得上谁？", "answer": "曲洋", "doc_chunk_id": "xajh_0343", "tool": "keyword_search", "entities": ["刘正风", "曲洋"], "qa_type": "character"}
+{"question": "刘正风通过什么方式与曲洋结交？", "answer": "吹萧", "doc_chunk_id": "xajh_0344", "tool": "keyword_search", "entities": ["刘正风", "曲洋", "吹萧"], "qa_type": "action_result"}
+{"question": "定逸师太劝刘正风对曲洋做什么？", "answer": "杀了曲洋", "doc_chunk_id": "xajh_0344", "tool": "keyword_search", "entities": ["定逸师太", "刘正风", "曲洋"], "qa_type": "action_result"}
+{"question": "刘正风是哪个门派的？", "answer": "衡山派", "doc_chunk_id": "xajh_0345", "tool": "keyword_search", "entities": ["刘正风", "衡山派"], "qa_type": "character"}
+{"question": "刘正风今日进行了什么仪式？", "answer": "金盆洗手", "doc_chunk_id": "xajh_0345", "tool": "keyword_search", "entities": ["刘正风", "金盆洗手"], "qa_type": "action_result"}
+{"question": "刘正风金盆洗手后，捐了什么官职？", "answer": "芝麻绿豆大的武官", "doc_chunk_id": "xajh_0346", "tool": "keyword_search", "entities": ["刘正风", "金盆洗手", "武官"], "qa_type": "action_result"}
+{"question": "费彬传令后，谁第一个走到左首？", "answer": "天门道人", "doc_chunk_id": "xajh_0349", "tool": "keyword_search", "entities": ["费彬", "天门道人", "左首"], "qa_type": "character"}
+{"question": "天门道人的师父死于谁之手？", "answer": "魔教一名女长老", "doc_chunk_id": "xajh_0349", "tool": "keyword_search", "entities": ["天门道人", "师父", "魔教女长老"], "qa_type": "character"}
+{"question": "刘正风与曲洋是什么关系？", "answer": "至交好友", "doc_chunk_id": "xajh_0350", "tool": "keyword_search", "entities": ["刘正风", "曲洋"], "qa_type": "relation"}
+{"question": "刘正风拒绝做什么？", "answer": "害曲洋", "doc_chunk_id": "xajh_0350", "tool": "keyword_search", "entities": ["刘正风", "曲洋", "拒绝加害"], "qa_type": "action_result"}
+{"question": "丁勉用什么暗器杀死了向大年？", "answer": "银针", "doc_chunk_id": "xajh_0352", "tool": "keyword_search", "entities": ["丁勉", "向大年", "银针"], "qa_type": "object"}
+{"question": "刘正风将向大年的尸身送到了谁胸前？", "answer": "费彬", "doc_chunk_id": "xajh_0352", "tool": "keyword_search", "entities": ["刘正风", "向大年", "费彬"], "qa_type": "character"}
+{"question": "刘正风制住费彬时使用的是哪套衡山派绝技？", "answer": "百变千幻衡山云雾十三式", "doc_chunk_id": "xajh_0353", "tool": "keyword_search", "entities": ["刘正风", "费彬", "百变千幻衡山云雾十三式"], "qa_type": "object"}
+{"question": "刘正风从费彬手中抢走了什么物品？", "answer": "五岳令旗", "doc_chunk_id": "xajh_0353", "tool": "keyword_search", "entities": ["刘正风", "费彬", "五岳令旗"], "qa_type": "object"}
+{"question": "定逸师太被谁打伤呕血？", "answer": "丁勉", "doc_chunk_id": "xajh_0357", "tool": "keyword_search", "entities": ["定逸师太", "丁勉"], "qa_type": "character"}
+{"question": "万登平一剑劈死了谁？", "answer": "刘菁", "doc_chunk_id": "xajh_0357", "tool": "keyword_search", "entities": ["万登平", "刘菁"], "qa_type": "character"}
+{"question": "刘正风最心爱的幼子叫什么名字？", "answer": "刘芹", "doc_chunk_id": "xajh_0358", "tool": "keyword_search", "entities": ["刘正风", "刘芹"], "qa_type": "character"}
+{"question": "史登达举剑威胁要削刘芹鼻子时，刘芹做了什么？", "answer": "跪倒求饶", "doc_chunk_id": "xajh_0358", "tool": "keyword_search", "entities": ["史登达", "刘芹"], "qa_type": "action_result"}
+{"question": "刘正风将什么物品掷向了陆柏？", "answer": "五岳令旗", "doc_chunk_id": "xajh_0359", "tool": "keyword_search", "entities": ["刘正风", "陆柏", "五岳令旗"], "qa_type": "object"}
+{"question": "救走刘正风的黑衣人是谁？", "answer": "曲洋", "doc_chunk_id": "xajh_0360", "tool": "keyword_search", "entities": ["刘正风", "黑衣人", "曲洋"], "qa_type": "character"}
+{"question": "曲洋在逃跑时撒出了什么暗器？", "answer": "黑血神针", "doc_chunk_id": "xajh_0360", "tool": "keyword_search", "entities": ["曲洋", "黑血神针"], "qa_type": "object"}
+{"question": "令狐冲在瀑布旁养伤时外敷的恒山派治伤圣药叫什么？", "answer": "天香断续胶", "doc_chunk_id": "xajh_0361", "tool": "keyword_search", "entities": ["令狐冲", "天香断续胶", "恒山派"], "qa_type": "object"}
+{"question": "令狐冲在瀑布旁养伤时内服了什么药物？", "answer": "白云熊胆丸", "doc_chunk_id": "xajh_0361", "tool": "keyword_search", "entities": ["令狐冲", "白云熊胆丸"], "qa_type": "object"}
+{"question": "捉萤火虫放在蚊帐里当星星的主意是谁想出来的？", "answer": "令狐冲", "doc_chunk_id": "xajh_0362", "tool": "keyword_search", "entities": ["令狐冲", "小师妹", "萤火虫", "星星"], "qa_type": "character"}
+{"question": "谁缝制了装萤火虫的纱布袋？", "answer": "小师妹", "doc_chunk_id": "xajh_0362", "tool": "keyword_search", "entities": ["小师妹", "纱布袋", "萤火虫"], "qa_type": "character"}
+{"question": "仪琳提到的在流星出现时打结许愿的习俗是从谁那里听说的？", "answer": "仪净师姊", "doc_chunk_id": "xajh_0363", "tool": "keyword_search", "entities": ["仪琳", "仪净", "流星许愿"], "qa_type": "character"}
+{"question": "仪琳在衣带上打好结后，心中在想什么？", "answer": "什么也没想", "doc_chunk_id": "xajh_0363", "tool": "keyword_search", "entities": ["仪琳", "衣带", "打结"], "qa_type": "action_result"}
+{"question": "令狐冲猜仪琳想成为什么？", "answer": "恒山派掌门", "doc_chunk_id": "xajh_0364", "tool": "keyword_search", "entities": ["令狐冲", "仪琳", "恒山派掌门"], "qa_type": "action_result"}
+{"question": "仪琳在与令狐冲看流星时手里拈着什么？", "answer": "衣带", "doc_chunk_id": "xajh_0364", "tool": "keyword_search", "entities": ["仪琳", "衣带"], "qa_type": "object"}
+{"question": "在箫声愈来愈高时，令狐冲侧头看到谁泪水涔涔而下？", "answer": "仪琳", "doc_chunk_id": "xajh_0366", "tool": "keyword_search", "entities": ["令狐冲", "仪琳"], "qa_type": "character"}
+{"question": "仪琳在令狐冲耳边低声道出的说话者是谁？", "answer": "刘正风", "doc_chunk_id": "xajh_0366", "tool": "keyword_search", "entities": ["仪琳", "刘正风", "令狐冲"], "qa_type": "character"}
+{"question": "刘正风的儿子叫什么名字？", "answer": "芹儿", "doc_chunk_id": "xajh_0367", "tool": "keyword_search", "entities": ["刘正风", "芹儿"], "qa_type": "character"}
+{"question": "曲洋原本藏身于何处？", "answer": "屋顶", "doc_chunk_id": "xajh_0367", "tool": "keyword_search", "entities": ["曲洋", "屋顶"], "qa_type": "place"}
+{"question": "曲非烟是曲洋的什么人？", "answer": "孙女", "doc_chunk_id": "xajh_0370", "tool": "keyword_search", "entities": ["曲非烟", "曲洋"], "qa_type": "relation"}
+{"question": "刘正风演奏的曲子叫什么？", "answer": "《笑傲江湖》", "doc_chunk_id": "xajh_0370", "tool": "keyword_search", "entities": ["刘正风", "笑傲江湖"], "qa_type": "object"}
+{"question": "令狐冲在华山派的身份是什么？", "answer": "大弟子", "doc_chunk_id": "xajh_0371", "tool": "keyword_search", "entities": ["令狐冲", "华山派"], "qa_type": "character"}
+{"question": "令狐冲称呼费彬为什么？", "answer": "费师叔", "doc_chunk_id": "xajh_0371", "tool": "keyword_search", "entities": ["令狐冲", "费彬"], "qa_type": "relation"}
+{"question": "令狐冲称呼费彬为什么？", "answer": "费师叔", "doc_chunk_id": "xajh_0373", "tool": "keyword_search", "entities": ["令狐冲", "费彬"], "qa_type": "relation"}
+{"question": "仪琳是哪个门派的？", "answer": "恒山派", "doc_chunk_id": "xajh_0373", "tool": "keyword_search", "entities": ["仪琳", "恒山派"], "qa_type": "character"}

@@ -5,8 +5,8 @@
   "embedding_dim": 1024,
   "faiss": true,
   "bm25": true,
-  "knowledge_graph": false,
-  "triple_count": 0,
-  "llm_max_concurrency": null,
+  "knowledge_graph": true,
+  "triple_count": 61311,
+  "llm_max_concurrency": 5,
   "reranker_model": ".\\models\\bge-reranker-v2-m3"
 }

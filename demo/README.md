@@ -248,7 +248,158 @@ uv run python .\scripts\build_index.py `
   --skip-kg
 ```
 
-去掉 `--skip-kg` 会启用知识图谱构建，需要 `.env` 中配置 `ARK_API_KEY`。`--max-concurrency` 控制同时发起的豆包三元组抽取请求数；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
+去掉 `--skip-kg` 会启用知识图谱构建，需要 `.env` 中配置在线模型供应商的 API Key。`--max-concurrency` 控制同时发起的在线 LLM 三元组抽取请求数；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
+
+如果使用 XingJianYa 在线模型抽取 KG 三元组，设置 `XINGJIANYA_API_KEY` 后执行：
+
+```powershell
+uv run python .\scripts\build_index.py `
+  --corpus .\data\novel\corpus.jsonl `
+  --index-dir .\data\novel\indexes `
+  --embedding-model .\models\bge-m3 `
+  --reranker-model .\models\bge-reranker-v2-m3 `
+  --llm-provider xingjianya `
+  --kg-model deepseek-v4-pro `
+  --max-concurrency 5
+```
+
+XingJianYa 只支持在线 OpenAI-compatible 请求，不支持 `--use-batch-inference`。
+
+如果使用 Doubao 批量推理任务抽取 KG 三元组，去掉 `--skip-kg` 并添加 `--use-batch-inference`：
+
+```powershell
+uv run python .\scripts\build_index.py `
+  --corpus .\data\novel\corpus.jsonl `
+  --index-dir .\data\novel\indexes `
+  --embedding-model .\models\bge-m3 `
+  --reranker-model .\models\bge-reranker-v2-m3 `
+  --use-batch-inference
+```
+
+批量模式不是在线并发请求，`--max-concurrency` 只影响非批量 KG 抽取。批量模式下每个 pending chunk 会写成一条 Batch Job 请求，由火山方舟调度执行；原始请求和响应备份默认保存到 `data/batch_jobs/kg/`，脚本解析后回填 `data/novel/indexes/triples_cache.jsonl` 并继续生成 KG 索引产物。`--use-batch-inference` 仅支持 `--llm-provider doubao`。
+
+### 在线模型供应商选择
+
+当前在线大模型业务支持两个 provider：
+
+| Provider | 接口 | API Key | 默认模型 | 是否支持 Batch Job |
+| --- | --- | --- | --- | --- |
+| `doubao` | 火山方舟 OpenAI-compatible | `ARK_API_KEY` | `doubao-seed-2-0-pro-260215` | 支持 |
+| `xingjianya` | `https://api.xinjianya.top/v1` OpenAI-compatible | `XINGJIANYA_API_KEY` | `deepseek-v4-pro` | 不支持 |
+
+可通过命令行选择 provider 和模型：
+
+| 业务 | provider 参数 | 模型参数 |
+| --- | --- | --- |
+| Step 2 KG 三元组抽取 | `--llm-provider xingjianya` | `--kg-model deepseek-v4-pro` |
+| Step 3 seed QA 生成 | `--llm-provider xingjianya` | `--model deepseek-v4-pro` |
+| Step 4 多跳 QA 合并 | `--llm-provider xingjianya` | `--merge-model deepseek-v4-pro` |
+| LLM-as-Judge | `--llm-provider xingjianya` | `--judge-model deepseek-v4-pro` |
+
+也可以在 `.env` 中配置默认值：
+
+```text
+XINGJIANYA_API_KEY=...
+XINGJIANYA_BASE_URL=https://api.xinjianya.top/v1
+XINGJIANYA_MODEL=deepseek-v4-pro
+XINGJIANYA_KG_MODEL=deepseek-v4-pro
+XINGJIANYA_THINKING_MODEL=deepseek-v4-pro
+XINGJIANYA_JUDGE_MODEL=deepseek-v4-pro
+```
+
+### Doubao 批量推理任务通用说明
+
+当前工程使用火山方舟[批量推理任务](https://www.volcengine.com/docs/82379/1399517?lang=zh)：脚本会生成请求 JSONL，上传到 TOS，创建 Batch Job，轮询任务状态，完成后下载 `results.jsonl/errors.jsonl`。下载后的原始请求和原始响应会作为可追溯备份保存在 `data/batch_jobs/...`；业务脚本会继续解析这些原始结果，并写入各步骤真正消费的业务执行产物。
+
+启用前需要在 `.env` 中配置火山引擎 AK/SK 和 TOS 存储桶：
+
+```text
+DOUBAO_USE_BATCH_INFERENCE=1
+VOLC_ACCESSKEY=...
+VOLC_SECRETKEY=...
+TOS_BUCKET=你的存储桶
+TOS_ENDPOINT=tos-cn-beijing.volces.com
+TOS_REGION=cn-beijing
+DOUBAO_BATCH_INPUT_PREFIX=agentic-rag-rl/batch/input/
+DOUBAO_BATCH_OUTPUT_PREFIX=agentic-rag-rl/batch/output/
+DOUBAO_BATCH_PROJECT_NAME=default
+DOUBAO_BATCH_COMPLETION_WINDOW=1d
+```
+
+如需显式指定基础模型和版本，可加：
+
+```powershell
+--batch-foundation-model doubao-seed-2-0-pro `
+--batch-model-version 260215
+```
+
+支持同一开关的业务脚本包括：
+
+| 业务 | 脚本 | 开启方式 |
+| --- | --- | --- |
+| Step 2 KG 三元组抽取 | `scripts/build_index.py` | `--use-batch-inference` |
+| Step 3 seed QA 生成 | `scripts/gen_seed_qa.py` | `--use-batch-inference` |
+| Step 4 多跳 QA 合并 | `scripts/domain_multihop_synthesis.py` | `--use-batch-inference` |
+| LLM-as-Judge | `scripts/run_llm_judge.py` | `--use-batch-inference` |
+
+批量推理任务不是在线并发请求，`--max-concurrency` 只影响非批量模式。批量模式的吞吐由火山方舟 Batch Job 调度决定；本地脚本通过 `--batch-poll-interval` 控制轮询间隔，通过 `--batch-wait-timeout` 控制最长等待时间。
+
+**Batch Job 原始备份与业务执行产物的关系**：
+
+`data/batch_jobs/...` 只保存 Batch Job 的原始请求和原始响应备份，默认包含 `requests.jsonl`、`results.jsonl`、`errors.jsonl`。这些文件用于追溯、排错和成本核对，不是后续训练、检索或评测直接消费的主文件。脚本会解析 `results.jsonl/errors.jsonl`，再转换或回填为本步骤的业务执行产物；如果手动传入 `--batch-work-dir`，原始备份目录以该参数为准。
+
+| 业务 | Batch Job 原始备份目录 | 原始备份文件 | 业务执行产物 | 后续用途 |
+| --- | --- | --- | --- | --- |
+| Step 2 KG 三元组抽取 | `data/batch_jobs/kg/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `data/novel/indexes/triples_cache.jsonl`、`knowledge_graph.json`、`entity_embeddings.pkl` | 构建 KG 索引和图检索 |
+| Step 3 seed QA 生成 | `data/batch_jobs/seed_qa/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `data/novel_eval/seeds.jsonl`、`seeds.checkpoint.jsonl`、`seeds.failed.jsonl` | Step 4 输入和 seed 审计 |
+| Step 4 多跳 QA 合并 | `data/batch_jobs/multihop_merge/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `data/novel_eval/qa_pairs.jsonl`、`qa_pairs.checkpoint.jsonl`、`qa_pairs.failed.jsonl` | SFT、GRPO 和 eval 基础 QA |
+| LLM-as-Judge | `data/batch_jobs/llm_judge/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `--output` 指定的 judged JSON，以及对应 `*_judged.checkpoint.jsonl` | 评测报告和诊断分析 |
+
+**怎么看 Batch Job 执行状态和进度**：
+
+本地脚本创建批量任务后会按固定间隔轮询任务状态，默认每 `60` 秒查询一次。日志中重点看 `batch_job.poll`：
+
+```text
+batch_job.start request_count=7898 job_name=agentic-rag-kg bucket=... input_key=... output_prefix=...
+batch_job.poll job_id=bi-... phase=Running counts=... message=...
+batch_job.poll job_id=bi-... phase=Completed counts=... message=...
+batch_job.completed job_id=bi-... status=...
+batch_job.results_loaded job_id=bi-... result_count=...
+```
+
+字段含义：
+
+| 字段 | 含义 |
+| --- | --- |
+| `job_id` | 火山方舟批量推理任务 ID，可在控制台中搜索 |
+| `phase` | 当前任务状态，例如排队、运行、完成或失败 |
+| `counts` | 方舟返回的请求统计，如果接口返回该字段，会包含请求总数、成功数、失败数等 |
+| `input_key` | 上传到 TOS 的请求 JSONL 文件路径 |
+| `output_prefix` | 方舟写回结果文件的 TOS 前缀 |
+
+如果想降低查询频率，可以加：
+
+```powershell
+--batch-poll-interval 300
+```
+
+这表示每 `300` 秒查询一次任务状态。任务完成后，脚本会从 TOS 下载原始响应备份：
+
+```text
+results.jsonl
+errors.jsonl
+```
+
+默认原始备份目录如下：
+
+| 业务 | 默认本地目录 |
+| --- | --- |
+| Step 2 KG 三元组抽取 | `data/batch_jobs/kg/` |
+| Step 3 seed QA 生成 | `data/batch_jobs/seed_qa/` |
+| Step 4 多跳 QA 合并 | `data/batch_jobs/multihop_merge/` |
+| LLM-as-Judge | `data/batch_jobs/llm_judge/` |
+
+也可以进入火山方舟控制台的批量推理任务页面，用日志中的 `job_id` 查询任务详情。控制台通常能看到更完整的任务状态、失败原因、输入 TOS 路径、输出 TOS 路径和请求统计。
 
 构建时应能看到类似日志：
 
@@ -271,6 +422,7 @@ index_save.progress stage=done output_dir=...
 - `data/novel/indexes/knowledge_graph.json`
 - `data/novel/indexes/entity_embeddings.pkl`
 - `data/novel/indexes/triples_cache.jsonl`
+- `data/batch_jobs/kg/requests.jsonl`、`results.jsonl`、`errors.jsonl`，仅使用 Doubao 批量推理任务时产生，属于 Batch Job 原始备份 / 可追溯文件
 - 后续检索服务和评测可加载 corpus 或索引产物；正式三路检索应优先加载索引产物
 
 **数据结构与字段用途**：
@@ -365,9 +517,9 @@ flowchart TD
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/gen_seed_qa.py`
 - 清洗脚本：`scripts/clean_seed_qa.py`
-- 环境文件：复制 `.env.example` 为 `.env`，填写 `ARK_API_KEY`
-- 默认 Provider：`doubao`
-- 默认模型：`doubao-seed-2-0-pro-260215`
+- 环境文件：复制 `.env.example` 为 `.env`，填写所选供应商 API Key
+- 默认 Provider：`doubao`，也可用 `--llm-provider xingjianya`
+- 默认模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，XingJianYa 使用 `deepseek-v4-pro`
 - 默认最大并发：`5`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
@@ -382,6 +534,28 @@ uv run python .\scripts\gen_seed_qa.py `
 ```
 
 `--max-concurrency` 控制同时发起的豆包请求数。默认值是 `5`；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
+
+如果使用 XingJianYa 在线模型生成 seed QA：
+
+```powershell
+uv run python .\scripts\gen_seed_qa.py `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\seeds.jsonl `
+  --llm-provider xingjianya `
+  --model deepseek-v4-pro `
+  --max-concurrency 5
+```
+
+如果使用 Doubao 批量推理任务生成 seed QA，添加 `--use-batch-inference`，不需要设置 `--max-concurrency`：
+
+```powershell
+uv run python .\scripts\gen_seed_qa.py `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\seeds.jsonl `
+  --use-batch-inference
+```
+
+批量模式下，每个 pending chunk 会写成一条 Batch Job 请求。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/seed_qa/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析模型输出，并按 corpus chunk 顺序回填业务执行产物 `data/novel_eval/seeds.jsonl`、`seeds.checkpoint.jsonl` 和 `seeds.failed.jsonl`。`seeds.jsonl` 是后续 Step 4 使用的 seed QA 主文件，不是 Batch Job 原始响应文件。
 
 生成后执行离线复洗，产出 Step 4 默认使用的 `seeds_clean.jsonl`：
 
@@ -409,6 +583,7 @@ uv run python .\scripts\gen_seed_qa.py `
 - `data/novel_eval/seeds_clean.jsonl`
 - `data/novel_eval/seeds_dropped.jsonl`
 - `data/novel_eval/seeds.failed.jsonl`，仅当部分 chunk 多次失败时产生
+- `data/batch_jobs/seed_qa/requests.jsonl`、`results.jsonl`、`errors.jsonl`，仅使用 Doubao 批量推理任务时产生，属于 Batch Job 原始备份 / 可追溯文件
 - 每条 seed 包含 `question/answer/doc_chunk_id/tool/entities/qa_type`
 - 每条 seed 的 `question/answer/qa_type/entities` 来自豆包模型，`doc_chunk_id/tool` 由脚本补齐
 - 正式训练建议使用经过质量过滤和答案精炼后的 seed 数据，而不是直接把未清洗候选 seed 进入多跳合成
@@ -597,9 +772,9 @@ flowchart TD
 - 输入：`data/novel_eval/seeds_clean.jsonl`
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/domain_multihop_synthesis.py`
-- 环境文件：`.env` 中填写 `ARK_API_KEY`
-- 默认 Provider：`doubao`
-- 默认合并模型：`doubao-seed-2-0-pro-260215`
+- 环境文件：`.env` 中填写所选供应商 API Key
+- 默认 Provider：`doubao`，也可用 `--llm-provider xingjianya`
+- 默认合并模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，XingJianYa 使用 `deepseek-v4-pro`
 - 默认最大并发：`5`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
 
@@ -616,6 +791,32 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 
 `--max-concurrency` 控制同时发起的多跳 merge LLM 请求数。默认值是 `5`；如果遇到接口限流或合并失败数上升，可以先降到 `1` 或 `2`。
 
+如果使用 XingJianYa 在线模型做多跳 QA 合并：
+
+```powershell
+uv run python .\scripts\domain_multihop_synthesis.py `
+  --seeds .\data\novel_eval\seeds_clean.jsonl `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\qa_pairs.jsonl `
+  --target-count 50 `
+  --llm-provider xingjianya `
+  --merge-model deepseek-v4-pro `
+  --max-concurrency 5
+```
+
+如果使用 Doubao 批量推理任务做多跳 QA 合并，添加 `--use-batch-inference`，不需要设置 `--max-concurrency`：
+
+```powershell
+uv run python .\scripts\domain_multihop_synthesis.py `
+  --seeds .\data\novel_eval\seeds_clean.jsonl `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\qa_pairs.jsonl `
+  --target-count 50 `
+  --use-batch-inference
+```
+
+批量模式会先构造候选 hop 链，把每条候选链的 merge prompt 写入 Batch Job。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 `final_question/final_answer/qa_type/answer_aliases`，并写入业务执行产物 `data/novel_eval/qa_pairs.jsonl` 和 checkpoint。`qa_pairs.jsonl` 是后续 SFT、GRPO 和 eval 使用的多跳 QA 主文件，不是 Batch Job 原始响应文件。默认提交候选数为 `target-count * 5`，可用 `--batch-max-candidates` 调整。
+
 失败后继续执行同一条命令即可续写；如果确认要从头合成，执行：
 
 ```powershell
@@ -631,6 +832,9 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 **能拿到的结果**：
 
 - `data/novel_eval/qa_pairs.jsonl`
+- `data/novel_eval/qa_pairs.checkpoint.jsonl`
+- `data/novel_eval/qa_pairs.failed.jsonl`，仅当部分候选链多次失败时产生
+- `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，仅使用 Doubao 批量推理任务时产生，属于 Batch Job 原始备份 / 可追溯文件
 - 每条样本包含 `final_question/final_answer/hop_count/qa_type/subset/hops/answer_aliases`
 - `hop_count >= 2`
 - 每个 hop 都有合法 `doc_chunk_id`
@@ -1252,10 +1456,35 @@ uv run python .\scripts\run_llm_judge.py `
   --max-concurrency 5
 ```
 
+如果使用 XingJianYa 在线模型跑 LLM-as-Judge：
+
+```powershell
+uv run python .\scripts\run_llm_judge.py `
+  .\results\agentic_eval.json `
+  --output .\results\agentic_eval_judged.json `
+  --llm-provider xingjianya `
+  --judge-model deepseek-v4-pro `
+  --max-concurrency 5
+```
+
+如果使用 Doubao 批量推理任务跑 LLM-as-Judge，添加 `--use-batch-inference`，不需要设置 `--max-concurrency`：
+
+```powershell
+uv run python .\scripts\run_llm_judge.py `
+  .\results\agentic_eval.json `
+  --output .\results\agentic_eval_judged.json `
+  --use-batch-inference
+```
+
+批量模式会把每条待评测样本写成一条 Batch Job 请求。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/llm_judge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 Judge JSON，并写入 `--output` 指定的 judged JSON 和对应 `*_judged.checkpoint.jsonl`；已有 `status=ok` 的样本仍会被跳过。最终报告和诊断应读取 `--output` 指定的 judged JSON，不直接读取 Batch Job 原始 `results.jsonl`。
+
 **能拿到的结果**：
 
 - `results/agentic_eval.json`
 - `results/pipeline_eval.json`
+- `results/agentic_eval_judged.json`，或 `--output` 指定的其他 judged JSON
+- `results/agentic_eval_judged.checkpoint.jsonl`，文件名前缀随 `--output` 变化
+- `data/batch_jobs/llm_judge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，仅使用 Doubao 批量推理任务时产生，属于 Batch Job 原始备份 / 可追溯文件
 - 指标包括 `EM/F1/hop_recall/tool_calls/evidence`
 - 可扩展 LLM Judge 评分，观察 correctness、faithfulness 和 context precision
 
@@ -1281,7 +1510,7 @@ Set-Location C:\Workspace\AI\Learning\AgenticRAG-RL\demo
 Copy-Item .\.env.example .\.env
 ```
 
-在 `.env` 中填写 `ARK_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
+在 `.env` 中填写所选在线模型供应商的 API Key。使用默认 Doubao 时填写 `ARK_API_KEY`；使用 XingJianYa 时填写 `XINGJIANYA_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
 
 ```powershell
 uv run python -m pytest

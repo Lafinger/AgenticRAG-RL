@@ -260,6 +260,20 @@ def _build_seed_batch(chunk: Chunk, items: list[dict[str, Any]]) -> list[dict[st
     return batch
 
 
+def build_seed_qa_messages(chunk_text: str, *, max_items: int) -> list[ChatMessage]:
+    return _build_seed_qa_messages(chunk_text, max_items=max_items)
+
+
+def parse_seed_qa_content(content: str, *, max_items: int) -> list[dict[str, Any]]:
+    records = _extract_json_array(content)
+    normalized_records, _ = clean_seed_qa_records(records, max_records=max_items)
+    return normalized_records
+
+
+def build_seed_batch(chunk: Chunk, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return _build_seed_batch(chunk, items)
+
+
 def generate_seed_qa(llm_client: LLMClient, chunk_text: str, *, max_items: int, max_attempts: int = 2) -> list[dict[str, Any]]:
     logger.info("seed_qa.start max_items=%s chunk_chars=%s", max_items, len(chunk_text))
     last_error: Exception | None = None
@@ -817,6 +831,47 @@ def _build_stepwise_example(
     }
 
 
+def build_stepwise_example_from_merge(chain: list[dict[str, Any]], merged: dict[str, Any] | None = None) -> dict[str, Any]:
+    hop_count = len(chain)
+    payload = merged or {}
+    final_answer = payload.get("final_answer") or chain[-1]["answer"]
+    final_question = payload.get("final_question") or _build_stepwise_question(chain)
+    qa_type = payload.get("qa_type") or "inference"
+    answer_aliases = payload.get("answer_aliases") or [final_answer, _first_sentence(final_answer)]
+    return {
+        "final_question": final_question,
+        "final_answer": final_answer,
+        "hop_count": hop_count,
+        "qa_type": qa_type,
+        "subset": f"{hop_count}hop_novel_stepwise",
+        "hops": [dict(hop) for hop in chain],
+        "answer_aliases": answer_aliases,
+    }
+
+
+def build_multihop_merge_messages(chain: list[dict[str, Any]]) -> list[ChatMessage]:
+    return _build_multihop_merge_messages(chain)
+
+
+def parse_multihop_merge_content(content: str) -> dict[str, Any]:
+    payload = _extract_json_object(content)
+    final_question = str(payload.get("final_question", "")).strip()
+    final_answer = str(payload.get("final_answer", "")).strip()
+    if not final_question or not final_answer:
+        raise ValueError("Multihop merge response missing final_question or final_answer.")
+    answer_aliases = payload.get("answer_aliases", [final_answer])
+    if isinstance(answer_aliases, str):
+        answer_aliases = [answer_aliases]
+    if not isinstance(answer_aliases, list):
+        answer_aliases = [final_answer]
+    return {
+        "final_question": final_question,
+        "final_answer": final_answer,
+        "qa_type": str(payload.get("qa_type", "inference")).strip() or "inference",
+        "answer_aliases": [str(alias).strip() for alias in answer_aliases if str(alias).strip()],
+    }
+
+
 def _merge_stepwise_question_with_llm(
     chain: list[dict[str, Any]],
     llm_client: LLMClient,
@@ -832,31 +887,14 @@ def _merge_stepwise_question_with_llm(
             raise
         return {}
     try:
-        payload = _extract_json_object(content)
+        payload = parse_multihop_merge_content(content)
     except Exception as exc:
         logger.exception("multihop_merge.invalid_json fallback=rule response_chars=%s", len(content))
         if raise_on_error:
             raise ValueError("Multihop merge response is not valid JSON.") from exc
         return {}
-    final_question = str(payload.get("final_question", "")).strip()
-    final_answer = str(payload.get("final_answer", "")).strip()
-    if not final_question or not final_answer:
-        logger.warning("multihop_merge.missing_required_fields keys=%s", sorted(payload))
-        if raise_on_error:
-            raise ValueError("Multihop merge response missing final_question or final_answer.")
-        return {}
-    answer_aliases = payload.get("answer_aliases", [final_answer])
-    if isinstance(answer_aliases, str):
-        answer_aliases = [answer_aliases]
-    if not isinstance(answer_aliases, list):
-        answer_aliases = [final_answer]
-    logger.info("multihop_merge.done hop_count=%s final_question_chars=%s", len(chain), len(final_question))
-    return {
-        "final_question": final_question,
-        "final_answer": final_answer,
-        "qa_type": str(payload.get("qa_type", "inference")).strip() or "inference",
-        "answer_aliases": [str(alias).strip() for alias in answer_aliases if str(alias).strip()],
-    }
+    logger.info("multihop_merge.done hop_count=%s final_question_chars=%s", len(chain), len(payload["final_question"]))
+    return payload
 
 
 def _build_multihop_merge_messages(chain: list[dict[str, Any]]) -> list[ChatMessage]:

@@ -1,14 +1,28 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 import httpx
 
 from agentic_rag_rl.llm_client import (
+    BatchChatResult,
+    DoubaoBatchJobClient,
+    DoubaoBatchJobConfig,
     DoubaoLLMClient,
+    XingJianYaLLMClient,
     create_llm_client,
+    get_doubao_batch_job_config,
     get_doubao_base_url,
     get_doubao_model,
     get_doubao_thinking_model,
+    get_doubao_use_batch_inference,
+    get_xingjianya_base_url,
+    get_xingjianya_model,
+    resolve_judge_model,
+    resolve_kg_model,
+    resolve_thinking_model,
+    split_doubao_model_version,
 )
 
 
@@ -32,6 +46,12 @@ def test_create_llm_client_returns_doubao_client() -> None:
     assert isinstance(client, DoubaoLLMClient)
 
 
+def test_create_llm_client_returns_xingjianya_client() -> None:
+    client = create_llm_client("xingjianya", api_key="test-key", transport=lambda _: "ok")
+
+    assert isinstance(client, XingJianYaLLMClient)
+
+
 def test_create_llm_client_rejects_unknown_provider() -> None:
     with pytest.raises(ValueError, match="Unsupported LLM provider"):
         create_llm_client("unknown", api_key="test-key")
@@ -42,6 +62,13 @@ def test_doubao_llm_client_requires_api_key_for_real_transport(monkeypatch) -> N
 
     with pytest.raises(ValueError, match="ARK_API_KEY"):
         DoubaoLLMClient(api_key="")
+
+
+def test_xingjianya_llm_client_requires_api_key_for_real_transport(monkeypatch) -> None:
+    monkeypatch.delenv("XINGJIANYA_API_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="XINGJIANYA_API_KEY"):
+        XingJianYaLLMClient(api_key="")
 
 
 def test_doubao_llm_client_reports_model_not_found() -> None:
@@ -61,7 +88,281 @@ def test_doubao_defaults_can_come_from_environment(monkeypatch) -> None:
     monkeypatch.setenv("DOUBAO_MODEL", "env-model")
     monkeypatch.setenv("DOUBAO_THINKING_MODEL", "env-thinking-model")
     monkeypatch.setenv("DOUBAO_BASE_URL", "https://env.example/api/v3")
+    monkeypatch.setenv("DOUBAO_USE_BATCH_INFERENCE", "true")
 
     assert get_doubao_model() == "env-model"
     assert get_doubao_thinking_model() == "env-thinking-model"
     assert get_doubao_base_url() == "https://env.example/api/v3"
+    assert get_doubao_use_batch_inference() is True
+
+
+def test_xingjianya_defaults_can_come_from_environment(monkeypatch) -> None:
+    monkeypatch.setenv("XINGJIANYA_MODEL", "env-xjy-model")
+    monkeypatch.setenv("XINGJIANYA_KG_MODEL", "env-xjy-kg")
+    monkeypatch.setenv("XINGJIANYA_THINKING_MODEL", "env-xjy-thinking")
+    monkeypatch.setenv("XINGJIANYA_JUDGE_MODEL", "env-xjy-judge")
+    monkeypatch.setenv("XINGJIANYA_BASE_URL", "https://xjy.example/v1")
+
+    assert get_xingjianya_model() == "env-xjy-model"
+    assert get_xingjianya_base_url() == "https://xjy.example/v1"
+    assert resolve_kg_model("xingjianya") == "env-xjy-kg"
+    assert resolve_thinking_model("xingjianya") == "env-xjy-thinking"
+    assert resolve_judge_model("xingjianya") == "env-xjy-judge"
+
+
+def test_doubao_online_inference_uses_chat_path(monkeypatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    def fake_post(url: str, *, headers: dict[str, str], json: dict[str, object], timeout: float) -> httpx.Response:
+        calls.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        request = httpx.Request("POST", url)
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "choices": [{"message": {"content": "ok"}}],
+                "usage": {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5},
+            },
+        )
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    client = DoubaoLLMClient(
+        api_key="test-key",
+        model="doubao-test",
+        base_url="https://online.example/api/v3",
+        timeout_seconds=123,
+    )
+
+    content = client.chat([{"role": "user", "content": "你好"}])
+
+    assert content == "ok"
+    assert calls[0]["url"] == "https://online.example/api/v3/chat/completions"
+    assert calls[0]["json"] == {
+        "model": "doubao-test",
+        "messages": [{"role": "user", "content": "你好"}],
+        "temperature": 0.2,
+    }
+    assert calls[0]["timeout"] == 123
+    assert client.last_usage == {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5}
+
+
+def test_xingjianya_online_inference_uses_openai_compatible_chat_path(monkeypatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    def fake_post(url: str, *, headers: dict[str, str], json: dict[str, object], timeout: float) -> httpx.Response:
+        calls.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        request = httpx.Request("POST", url)
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "choices": [{"message": {"content": "ok"}}],
+                "usage": {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5},
+            },
+        )
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    client = XingJianYaLLMClient(
+        api_key="sk-test",
+        model="deepseek-v4-pro",
+        base_url="https://api.xinjianya.top/v1",
+        timeout_seconds=123,
+    )
+
+    content = client.chat([{"role": "user", "content": "你好"}])
+
+    assert content == "ok"
+    assert calls[0]["url"] == "https://api.xinjianya.top/v1/chat/completions"
+    assert calls[0]["headers"]["Authorization"] == "Bearer sk-test"
+    assert calls[0]["json"] == {
+        "model": "deepseek-v4-pro",
+        "messages": [{"role": "user", "content": "你好"}],
+        "temperature": 0.2,
+    }
+    assert calls[0]["timeout"] == 123
+    assert client.last_usage == {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5}
+
+
+def test_split_doubao_model_version() -> None:
+    assert split_doubao_model_version("doubao-seed-2-0-pro-260215") == ("doubao-seed-2-0-pro", "260215")
+
+
+def test_get_doubao_batch_job_config_from_environment(monkeypatch) -> None:
+    monkeypatch.setenv("VOLC_ACCESSKEY", "ak")
+    monkeypatch.setenv("VOLC_SECRETKEY", "sk")
+    monkeypatch.setenv("TOS_BUCKET", "bucket")
+    monkeypatch.setenv("DOUBAO_MODEL", "doubao-seed-2-0-pro-260215")
+    monkeypatch.setenv("DOUBAO_BATCH_INPUT_PREFIX", "input")
+    monkeypatch.setenv("DOUBAO_BATCH_OUTPUT_PREFIX", "output")
+
+    config = get_doubao_batch_job_config()
+
+    assert config.access_key == "ak"
+    assert config.secret_key == "sk"
+    assert config.tos_bucket == "bucket"
+    assert config.input_key_prefix == "input/"
+    assert config.output_key_prefix == "output/"
+    assert config.foundation_model_name == "doubao-seed-2-0-pro"
+    assert config.foundation_model_version == "260215"
+
+
+def test_batch_job_client_writes_chat_requests(tmp_path) -> None:
+    config = DoubaoBatchJobConfig(
+        access_key="ak",
+        secret_key="sk",
+        tos_endpoint="tos.example",
+        tos_region="cn-beijing",
+        tos_bucket="bucket",
+        input_key_prefix="input/",
+        output_key_prefix="output/",
+        ark_region="cn-beijing",
+        ark_host="ark.example",
+        project_name="default",
+        completion_window="1d",
+        foundation_model_name="doubao-seed-2-0-pro",
+        foundation_model_version="260215",
+    )
+    client = DoubaoBatchJobClient(config)
+    target = tmp_path / "requests.jsonl"
+
+    client.write_chat_requests(
+        [{"custom_id": "task-1", "messages": [{"role": "user", "content": "你好"}], "temperature": 0.0}],
+        target,
+        model="doubao-seed-2-0-pro-260215",
+    )
+
+    record = json.loads(target.read_text(encoding="utf-8").strip())
+    assert record == {
+        "custom_id": "task-1",
+        "body": {
+            "model": "doubao-seed-2-0-pro-260215",
+            "messages": [{"role": "user", "content": "你好"}],
+            "temperature": 0.0,
+        },
+    }
+
+
+def test_batch_job_client_reads_openai_style_results(tmp_path) -> None:
+    config = DoubaoBatchJobConfig(
+        access_key="ak",
+        secret_key="sk",
+        tos_endpoint="tos.example",
+        tos_region="cn-beijing",
+        tos_bucket="bucket",
+        input_key_prefix="input/",
+        output_key_prefix="output/",
+        ark_region="cn-beijing",
+        ark_host="ark.example",
+        project_name="default",
+        completion_window="1d",
+        foundation_model_name="doubao-seed-2-0-pro",
+        foundation_model_version="260215",
+    )
+    client = DoubaoBatchJobClient(config)
+    target = tmp_path / "results.jsonl"
+    target.write_text(
+        json.dumps(
+            {
+                "custom_id": "task-1",
+                "response": {
+                    "status_code": 200,
+                    "body": {
+                        "choices": [{"message": {"content": "ok"}}],
+                        "usage": {"total_tokens": 5},
+                    },
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    results = client.read_result_records(target)
+
+    assert results["task-1"] == BatchChatResult(
+        custom_id="task-1",
+        content="ok",
+        usage={"total_tokens": 5},
+        raw=json.loads(target.read_text(encoding="utf-8")),
+    )
+
+
+def test_batch_job_client_creates_output_prefix_placeholder() -> None:
+    class FakeTosClient:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, str, bytes]] = []
+
+        def put_object(self, bucket: str, key: str, content: bytes) -> None:
+            self.calls.append((bucket, key, content))
+
+    config = DoubaoBatchJobConfig(
+        access_key="ak",
+        secret_key="sk",
+        tos_endpoint="tos.example",
+        tos_region="cn-beijing",
+        tos_bucket="bucket",
+        input_key_prefix="input/",
+        output_key_prefix="output/",
+        ark_region="cn-beijing",
+        ark_host="ark.example",
+        project_name="default",
+        completion_window="1d",
+        foundation_model_name="doubao-seed-2-0-pro",
+        foundation_model_version="260215",
+    )
+    fake_tos = FakeTosClient()
+    client = DoubaoBatchJobClient(config, tos_client=fake_tos)
+
+    client.ensure_output_prefix("output/job-1")
+
+    assert fake_tos.calls == [("bucket", "output/job-1/", b"")]
+
+
+def test_batch_job_download_outputs_merges_existing_results(tmp_path) -> None:
+    class FakeTosClient:
+        def get_object_to_file(self, bucket: str, key: str, file_path: str) -> None:
+            records = {
+                "output/run-2/bi-2/output/results.jsonl": [
+                    {"custom_id": "task-2", "response": {"body": {"choices": [{"message": {"content": "new"}}]}}},
+                    {"custom_id": "task-4", "response": {"body": {"choices": [{"message": {"content": "extra"}}]}}},
+                ],
+                "output/run-2/bi-2/error/errors.jsonl": [],
+            }[key]
+            with open(file_path, "w", encoding="utf-8", newline="") as handle:
+                for record in records:
+                    handle.write(json.dumps(record, ensure_ascii=False))
+                    handle.write("\r\n")
+
+    config = DoubaoBatchJobConfig(
+        access_key="ak",
+        secret_key="sk",
+        tos_endpoint="tos.example",
+        tos_region="cn-beijing",
+        tos_bucket="bucket",
+        input_key_prefix="input/",
+        output_key_prefix="output/",
+        ark_region="cn-beijing",
+        ark_host="ark.example",
+        project_name="default",
+        completion_window="1d",
+        foundation_model_name="doubao-seed-2-0-pro",
+        foundation_model_version="260215",
+    )
+    client = DoubaoBatchJobClient(config, tos_client=FakeTosClient())
+    existing = [
+        {"custom_id": "task-1", "response": {"body": {"choices": [{"message": {"content": "old-1"}}]}}},
+        {"custom_id": "task-2", "response": {"body": {"choices": [{"message": {"content": "old-2"}}]}}},
+        {"custom_id": "task-3", "response": {"body": {"choices": [{"message": {"content": "old-3"}}]}}},
+    ]
+    results_path = tmp_path / "results.jsonl"
+    with results_path.open("w", encoding="utf-8", newline="") as handle:
+        for record in existing:
+            handle.write(json.dumps(record, ensure_ascii=False))
+            handle.write("\r\n")
+
+    client.download_outputs("bi-2", "output/run-2/", tmp_path, request_order=["task-2", "task-4"])
+
+    records = [json.loads(line) for line in results_path.read_text(encoding="utf-8").splitlines()]
+    assert [record["custom_id"] for record in records] == ["task-1", "task-2", "task-3", "task-4"]
+    assert records[1]["response"]["body"]["choices"][0]["message"]["content"] == "new"
+    assert (tmp_path / "results.bi-2.jsonl").exists()

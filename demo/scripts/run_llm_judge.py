@@ -28,9 +28,14 @@ llm_client_module = load_project_module("agentic_rag_rl_llm_client_for_judge", S
 
 load_env_file = env_module.load_env_file
 DEFAULT_LLM_PROVIDER = llm_client_module.DEFAULT_LLM_PROVIDER
+LLM_PROVIDER_CHOICES = llm_client_module.LLM_PROVIDER_CHOICES
+create_batch_job_client = llm_client_module.create_batch_job_client
 create_llm_client = llm_client_module.create_llm_client
-get_doubao_base_url = llm_client_module.get_doubao_base_url
-get_doubao_judge_model = llm_client_module.get_doubao_judge_model
+get_doubao_batch_job_config = llm_client_module.get_doubao_batch_job_config
+get_doubao_use_batch_inference = llm_client_module.get_doubao_use_batch_inference
+resolve_judge_model = llm_client_module.resolve_judge_model
+resolve_llm_base_url = llm_client_module.resolve_llm_base_url
+split_doubao_model_version = llm_client_module.split_doubao_model_version
 
 
 JUDGE_SYSTEM_PROMPT = """你是一个严格的中文阅读理解评测裁判。你需要判断模型回答是否和标准答案语义一致，并只输出 JSON。
@@ -45,15 +50,31 @@ JUDGE_SYSTEM_PROMPT = """你是一个严格的中文阅读理解评测裁判。�
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run Doubao LLM-as-Judge on evaluation results.")
+    parser = argparse.ArgumentParser(description="Run LLM-as-Judge on evaluation results.")
     parser.add_argument("results_file", help="Eval JSON file with summary/results.")
     parser.add_argument("--output")
     parser.add_argument("--env-file", default=str(ROOT / ".env"))
-    parser.add_argument("--llm-provider", default=DEFAULT_LLM_PROVIDER, choices=["doubao"])
-    parser.add_argument("--judge-model", help="Defaults to DOUBAO_JUDGE_MODEL or DOUBAO_THINKING_MODEL.")
+    parser.add_argument("--llm-provider", default=DEFAULT_LLM_PROVIDER, choices=LLM_PROVIDER_CHOICES)
+    parser.add_argument("--judge-model", help="Judge model for the selected provider.")
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
     parser.add_argument("--timeout-seconds", type=float)
+    parser.add_argument(
+        "--use-batch-inference",
+        action="store_true",
+        help="Use Doubao Batch Inference Job API for LLM judge.",
+    )
+    parser.add_argument("--batch-foundation-model", help="Foundation model name for Batch Job, e.g. doubao-seed-2-0-pro.")
+    parser.add_argument("--batch-model-version", help="Foundation model version for Batch Job, e.g. 260215.")
+    parser.add_argument("--batch-custom-model-id", help="Custom model ID for Batch Job. Overrides foundation model.")
+    parser.add_argument("--batch-tos-bucket", help="TOS bucket for Batch Job input and output.")
+    parser.add_argument("--batch-input-prefix", help="TOS input object key prefix for Batch Job JSONL files.")
+    parser.add_argument("--batch-output-prefix", help="TOS output object key prefix for Batch Job results.")
+    parser.add_argument("--batch-project-name", help="Volcengine project name for Batch Job.")
+    parser.add_argument("--batch-completion-window", help="Batch Job completion window, e.g. 1d.")
+    parser.add_argument("--batch-poll-interval", type=float, default=60.0, help="Seconds between Batch Job status polls.")
+    parser.add_argument("--batch-wait-timeout", type=float, help="Maximum seconds to wait for Batch Job completion.")
+    parser.add_argument("--batch-work-dir", default=str(ROOT / "data" / "batch_jobs" / "llm_judge"), help="Local Batch Job work dir.")
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-attempts", type=int, default=2)
@@ -246,6 +267,9 @@ def main() -> None:
     if args.max_concurrency < 1:
         raise SystemExit("--max-concurrency must be >= 1.")
     load_env_file(args.env_file)
+    batch_inference_enabled = get_doubao_use_batch_inference(args.use_batch_inference)
+    if batch_inference_enabled and args.llm_provider != "doubao":
+        raise SystemExit("--use-batch-inference only supports --llm-provider doubao.")
     payload = json.loads(Path(args.results_file).read_text(encoding="utf-8"))
     input_results = payload["results"]
     if args.max_samples is not None:
@@ -257,15 +281,7 @@ def main() -> None:
     if args.overwrite and checkpoint_path.exists():
         checkpoint_path.unlink()
 
-    judge_model = get_doubao_judge_model(args.judge_model)
-    client = create_llm_client(
-        args.llm_provider,
-        api_key=args.api_key,
-        model=judge_model,
-        base_url=get_doubao_base_url(args.base_url),
-        timeout_seconds=args.timeout_seconds,
-    )
-
+    judge_model = resolve_judge_model(args.llm_provider, args.judge_model)
     checkpoint = {} if args.overwrite else load_checkpoint(checkpoint_path)
     successes = {
         index: record["item"]
@@ -289,6 +305,76 @@ def main() -> None:
     print(
         f"judge_resume success={len(successes)} failed_to_retry={len(failures)} "
         f"pending={len(pending_items)} checkpoint={checkpoint_path}"
+    )
+    if batch_inference_enabled:
+        default_batch_name, default_batch_version = split_doubao_model_version(judge_model)
+        batch_config = get_doubao_batch_job_config(
+            foundation_model_name=args.batch_foundation_model or default_batch_name,
+            foundation_model_version=args.batch_model_version or default_batch_version,
+            custom_model_id=args.batch_custom_model_id,
+            tos_bucket=args.batch_tos_bucket,
+            input_key_prefix=args.batch_input_prefix,
+            output_key_prefix=args.batch_output_prefix,
+            project_name=args.batch_project_name,
+            completion_window=args.batch_completion_window,
+        )
+        batch_client = create_batch_job_client(batch_config)
+        requests = [
+            {
+                "custom_id": str(index),
+                "messages": [
+                    {"role": "system", "content": JUDGE_SYSTEM_PROMPT},
+                    {"role": "user", "content": build_user_prompt(item)},
+                ],
+                "temperature": args.temperature,
+            }
+            for index, item in pending_items
+        ]
+        results = batch_client.run_chat_batch(
+            requests,
+            local_dir=args.batch_work_dir,
+            job_name="agentic-rag-llm-judge",
+            model=judge_model,
+            poll_interval_seconds=args.batch_poll_interval,
+            wait_timeout_seconds=args.batch_wait_timeout,
+        )
+        for completed_count, (index, item) in enumerate(pending_items, start=1):
+            judged_item = dict(item)
+            try:
+                result = results.get(str(index))
+                if result is None:
+                    raise RuntimeError("Batch job result missing for judge item.")
+                judged_item["judge"] = parse_judge_json(result.content)
+                judged_item["judge"]["raw_judge_response"] = result.content
+            except Exception as exc:
+                judged_item["judge_error"] = {"type": type(exc).__name__, "message": str(exc)}
+                failures[index] = judged_item
+                append_checkpoint(checkpoint_path, {"index": index, "status": "failed", "item": judged_item})
+                if args.fail_fast:
+                    raise
+            else:
+                successes[index] = judged_item
+                failures.pop(index, None)
+                append_checkpoint(checkpoint_path, {"index": index, "status": "ok", "item": judged_item})
+            write_output(
+                output_path,
+                provider=args.llm_provider,
+                model=judge_model,
+                successes=successes,
+                failures=failures,
+            )
+            print(f"judge_progress completed={completed_count}/{len(pending_items)} success={len(successes)} failed={len(failures)}")
+        final_payload = json.loads(output_path.read_text(encoding="utf-8"))
+        summary = final_payload["summary"]
+        print(json.dumps({"summary": summary, "output": str(output_path)}, ensure_ascii=False, indent=2))
+        return
+
+    client = create_llm_client(
+        args.llm_provider,
+        api_key=args.api_key,
+        model=judge_model,
+        base_url=resolve_llm_base_url(args.llm_provider, args.base_url),
+        timeout_seconds=args.timeout_seconds,
     )
     if args.max_concurrency == 1:
         for index, item in pending_items:
