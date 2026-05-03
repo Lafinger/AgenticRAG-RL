@@ -265,6 +265,21 @@ uv run python .\scripts\build_index.py `
 
 XingJianYa 只支持在线 OpenAI-compatible 请求，不支持 `--use-batch-inference`。
 
+如果使用 RightCode 在线模型抽取 KG 三元组，设置 `RIGHTCODE_API_KEY` 后执行：
+
+```powershell
+uv run python .\scripts\build_index.py `
+  --corpus .\data\novel\corpus.jsonl `
+  --index-dir .\data\novel\indexes `
+  --embedding-model .\models\bge-m3 `
+  --reranker-model .\models\bge-reranker-v2-m3 `
+  --llm-provider rightcode `
+  --kg-model gpt-5.5 `
+  --max-concurrency 5
+```
+
+RightCode 只支持在线 OpenAI-compatible 请求，不支持 `--use-batch-inference`。
+
 如果使用 Doubao 批量推理任务抽取 KG 三元组，去掉 `--skip-kg` 并添加 `--use-batch-inference`：
 
 ```powershell
@@ -280,12 +295,13 @@ uv run python .\scripts\build_index.py `
 
 ### 在线模型供应商选择
 
-当前在线大模型业务支持两个 provider：
+当前在线大模型业务支持三个 provider：
 
 | Provider | 接口 | API Key | 默认模型 | 是否支持 Batch Job |
 | --- | --- | --- | --- | --- |
 | `doubao` | 火山方舟 OpenAI-compatible | `ARK_API_KEY` | `doubao-seed-2-0-pro-260215` | 支持 |
 | `xingjianya` | `https://api.xinjianya.top/v1` OpenAI-compatible | `XINGJIANYA_API_KEY` | `deepseek-v4-pro` | 不支持 |
+| `rightcode` | `https://api.right.codes/v1` OpenAI-compatible | `RIGHTCODE_API_KEY` | `gpt-5.5` | 不支持 |
 
 可通过命令行选择 provider 和模型：
 
@@ -295,6 +311,10 @@ uv run python .\scripts\build_index.py `
 | Step 3 seed QA 生成 | `--llm-provider xingjianya` | `--model deepseek-v4-pro` |
 | Step 4 多跳 QA 合并 | `--llm-provider xingjianya` | `--merge-model deepseek-v4-pro` |
 | LLM-as-Judge | `--llm-provider xingjianya` | `--judge-model deepseek-v4-pro` |
+| Step 2 KG 三元组抽取 | `--llm-provider rightcode` | `--kg-model gpt-5.5` |
+| Step 3 seed QA 生成 | `--llm-provider rightcode` | `--model gpt-5.5` |
+| Step 4 多跳 QA 合并 | `--llm-provider rightcode` | `--merge-model gpt-5.5` |
+| LLM-as-Judge | `--llm-provider rightcode` | `--judge-model gpt-5.5` |
 
 也可以在 `.env` 中配置默认值：
 
@@ -305,6 +325,12 @@ XINGJIANYA_MODEL=deepseek-v4-pro
 XINGJIANYA_KG_MODEL=deepseek-v4-pro
 XINGJIANYA_THINKING_MODEL=deepseek-v4-pro
 XINGJIANYA_JUDGE_MODEL=deepseek-v4-pro
+RIGHTCODE_API_KEY=...
+RIGHTCODE_BASE_URL=https://api.right.codes/v1
+RIGHTCODE_MODEL=gpt-5.5
+RIGHTCODE_KG_MODEL=gpt-5.5
+RIGHTCODE_THINKING_MODEL=gpt-5.5
+RIGHTCODE_JUDGE_MODEL=gpt-5.5
 ```
 
 ### Doubao 批量推理任务通用说明
@@ -518,8 +544,8 @@ flowchart TD
 - 脚本：`scripts/gen_seed_qa.py`
 - 清洗脚本：`scripts/clean_seed_qa.py`
 - 环境文件：复制 `.env.example` 为 `.env`，填写所选供应商 API Key
-- 默认 Provider：`doubao`，也可用 `--llm-provider xingjianya`
-- 默认模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，XingJianYa 使用 `deepseek-v4-pro`
+- 默认 Provider：`doubao`，也可用 `--llm-provider xingjianya` 或 `--llm-provider rightcode`
+- 默认模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，XingJianYa 使用 `deepseek-v4-pro`，RightCode 使用 `gpt-5.5`
 - 默认最大并发：`5`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
@@ -543,6 +569,17 @@ uv run python .\scripts\gen_seed_qa.py `
   --output .\data\novel_eval\seeds.jsonl `
   --llm-provider xingjianya `
   --model deepseek-v4-pro `
+  --max-concurrency 5
+```
+
+如果使用 RightCode 在线模型生成 seed QA：
+
+```powershell
+uv run python .\scripts\gen_seed_qa.py `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\seeds.jsonl `
+  --llm-provider rightcode `
+  --model gpt-5.5 `
   --max-concurrency 5
 ```
 
@@ -773,8 +810,8 @@ flowchart TD
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/domain_multihop_synthesis.py`
 - 环境文件：`.env` 中填写所选供应商 API Key
-- 默认 Provider：`doubao`，也可用 `--llm-provider xingjianya`
-- 默认合并模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，XingJianYa 使用 `deepseek-v4-pro`
+- 默认 Provider：`doubao`，也可用 `--llm-provider xingjianya` 或 `--llm-provider rightcode`
+- 默认合并模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，XingJianYa 使用 `deepseek-v4-pro`，RightCode 使用 `gpt-5.5`
 - 默认最大并发：`5`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
 
@@ -801,6 +838,19 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --target-count 50 `
   --llm-provider xingjianya `
   --merge-model deepseek-v4-pro `
+  --max-concurrency 5
+```
+
+如果使用 RightCode 在线模型做多跳 QA 合并：
+
+```powershell
+uv run python .\scripts\domain_multihop_synthesis.py `
+  --seeds .\data\novel_eval\seeds_clean.jsonl `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\qa_pairs.jsonl `
+  --target-count 50 `
+  --llm-provider rightcode `
+  --merge-model gpt-5.5 `
   --max-concurrency 5
 ```
 
@@ -1467,6 +1517,17 @@ uv run python .\scripts\run_llm_judge.py `
   --max-concurrency 5
 ```
 
+如果使用 RightCode 在线模型跑 LLM-as-Judge：
+
+```powershell
+uv run python .\scripts\run_llm_judge.py `
+  .\results\agentic_eval.json `
+  --output .\results\agentic_eval_judged.json `
+  --llm-provider rightcode `
+  --judge-model gpt-5.5 `
+  --max-concurrency 5
+```
+
 如果使用 Doubao 批量推理任务跑 LLM-as-Judge，添加 `--use-batch-inference`，不需要设置 `--max-concurrency`：
 
 ```powershell
@@ -1510,7 +1571,7 @@ Set-Location C:\Workspace\AI\Learning\AgenticRAG-RL\demo
 Copy-Item .\.env.example .\.env
 ```
 
-在 `.env` 中填写所选在线模型供应商的 API Key。使用默认 Doubao 时填写 `ARK_API_KEY`；使用 XingJianYa 时填写 `XINGJIANYA_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
+在 `.env` 中填写所选在线模型供应商的 API Key。使用默认 Doubao 时填写 `ARK_API_KEY`；使用 XingJianYa 时填写 `XINGJIANYA_API_KEY`；使用 RightCode 时填写 `RIGHTCODE_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
 
 ```powershell
 uv run python -m pytest

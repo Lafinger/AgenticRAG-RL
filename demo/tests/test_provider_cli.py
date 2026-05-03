@@ -14,7 +14,7 @@ def run_help(script: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_llm_business_scripts_accept_xingjianya_provider() -> None:
+def test_llm_business_scripts_accept_rightcode_provider() -> None:
     scripts = [
         "scripts/build_index.py",
         "scripts/gen_seed_qa.py",
@@ -25,7 +25,7 @@ def test_llm_business_scripts_accept_xingjianya_provider() -> None:
     for script in scripts:
         result = run_help(script)
         assert result.returncode == 0
-        assert "doubao,xingjianya" in result.stdout
+        assert "doubao,xingjianya,rightcode" in result.stdout
 
 
 def test_build_index_rejects_xingjianya_batch_inference() -> None:
@@ -41,6 +41,31 @@ def test_build_index_rejects_xingjianya_batch_inference() -> None:
             "BAAI/bge-m3",
             "--llm-provider",
             "xingjianya",
+            "--use-batch-inference",
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "--use-batch-inference only supports --llm-provider doubao" in result.stderr
+
+
+def test_build_index_rejects_rightcode_batch_inference() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/build_index.py",
+            "--corpus",
+            "missing.jsonl",
+            "--index-dir",
+            "indexes",
+            "--embedding-model",
+            "BAAI/bge-m3",
+            "--llm-provider",
+            "rightcode",
             "--use-batch-inference",
         ],
         capture_output=True,

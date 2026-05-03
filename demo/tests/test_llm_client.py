@@ -10,6 +10,7 @@ from agentic_rag_rl.llm_client import (
     DoubaoBatchJobClient,
     DoubaoBatchJobConfig,
     DoubaoLLMClient,
+    RightCodeLLMClient,
     XingJianYaLLMClient,
     create_llm_client,
     get_doubao_batch_job_config,
@@ -17,6 +18,8 @@ from agentic_rag_rl.llm_client import (
     get_doubao_model,
     get_doubao_thinking_model,
     get_doubao_use_batch_inference,
+    get_rightcode_base_url,
+    get_rightcode_model,
     get_xingjianya_base_url,
     get_xingjianya_model,
     resolve_judge_model,
@@ -52,6 +55,12 @@ def test_create_llm_client_returns_xingjianya_client() -> None:
     assert isinstance(client, XingJianYaLLMClient)
 
 
+def test_create_llm_client_returns_rightcode_client() -> None:
+    client = create_llm_client("rightcode", api_key="test-key", transport=lambda _: "ok")
+
+    assert isinstance(client, RightCodeLLMClient)
+
+
 def test_create_llm_client_rejects_unknown_provider() -> None:
     with pytest.raises(ValueError, match="Unsupported LLM provider"):
         create_llm_client("unknown", api_key="test-key")
@@ -69,6 +78,13 @@ def test_xingjianya_llm_client_requires_api_key_for_real_transport(monkeypatch) 
 
     with pytest.raises(ValueError, match="XINGJIANYA_API_KEY"):
         XingJianYaLLMClient(api_key="")
+
+
+def test_rightcode_llm_client_requires_api_key_for_real_transport(monkeypatch) -> None:
+    monkeypatch.delenv("RIGHTCODE_API_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="RIGHTCODE_API_KEY"):
+        RightCodeLLMClient(api_key="")
 
 
 def test_doubao_llm_client_reports_model_not_found() -> None:
@@ -108,6 +124,20 @@ def test_xingjianya_defaults_can_come_from_environment(monkeypatch) -> None:
     assert resolve_kg_model("xingjianya") == "env-xjy-kg"
     assert resolve_thinking_model("xingjianya") == "env-xjy-thinking"
     assert resolve_judge_model("xingjianya") == "env-xjy-judge"
+
+
+def test_rightcode_defaults_can_come_from_environment(monkeypatch) -> None:
+    monkeypatch.setenv("RIGHTCODE_MODEL", "env-rc-model")
+    monkeypatch.setenv("RIGHTCODE_KG_MODEL", "env-rc-kg")
+    monkeypatch.setenv("RIGHTCODE_THINKING_MODEL", "env-rc-thinking")
+    monkeypatch.setenv("RIGHTCODE_JUDGE_MODEL", "env-rc-judge")
+    monkeypatch.setenv("RIGHTCODE_BASE_URL", "https://rc.example/v1")
+
+    assert get_rightcode_model() == "env-rc-model"
+    assert get_rightcode_base_url() == "https://rc.example/v1"
+    assert resolve_kg_model("rightcode") == "env-rc-kg"
+    assert resolve_thinking_model("rightcode") == "env-rc-thinking"
+    assert resolve_judge_model("rightcode") == "env-rc-judge"
 
 
 def test_doubao_online_inference_uses_chat_path(monkeypatch) -> None:
@@ -176,6 +206,43 @@ def test_xingjianya_online_inference_uses_openai_compatible_chat_path(monkeypatc
     assert calls[0]["headers"]["Authorization"] == "Bearer sk-test"
     assert calls[0]["json"] == {
         "model": "deepseek-v4-pro",
+        "messages": [{"role": "user", "content": "你好"}],
+        "temperature": 0.2,
+    }
+    assert calls[0]["timeout"] == 123
+    assert client.last_usage == {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5}
+
+
+def test_rightcode_online_inference_uses_openai_compatible_chat_path(monkeypatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    def fake_post(url: str, *, headers: dict[str, str], json: dict[str, object], timeout: float) -> httpx.Response:
+        calls.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        request = httpx.Request("POST", url)
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "choices": [{"message": {"content": "ok"}}],
+                "usage": {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5},
+            },
+        )
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    client = RightCodeLLMClient(
+        api_key="sk-test",
+        model="gpt-5.5",
+        base_url="https://api.right.codes/v1",
+        timeout_seconds=123,
+    )
+
+    content = client.chat([{"role": "user", "content": "你好"}])
+
+    assert content == "ok"
+    assert calls[0]["url"] == "https://api.right.codes/v1/chat/completions"
+    assert calls[0]["headers"]["Authorization"] == "Bearer sk-test"
+    assert calls[0]["json"] == {
+        "model": "gpt-5.5",
         "messages": [{"role": "user", "content": "你好"}],
         "temperature": 0.2,
     }

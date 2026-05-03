@@ -13,7 +13,7 @@ import httpx
 
 
 DEFAULT_LLM_PROVIDER = "doubao"
-LLM_PROVIDER_CHOICES = ("doubao", "xingjianya")
+LLM_PROVIDER_CHOICES = ("doubao", "xingjianya", "rightcode")
 DEFAULT_DOUBAO_MODEL = "doubao-seed-2-0-pro-260215"
 DEFAULT_DOUBAO_THINKING_MODEL = "doubao-seed-2-0-pro-260215"
 DEFAULT_DOUBAO_JUDGE_MODEL = DEFAULT_DOUBAO_THINKING_MODEL
@@ -21,6 +21,8 @@ DEFAULT_DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 DOUBAO_CHAT_COMPLETIONS_PATH = "/chat/completions"
 DEFAULT_XINGJIANYA_MODEL = "deepseek-v4-pro"
 DEFAULT_XINGJIANYA_BASE_URL = "https://api.xinjianya.top/v1"
+DEFAULT_RIGHTCODE_MODEL = "gpt-5.5"
+DEFAULT_RIGHTCODE_BASE_URL = "https://api.right.codes/v1"
 OPENAI_CHAT_COMPLETIONS_PATH = "/chat/completions"
 TRUTHY_ENV_VALUES = {"1", "true", "yes", "y", "on"}
 DEFAULT_DOUBAO_BATCH_REGION = "cn-beijing"
@@ -99,6 +101,14 @@ def create_llm_client(
             timeout_seconds=timeout_seconds,
             transport=transport,
         )
+    if normalized_provider == "rightcode":
+        return RightCodeLLMClient(
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            timeout_seconds=timeout_seconds,
+            transport=transport,
+        )
     else:
         raise ValueError(f"Unsupported LLM provider: {provider}")
 
@@ -153,6 +163,36 @@ def get_xingjianya_base_url(explicit_base_url: str | None = None) -> str:
     return explicit_base_url or os.getenv("XINGJIANYA_BASE_URL") or DEFAULT_XINGJIANYA_BASE_URL
 
 
+def get_rightcode_model(explicit_model: str | None = None) -> str:
+    return explicit_model or os.getenv("RIGHTCODE_MODEL") or DEFAULT_RIGHTCODE_MODEL
+
+
+def get_rightcode_kg_model(explicit_model: str | None = None) -> str:
+    return explicit_model or os.getenv("RIGHTCODE_KG_MODEL") or os.getenv("RIGHTCODE_MODEL") or DEFAULT_RIGHTCODE_MODEL
+
+
+def get_rightcode_thinking_model(explicit_model: str | None = None) -> str:
+    return (
+        explicit_model
+        or os.getenv("RIGHTCODE_THINKING_MODEL")
+        or os.getenv("RIGHTCODE_MODEL")
+        or DEFAULT_RIGHTCODE_MODEL
+    )
+
+
+def get_rightcode_judge_model(explicit_model: str | None = None) -> str:
+    return (
+        explicit_model
+        or os.getenv("RIGHTCODE_JUDGE_MODEL")
+        or os.getenv("RIGHTCODE_MODEL")
+        or DEFAULT_RIGHTCODE_MODEL
+    )
+
+
+def get_rightcode_base_url(explicit_base_url: str | None = None) -> str:
+    return explicit_base_url or os.getenv("RIGHTCODE_BASE_URL") or DEFAULT_RIGHTCODE_BASE_URL
+
+
 def normalize_llm_provider(provider: str | None) -> str:
     normalized = (provider or DEFAULT_LLM_PROVIDER).strip().lower()
     if normalized not in LLM_PROVIDER_CHOICES:
@@ -164,35 +204,45 @@ def resolve_llm_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
     if normalized_provider == "doubao":
         return get_doubao_model(explicit_model)
-    return get_xingjianya_model(explicit_model)
+    if normalized_provider == "xingjianya":
+        return get_xingjianya_model(explicit_model)
+    return get_rightcode_model(explicit_model)
 
 
 def resolve_kg_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
     if normalized_provider == "doubao":
         return explicit_model or os.getenv("KG_EXTRACTION_MODEL") or DEFAULT_DOUBAO_MODEL
-    return get_xingjianya_kg_model(explicit_model)
+    if normalized_provider == "xingjianya":
+        return get_xingjianya_kg_model(explicit_model)
+    return get_rightcode_kg_model(explicit_model)
 
 
 def resolve_thinking_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
     if normalized_provider == "doubao":
         return get_doubao_thinking_model(explicit_model)
-    return get_xingjianya_thinking_model(explicit_model)
+    if normalized_provider == "xingjianya":
+        return get_xingjianya_thinking_model(explicit_model)
+    return get_rightcode_thinking_model(explicit_model)
 
 
 def resolve_judge_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
     if normalized_provider == "doubao":
         return get_doubao_judge_model(explicit_model)
-    return get_xingjianya_judge_model(explicit_model)
+    if normalized_provider == "xingjianya":
+        return get_xingjianya_judge_model(explicit_model)
+    return get_rightcode_judge_model(explicit_model)
 
 
 def resolve_llm_base_url(provider: str, explicit_base_url: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
     if normalized_provider == "doubao":
         return get_doubao_base_url(explicit_base_url)
-    return get_xingjianya_base_url(explicit_base_url)
+    if normalized_provider == "xingjianya":
+        return get_xingjianya_base_url(explicit_base_url)
+    return get_rightcode_base_url(explicit_base_url)
 
 
 def get_doubao_use_batch_inference(explicit_enabled: bool = False) -> bool:
@@ -253,11 +303,19 @@ def get_xingjianya_timeout(explicit_timeout: float | None = None) -> float:
     return float(os.getenv("XINGJIANYA_TIMEOUT_SECONDS") or os.getenv("DOUBAO_TIMEOUT_SECONDS", "60"))
 
 
+def get_rightcode_timeout(explicit_timeout: float | None = None) -> float:
+    if explicit_timeout is not None:
+        return explicit_timeout
+    return float(os.getenv("RIGHTCODE_TIMEOUT_SECONDS") or os.getenv("DOUBAO_TIMEOUT_SECONDS", "60"))
+
+
 def resolve_llm_timeout(provider: str, explicit_timeout: float | None = None) -> float:
     normalized_provider = normalize_llm_provider(provider)
     if normalized_provider == "doubao":
         return get_doubao_timeout(explicit_timeout)
-    return get_xingjianya_timeout(explicit_timeout)
+    if normalized_provider == "xingjianya":
+        return get_xingjianya_timeout(explicit_timeout)
+    return get_rightcode_timeout(explicit_timeout)
 
 
 def _read_api_key(explicit_api_key: str | None = None) -> str:
@@ -271,6 +329,13 @@ def _read_xingjianya_api_key(explicit_api_key: str | None = None) -> str:
     api_key = explicit_api_key or os.getenv("XINGJIANYA_API_KEY") or ""
     if not api_key.strip():
         raise ValueError("XingJianYa API key is required. Set XINGJIANYA_API_KEY or pass --api-key.")
+    return api_key.strip()
+
+
+def _read_rightcode_api_key(explicit_api_key: str | None = None) -> str:
+    api_key = explicit_api_key or os.getenv("RIGHTCODE_API_KEY") or ""
+    if not api_key.strip():
+        raise ValueError("RightCode API key is required. Set RIGHTCODE_API_KEY or pass --api-key.")
     return api_key.strip()
 
 
@@ -316,8 +381,10 @@ class OpenAICompatibleLLMClient:
         self.provider = normalize_llm_provider(provider)
         if self.provider == "doubao":
             self.api_key = _read_api_key(api_key) if transport is None else (api_key or "test-key")
-        else:
+        elif self.provider == "xingjianya":
             self.api_key = _read_xingjianya_api_key(api_key) if transport is None else (api_key or "test-key")
+        else:
+            self.api_key = _read_rightcode_api_key(api_key) if transport is None else (api_key or "test-key")
         self.model = resolve_llm_model(self.provider, model)
         self.base_url = resolve_llm_base_url(self.provider, base_url).rstrip("/")
         self.completions_path = completions_path
@@ -417,6 +484,26 @@ class XingJianYaLLMClient(OpenAICompatibleLLMClient):
     ) -> None:
         super().__init__(
             provider="xingjianya",
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            timeout_seconds=timeout_seconds,
+            completions_path=OPENAI_CHAT_COMPLETIONS_PATH,
+            transport=transport,
+        )
+
+
+class RightCodeLLMClient(OpenAICompatibleLLMClient):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str | None = None,
+        base_url: str | None = None,
+        timeout_seconds: float | None = None,
+        transport: Callable[[list[ChatMessage]], str] | None = None,
+    ) -> None:
+        super().__init__(
+            provider="rightcode",
             api_key=api_key,
             model=model,
             base_url=base_url,
