@@ -139,6 +139,16 @@ class SlowSeedLLMClient:
                 self.active_calls -= 1
 
 
+class InterruptSeedLLMClient:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del messages, temperature
+        self.calls += 1
+        raise KeyboardInterrupt()
+
+
 def test_generate_seed_questions_uses_llm_client() -> None:
     chunks = load_chunks(DATA_DIR / "corpus.jsonl")
     client = FakeLLMClient()
@@ -180,6 +190,18 @@ def test_iter_seed_question_batches_respects_max_concurrency() -> None:
     assert client.calls == 4
     assert client.max_active_calls == 2
     assert sorted(batch[0]["doc_chunk_id"] for batch in batches) == ["c0", "c1", "c2", "c3"]
+
+
+def test_iter_seed_question_batches_propagates_keyboard_interrupt() -> None:
+    chunks = [Chunk(chunk_id="c1", title="1", text="孙少平在学校生活艰难。")]
+    client = InterruptSeedLLMClient()
+
+    try:
+        list(iter_seed_question_batches(chunks, client, max_per_chunk=1, max_concurrency=2))
+    except KeyboardInterrupt:
+        pass
+    else:
+        raise AssertionError("expected KeyboardInterrupt")
 
 
 def test_generate_seed_qa_retries_invalid_json_response() -> None:

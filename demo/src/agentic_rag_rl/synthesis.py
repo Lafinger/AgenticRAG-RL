@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from typing import Any
 
+from .interrupts import shutdown_thread_pool
 from .llm_client import ChatMessage, LLMClient
 from .retrieval import HybridRetriever, RetrievalResult
 from .types import Chunk
@@ -126,7 +127,9 @@ def iter_seed_question_batches(
         )
         futures[future] = (index, chunk)
 
-    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+    executor = ThreadPoolExecutor(max_workers=worker_count)
+    interrupted = False
+    try:
         for _ in range(worker_count):
             submit_next(executor)
 
@@ -178,6 +181,20 @@ def iter_seed_question_batches(
                 )
                 yield batch
                 submit_next(executor)
+    except KeyboardInterrupt:
+        interrupted = True
+        logger.warning(
+            "seed_qa_generation.interrupted completed=%s/%s failed=%s in_flight=%s",
+            completed_count,
+            len(chunk_list),
+            failed_count,
+            len(futures),
+        )
+        shutdown_thread_pool(executor, futures.keys(), wait=False)
+        raise
+    finally:
+        if not interrupted:
+            executor.shutdown(wait=True, cancel_futures=False)
     logger.info("seed_qa_generation.done chunk_count=%s seed_count=%s", len(chunk_list), len(seeds))
 
 
@@ -639,7 +656,9 @@ def iter_synthesize_multihop_examples(
             )
             return True
 
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        executor = ThreadPoolExecutor(max_workers=worker_count)
+        interrupted = False
+        try:
             for _ in range(worker_count):
                 if not submit_next(executor):
                     break
@@ -693,6 +712,20 @@ def iter_synthesize_multihop_examples(
                     submit_next(executor)
             for pending_future in futures:
                 pending_future.cancel()
+        except KeyboardInterrupt:
+            interrupted = True
+            logger.warning(
+                "multihop_synthesis.interrupted completed_merges=%s submitted=%s accepted=%s in_flight=%s",
+                completed_merge_count,
+                submitted_count,
+                generated_count,
+                len(futures),
+            )
+            shutdown_thread_pool(executor, futures.keys(), wait=False)
+            raise
+        finally:
+            if not interrupted:
+                executor.shutdown(wait=True, cancel_futures=False)
 
     logger.info(
         "multihop_synthesis.done generated_count=%s target_count=%s extension_attempt_count=%s",

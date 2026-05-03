@@ -37,6 +37,10 @@ resolve_judge_model = llm_client_module.resolve_judge_model
 resolve_llm_base_url = llm_client_module.resolve_llm_base_url
 split_doubao_model_version = llm_client_module.split_doubao_model_version
 
+interrupts_module = load_project_module("agentic_rag_rl_interrupts_for_judge", SRC / "interrupts.py")
+force_exit_on_keyboard_interrupt = interrupts_module.force_exit_on_keyboard_interrupt
+shutdown_thread_pool = interrupts_module.shutdown_thread_pool
+
 
 JUDGE_SYSTEM_PROMPT = """你是一个严格的中文阅读理解评测裁判。你需要判断模型回答是否和标准答案语义一致，并只输出 JSON。
 
@@ -405,7 +409,9 @@ def main() -> None:
             )
             print(f"judge_progress completed={completed_count}/{len(pending_items)} success={len(successes)} failed={len(failures)}")
     else:
-        with ThreadPoolExecutor(max_workers=args.max_concurrency) as executor:
+        executor = ThreadPoolExecutor(max_workers=args.max_concurrency)
+        interrupted = False
+        try:
             futures = {
                 executor.submit(
                     judge_item,
@@ -441,6 +447,17 @@ def main() -> None:
                     failures=failures,
                 )
                 print(f"judge_progress completed={completed_count}/{len(pending_items)} success={len(successes)} failed={len(failures)}")
+        except KeyboardInterrupt:
+            interrupted = True
+            shutdown_thread_pool(executor, futures.keys(), wait=False)
+            force_exit_on_keyboard_interrupt(
+                "run_llm_judge",
+                output_path=output_path,
+                checkpoint_path=checkpoint_path,
+            )
+        finally:
+            if not interrupted:
+                executor.shutdown(wait=True, cancel_futures=False)
 
     final_payload = json.loads(output_path.read_text(encoding="utf-8"))
     summary = final_payload["summary"]

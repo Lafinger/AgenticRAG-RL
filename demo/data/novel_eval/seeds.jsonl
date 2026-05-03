@@ -8917,6 +8917,10 @@
 {"question": "萧峰在敌阵中望见另一人身披黄金甲胄，他推测此人是谁？", "answer": "楚王", "doc_chunk_id": "tlbb_1544", "tool": "keyword_search", "entities": ["萧峰", "楚王"], "qa_type": "character"}
 {"question": "皇太叔和楚王是什么关系？", "answer": "父子", "doc_chunk_id": "tlbb_1545", "tool": "keyword_search", "entities": ["皇太叔", "楚王"], "qa_type": "relation"}
 {"question": "耶律洪基的母亲是谁？", "answer": "萧太后", "doc_chunk_id": "tlbb_1545", "tool": "keyword_search", "entities": ["耶律洪基", "萧太后"], "qa_type": "character"}
+{"question": "谁下令将哭喊的女子都射死？", "answer": "耶律洪基", "doc_chunk_id": "tlbb_1546", "tool": "keyword_search", "entities": ["耶律洪基", "哭喊的女子"], "qa_type": "character"}
+{"question": "御营官兵的家属被准许居住在哪里？", "answer": "上京", "doc_chunk_id": "tlbb_1546", "tool": "keyword_search", "entities": ["御营官兵", "家属", "上京"], "qa_type": "place"}
+{"question": "耶律洪基下令退往何处？", "answer": "苍茫山", "doc_chunk_id": "tlbb_1548", "tool": "keyword_search", "entities": ["耶律洪基", "苍茫山"], "qa_type": "place"}
+{"question": "在苍茫山脚下，谁率军向山坡冲锋？", "answer": "楚王", "doc_chunk_id": "tlbb_1548", "tool": "keyword_search", "entities": ["楚王", "苍茫山"], "qa_type": "character"}
 {"question": "萧峰与耶律洪基是什么关系？", "answer": "结义兄弟", "doc_chunk_id": "tlbb_1549", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基"], "qa_type": "relation"}
 {"question": "耶律洪基自称什么身份？", "answer": "国君", "doc_chunk_id": "tlbb_1549", "tool": "keyword_search", "entities": ["耶律洪基"], "qa_type": "character"}
 {"question": "阿紫向萧峰发射毒针是为了让萧峰怎样？", "answer": "动弹不得", "doc_chunk_id": "tlbb_1551", "tool": "keyword_search", "entities": ["阿紫", "萧峰", "毒针"], "qa_type": "action_result"}
@@ -8927,16 +8931,49 @@
 {"question": "萧峰从耶律洪基手中夺下了什么？", "answer": "刀子", "doc_chunk_id": "tlbb_1554", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基", "刀子"], "qa_type": "object"}
 {"question": "萧峰在战阵中射向皇太叔前，已经射出了几枝箭？", "answer": "七枝", "doc_chunk_id": "tlbb_1557", "tool": "keyword_search", "entities": ["萧峰", "箭"], "qa_type": "action_result"}
 {"question": "萧峰纵身跃过盾牌后擒获了谁？", "answer": "皇太叔", "doc_chunk_id": "tlbb_1557", "tool": "keyword_search", "entities": ["萧峰", "皇太叔"], "qa_type": "character"}
+{"question": "萧峰在叛军阵前擒获并高举的人是谁？", "answer": "皇太叔", "doc_chunk_id": "tlbb_1558", "tool": "keyword_search", "entities": ["萧峰", "皇太叔"], "qa_type": "character"}
+{"question": "萧峰在情势紧急时未及向谁请旨便大声宣示免罪？", "answer": "耶律洪基", "doc_chunk_id": "tlbb_1558", "tool": "keyword_search", "entities": ["萧峰", "耶律洪基"], "qa_type": "character"}
 {"question": "辽军中由谁分派处理事务？", "answer": "耶律莫哥", "doc_chunk_id": "tlbb_1563", "tool": "keyword_search", "entities": ["耶律莫哥", "辽军"], "qa_type": "character"}
 {"question": "萧峰在丐帮的职位是什么？", "answer": "帮主", "doc_chunk_id": "tlbb_1563", "tool": "keyword_search", "entities": ["萧峰", "丐帮"], "qa_type": "character"}
+{"question": "萧峰在何处独斗群雄？", "answer": "聚贤庄", "doc_chunk_id": "tlbb_1568", "tool": "keyword_search", "entities": ["萧峰", "聚贤庄"], "qa_type": "place"}
+{"question": "阿朱是阿紫的什么人？", "answer": "姐姐", "doc_chunk_id": "tlbb_1568", "tool": "keyword_search", "entities": ["阿朱", "阿紫"], "qa_type": "relation"}
+{"question": "萧峰率领大军来到了什么地方？", "answer": "上京", "doc_chunk_id": "tlbb_1569", "tool": "keyword_search", "entities": ["萧峰", "大军", "上京"], "qa_type": "place"}
+{"question": "百姓称呼萧峰为什么？", "answer": "南院大王", "doc_chunk_id": "tlbb_1569", "tool": "keyword_search", "entities": ["萧峰", "百姓", "南院大王"], "qa_type": "character"}
+{"question": "萧峰在辽国担任什么官职？", "answer": "南院大王", "doc_chunk_id": "tlbb_1571", "tool": "keyword_search", "entities": ["萧峰", "南院大王"], "qa_type": "character"}
+{"question": "耶律洪基召见萧峰时，命他做什么？", "answer": "领兵南征", "doc_chunk_id": "tlbb_1571", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰", "南征"], "qa_type": "action_result"}
+{"question": "耶律洪基让萧峰用什么收买南人奸细？", "answer": "金银财帛", "doc_chunk_id": "tlbb_1572", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰", "金银财帛", "南人奸细"], "qa_type": "object"}
+{"question": "耶律洪基封萧峰为什么官职？", "answer": "南院大王", "doc_chunk_id": "tlbb_1572", "tool": "keyword_search", "entities": ["耶律洪基", "萧峰", "南院大王"], "qa_type": "character"}
+{"question": "萧峰被封为什么官职？", "answer": "南院大王", "doc_chunk_id": "tlbb_1573", "tool": "keyword_search", "entities": ["萧峰", "南院大王"], "qa_type": "character"}
+{"question": "辽时南京是今天的哪座城市？", "answer": "北京", "doc_chunk_id": "tlbb_1573", "tool": "keyword_search", "entities": ["辽时南京", "北京"], "qa_type": "place"}
+{"question": "南院大王的王府位于燕京城的哪个方位？", "answer": "西南", "doc_chunk_id": "tlbb_1574", "tool": "keyword_search", "entities": ["南院大王", "王府", "燕京城"], "qa_type": "place"}
+{"question": "阿紫如何称呼萧峰？", "answer": "姊夫", "doc_chunk_id": "tlbb_1574", "tool": "keyword_search", "entities": ["阿紫", "萧峰"], "qa_type": "relation"}
+{"question": "萧峰和阿紫出城时经过哪个城门？", "answer": "清晋门", "doc_chunk_id": "tlbb_1575", "tool": "keyword_search", "entities": ["萧峰", "阿紫", "清晋门"], "qa_type": "place"}
+{"question": "阿紫称呼萧峰为什么？", "answer": "姊夫", "doc_chunk_id": "tlbb_1575", "tool": "keyword_search", "entities": ["阿紫", "萧峰"], "qa_type": "relation"}
+{"question": "萧峰命令谁去询问官兵？", "answer": "随从", "doc_chunk_id": "tlbb_1576", "tool": "keyword_search", "entities": ["萧峰", "随从", "官兵"], "qa_type": "character"}
+{"question": "随从说那些官兵去做什么了？", "answer": "打草谷", "doc_chunk_id": "tlbb_1576", "tool": "keyword_search", "entities": ["随从", "官兵", "打草谷"], "qa_type": "action_result"}
+{"question": "契丹官兵把去邻国抢劫的行为叫做什么？", "answer": "打草谷", "doc_chunk_id": "tlbb_1577", "tool": "keyword_search", "entities": ["契丹官兵", "打草谷"], "qa_type": "action_result"}
+{"question": "少年向萧峰脸上掷出的物品是什么？", "answer": "生石灰包", "doc_chunk_id": "tlbb_1579", "tool": "keyword_search", "entities": ["少年", "萧峰", "生石灰包"], "qa_type": "object"}
+{"question": "萧峰用什么击落了少年掷来的布袋？", "answer": "马鞭", "doc_chunk_id": "tlbb_1579", "tool": "keyword_search", "entities": ["萧峰", "马鞭", "布袋"], "qa_type": "object"}
 {"question": "游坦之试图用什么工具自杀？", "answer": "短刀", "doc_chunk_id": "tlbb_1581", "tool": "keyword_search", "entities": ["游坦之", "短刀"], "qa_type": "object"}
 {"question": "阿紫想用什么废掉游坦之的一双招子？", "answer": "石灰包", "doc_chunk_id": "tlbb_1581", "tool": "keyword_search", "entities": ["阿紫", "石灰包", "游坦之"], "qa_type": "object"}
+{"question": "身世揭露前，萧峰以为自己是哪国人？", "answer": "大宋百姓", "doc_chunk_id": "tlbb_1582", "tool": "keyword_search", "entities": ["萧峰", "大宋"], "qa_type": "character"}
+{"question": "萧峰说放俘虏回去时，俘虏们最初的反应是什么？", "answer": "迟疑不动", "doc_chunk_id": "tlbb_1582", "tool": "keyword_search", "entities": ["萧峰", "俘虏"], "qa_type": "action_result"}
 {"question": "萧峰是游坦之的什么人？", "answer": "杀父仇人", "doc_chunk_id": "tlbb_1584", "tool": "keyword_search", "entities": ["萧峰", "游坦之"], "qa_type": "relation"}
 {"question": "阿紫称呼萧峰为什么？", "answer": "姊夫", "doc_chunk_id": "tlbb_1584", "tool": "keyword_search", "entities": ["阿紫", "萧峰"], "qa_type": "relation"}
 {"question": "游坦之在聚贤庄大战时躲在何处观战？", "answer": "照壁后", "doc_chunk_id": "tlbb_1586", "tool": "keyword_search", "entities": ["游坦之", "聚贤庄", "照壁"], "qa_type": "place"}
 {"question": "游坦之一心要找谁报仇？", "answer": "乔峰", "doc_chunk_id": "tlbb_1586", "tool": "keyword_search", "entities": ["游坦之", "乔峰"], "qa_type": "character"}
 {"question": "游坦之被契丹兵拖入了哪座城？", "answer": "南京城", "doc_chunk_id": "tlbb_1588", "tool": "keyword_search", "entities": ["游坦之", "契丹兵", "南京城"], "qa_type": "place"}
 {"question": "游坦之被俘时背上遭遇了什么？", "answer": "挨了一刀背", "doc_chunk_id": "tlbb_1588", "tool": "keyword_search", "entities": ["游坦之", "刀背"], "qa_type": "action_result"}
+{"question": "游坦之被拉入的大屋地面铺着什么？", "answer": "青石板", "doc_chunk_id": "tlbb_1589", "tool": "keyword_search", "entities": ["游坦之", "大屋", "青石板"], "qa_type": "object"}
+{"question": "阿紫拍手欢笑时，把游坦之称为什么？", "answer": "人鸢子", "doc_chunk_id": "tlbb_1589", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "人鸢子"], "qa_type": "object"}
+{"question": "游坦之被契丹兵戏耍时，谁命令再放他上去？", "answer": "阿紫", "doc_chunk_id": "tlbb_1591", "tool": "keyword_search", "entities": ["阿紫", "游坦之"], "qa_type": "character"}
+{"question": "契丹兵将游坦之带到哪里施放“放人鸢”？", "answer": "宫后大校场", "doc_chunk_id": "tlbb_1591", "tool": "keyword_search", "entities": ["游坦之", "契丹兵", "宫后大校场"], "qa_type": "place"}
+{"question": "阿紫赏给每名官兵多少两银子？", "answer": "五两", "doc_chunk_id": "tlbb_1592", "tool": "keyword_search", "entities": ["阿紫", "官兵", "银子"], "qa_type": "action_result"}
+{"question": "谁将满身是血的游坦之架了出去？", "answer": "众官兵", "doc_chunk_id": "tlbb_1592", "tool": "keyword_search", "entities": ["游坦之", "众官兵"], "qa_type": "character"}
+{"question": "次日，谁押着游坦之去见阿紫？", "answer": "两名契丹兵", "doc_chunk_id": "tlbb_1593", "tool": "keyword_search", "entities": ["游坦之", "阿紫", "契丹兵"], "qa_type": "character"}
+{"question": "游坦之被带进的厅堂地上铺着什么？", "answer": "一张花纹斑斓的极大地毯", "doc_chunk_id": "tlbb_1593", "tool": "keyword_search", "entities": ["游坦之", "厅堂", "地毯"], "qa_type": "object"}
+{"question": "游坦之咬了阿紫的什么部位？", "answer": "脚趾头", "doc_chunk_id": "tlbb_1594", "tool": "keyword_search", "entities": ["游坦之", "阿紫", "脚趾头"], "qa_type": "action_result"}
+{"question": "阿紫被契丹兵从锦垫上扯下后，坐到了什么上面？", "answer": "地毯", "doc_chunk_id": "tlbb_1594", "tool": "keyword_search", "entities": ["阿紫", "契丹兵", "锦垫", "地毯"], "qa_type": "action_result"}
 {"question": "阿紫命侍女取出了什么？", "answer": "五十两银子", "doc_chunk_id": "tlbb_1597", "tool": "keyword_search", "entities": ["阿紫", "侍女", "五十两银子"], "qa_type": "object"}
 {"question": "游坦之被谁架出厅去？", "answer": "两名契丹兵", "doc_chunk_id": "tlbb_1597", "tool": "keyword_search", "entities": ["游坦之", "契丹兵", "厅"], "qa_type": "character"}
 {"question": "游坦之被关押在何处？", "answer": "地牢", "doc_chunk_id": "tlbb_1598", "tool": "keyword_search", "entities": ["游坦之", "地牢"], "qa_type": "place"}
@@ -8949,6 +8986,8 @@
 {"question": "铁匠在游坦之头上最终罩上了什么？", "answer": "一个铁球", "doc_chunk_id": "tlbb_1601", "tool": "keyword_search", "entities": ["铁匠", "游坦之", "铁球"], "qa_type": "object"}
 {"question": "这一切功夫是室里队长在谁的授意下干的？", "answer": "阿紫", "doc_chunk_id": "tlbb_1602", "tool": "keyword_search", "entities": ["室里队长", "阿紫"], "qa_type": "character"}
 {"question": "套在他头上的铁罩是什么材质？", "answer": "镔铁", "doc_chunk_id": "tlbb_1602", "tool": "keyword_search", "entities": ["铁罩", "镔铁"], "qa_type": "object"}
+{"question": "阿紫被耶律洪基封为什么？", "answer": "端福郡主", "doc_chunk_id": "tlbb_1603", "tool": "keyword_search", "entities": ["阿紫", "耶律洪基", "端福郡主"], "qa_type": "character"}
+{"question": "阿紫居住的宫殿叫什么名字？", "answer": "端福宫", "doc_chunk_id": "tlbb_1603", "tool": "keyword_search", "entities": ["阿紫", "端福宫"], "qa_type": "place"}
 {"question": "游坦之的仇人是谁？", "answer": "乔峰", "doc_chunk_id": "tlbb_1604", "tool": "keyword_search", "entities": ["游坦之", "乔峰"], "qa_type": "character"}
 {"question": "阿紫给游坦之戴上了什么？", "answer": "面具", "doc_chunk_id": "tlbb_1604", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "面具"], "qa_type": "object"}
 {"question": "游坦之在聚贤庄的身份是什么？", "answer": "小庄主", "doc_chunk_id": "tlbb_1605", "tool": "keyword_search", "entities": ["游坦之", "聚贤庄"], "qa_type": "character"}
@@ -8974,8 +9013,18 @@
 {"question": "游坦之头上戴了什么？", "answer": "铁罩", "doc_chunk_id": "tlbb_1617", "tool": "keyword_search", "entities": ["游坦之", "铁罩"], "qa_type": "object"}
 {"question": "游坦之头上戴了什么？", "answer": "铁罩", "doc_chunk_id": "tlbb_1618", "tool": "keyword_search", "entities": ["游坦之", "铁罩"], "qa_type": "object"}
 {"question": "游坦之被阿紫叫唤后，转身走向她时发生了什么？", "answer": "摔了一跤", "doc_chunk_id": "tlbb_1618", "tool": "keyword_search", "entities": ["游坦之", "阿紫"], "qa_type": "action_result"}
+{"question": "阿紫称呼游坦之为什么？", "answer": "铁丑", "doc_chunk_id": "tlbb_1622", "tool": "keyword_search", "entities": ["阿紫", "游坦之"], "qa_type": "character"}
+{"question": "阿紫让游坦之把手伸进什么容器？", "answer": "瓦瓮", "doc_chunk_id": "tlbb_1622", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "瓦瓮"], "qa_type": "object"}
+{"question": "游坦之将右手伸入了什么容器？", "answer": "瓦瓮", "doc_chunk_id": "tlbb_1623", "tool": "keyword_search", "entities": ["游坦之", "瓦瓮"], "qa_type": "object"}
+{"question": "什么动物咬住了游坦之的中指吸血？", "answer": "蜈蚣", "doc_chunk_id": "tlbb_1623", "tool": "keyword_search", "entities": ["蜈蚣", "游坦之"], "qa_type": "object"}
+{"question": "游坦之脸上戴着什么？", "answer": "铁罩", "doc_chunk_id": "tlbb_1624", "tool": "keyword_search", "entities": ["游坦之", "铁罩"], "qa_type": "object"}
+{"question": "阿紫让游坦之将蜈蚣放入什么容器？", "answer": "小木鼎", "doc_chunk_id": "tlbb_1624", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "蜈蚣", "小木鼎"], "qa_type": "object"}
 {"question": "游坦之的涕泪落在书页上后，显出了什么武功秘籍的图形？", "answer": "欲三摩地断行成就神足经", "doc_chunk_id": "tlbb_1628", "tool": "keyword_search", "entities": ["游坦之", "欲三摩地断行成就神足经", "书页"], "qa_type": "object"}
 {"question": "阿紫带游坦之到荒僻之处诱捕毒虫时，使用了什么器具？", "answer": "神木王鼎", "doc_chunk_id": "tlbb_1628", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "神木王鼎", "毒虫"], "qa_type": "object"}
+{"question": "阿紫用什么物品诱捕毒虫？", "answer": "神木王鼎", "doc_chunk_id": "tlbb_1629", "tool": "keyword_search", "entities": ["阿紫", "神木王鼎", "毒虫"], "qa_type": "object"}
+{"question": "阿紫当年偷看师父练功的地点在哪里？", "answer": "星宿海", "doc_chunk_id": "tlbb_1629", "tool": "keyword_search", "entities": ["阿紫", "星宿海", "师父"], "qa_type": "place"}
+{"question": "阿紫向谁低声商量对付蟒蛇的事？", "answer": "游坦之", "doc_chunk_id": "tlbb_1630", "tool": "keyword_search", "entities": ["阿紫", "游坦之", "蟒蛇"], "qa_type": "character"}
+{"question": "什么虫子爬上了蟒蛇并将蟒蛇脊背烧出一条焦线？", "answer": "水晶蚕儿", "doc_chunk_id": "tlbb_1630", "tool": "keyword_search", "entities": ["水晶蚕儿", "蟒蛇"], "qa_type": "object"}
 {"question": "阿紫取出什么东西罩在木鼎上？", "answer": "锦缎", "doc_chunk_id": "tlbb_1631", "tool": "keyword_search", "entities": ["阿紫", "木鼎", "锦缎"], "qa_type": "object"}
 {"question": "焦痕在什么地方消失了？", "answer": "溪边", "doc_chunk_id": "tlbb_1631", "tool": "keyword_search", "entities": ["焦痕", "溪边"], "qa_type": "place"}
 {"question": "游坦之称是谁叫他下的号令？", "answer": "全冠清", "doc_chunk_id": "tlbb_2410", "tool": "keyword_search", "entities": ["游坦之", "全冠清", "号令"], "qa_type": "character"}
