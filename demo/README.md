@@ -773,7 +773,7 @@ flowchart TD
 - `--quality-gate` 默认是 `llm`：先做规则门禁，再调用同一 provider 的 Judge 模型做语义和多跳必要性审查；只想做低成本硬规则检查时可设为 `rules`。
 - `--judge-model` 默认跟随 `--merge-model`；如果显式传入，则用于 Step 4 生成后的 LLM 语义门禁。
 - 被规则门禁或 Judge 拒绝的候选样本不会写入 `qa_pairs.jsonl`，会写入 `qa_pairs.rejected.jsonl`，包含 `chain_key/stage/problem_codes/final_question/hops` 等追踪字段。
-- `--candidate-multiplier` 控制严格门禁下的候选放大倍数；`llm` 模式默认 `20`，`rules` 模式默认 `10`。
+- `--candidate-multiplier` 控制严格门禁下的候选放大倍数；`llm` 模式默认 `5`，`rules` 模式默认 `10`。
 - LLM 合并默认最大并发数为 `5`，可通过 `--max-concurrency` 调整；输出按 merge 完成顺序写入，断点续写仍按 hop 链路签名判断。
 - LLM 合并会打印 `multihop_synthesis.progress` / `multihop_synthesis.added`，显示已完成 merge、已接受样本、重复跳过数和目标数量。
 - 使用真实 LLM merge 时，合并失败的链路会写入 `qa_pairs.failed.jsonl` 和 `qa_pairs.checkpoint.jsonl` 的 `status=failed` 记录；重新执行同一命令时，失败链路不会被当作已完成，会重新尝试生成。
@@ -823,7 +823,7 @@ flowchart TD
 - 默认 Provider：`doubao`，也可用 `--llm-provider newapi` 或 `--llm-provider rightcode`
 - 默认合并模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，NewAPI 使用 `gpt-5.5`，RightCode 使用 `gpt-5.5`
 - 默认质量门禁：`--quality-gate llm`，先规则过滤，再调用 `--judge-model` 做语义审查
-- 默认候选放大：LLM 门禁模式下 `--candidate-multiplier 20`
+- 默认候选放大：LLM 门禁模式下 `--candidate-multiplier 5`
 - 默认最大并发：`5`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
 - 拒绝样本输出：`data/novel_eval/qa_pairs.rejected.jsonl`
@@ -837,7 +837,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
   --quality-gate llm `
-  --candidate-multiplier 20 `
+  --candidate-multiplier 5 `
   --max-concurrency 5
 ```
 
@@ -855,7 +855,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --merge-model gpt-5.5 `
   --judge-model gpt-5.5 `
   --quality-gate llm `
-  --candidate-multiplier 20 `
+  --candidate-multiplier 5 `
   --max-concurrency 5
 ```
 
@@ -873,7 +873,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --merge-model gpt-5.5 `
   --judge-model gpt-5.5 `
   --quality-gate llm `
-  --candidate-multiplier 20 `
+  --candidate-multiplier 5 `
   --max-concurrency 5
 ```
 
@@ -886,11 +886,11 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
   --quality-gate llm `
-  --candidate-multiplier 20 `
+  --candidate-multiplier 5 `
   --use-batch-inference
 ```
 
-批量模式会先构造候选 hop 链，把每条候选链的 merge prompt 写入 Batch Job。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 `final_question/final_answer/qa_type/answer_aliases`，通过规则门禁和可选 LLM Judge 后写入业务执行产物 `data/novel_eval/qa_pairs.jsonl` 和 checkpoint。`qa_pairs.jsonl` 是后续 SFT、GRPO 和 eval 使用的多跳 QA 主文件，不是 Batch Job 原始响应文件。默认提交候选数为 `target-count * candidate-multiplier`，`llm` 模式默认 multiplier 为 `20`，可用 `--batch-max-candidates` 调整绝对候选数。
+批量模式会先构造候选 hop 链，把每条候选链的 merge prompt 写入 Batch Job。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 `final_question/final_answer/qa_type/answer_aliases`，通过规则门禁和可选 LLM Judge 后写入业务执行产物 `data/novel_eval/qa_pairs.jsonl` 和 checkpoint。`qa_pairs.jsonl` 是后续 SFT、GRPO 和 eval 使用的多跳 QA 主文件，不是 Batch Job 原始响应文件。默认提交候选数为 `target-count * candidate-multiplier`，`llm` 模式默认 multiplier 为 `5`，可用 `--batch-max-candidates` 调整绝对候选数。
 
 失败后继续执行同一条命令即可续写；如果确认要从头合成，执行：
 
@@ -901,7 +901,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
   --quality-gate llm `
-  --candidate-multiplier 20 `
+  --candidate-multiplier 5 `
   --max-concurrency 5 `
   --overwrite
 ```
@@ -1608,7 +1608,7 @@ uv run python .\scripts\parse_text_corpus.py --input-dir .\data\original_data --
 uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes --embedding-model .\models\bge-m3 --reranker-model .\models\bge-reranker-v2-m3 --max-concurrency 5 --skip-kg
 uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
 uv run python .\scripts\clean_seed_qa.py --input .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds_clean.jsonl --dropped-output .\data\novel_eval\seeds_dropped.jsonl
-uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50 --quality-gate llm --candidate-multiplier 20 --max-concurrency 5
+uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50 --quality-gate llm --candidate-multiplier 5 --max-concurrency 5
 uv run python .\scripts\build_oracle_traces.py --qa .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\traces_oracle_zh.jsonl --use-zh
 uv run python .\scripts\trace_to_sft.py --input .\data\novel_eval\traces_oracle_zh.jsonl --output-dir .\data\novel_eval\sft --lang zh
 uv run python .\scripts\convert_sft_to_unsloth.py --input-dir .\data\novel_eval\sft --output-dir .\data\novel_eval\sft_zh_unsloth

@@ -119,7 +119,7 @@ def main() -> None:
     merge_model = resolve_thinking_model(args.llm_provider, args.merge_model)
     judge_model = resolve_judge_model(args.llm_provider, args.judge_model) if args.judge_model else merge_model
     base_url = resolve_llm_base_url(args.llm_provider, args.base_url)
-    candidate_multiplier = args.candidate_multiplier or (20 if args.quality_gate == "llm" else 10)
+    candidate_multiplier = args.candidate_multiplier or (5 if args.quality_gate == "llm" else 10)
     logging.info(
         "domain_multihop_synthesis.start seeds=%s corpus=%s output=%s target_count=%s llm_merge=%s merge_model=%s quality_gate=%s judge_model=%s max_concurrency=%s batch_inference=%s",
         args.seeds,
