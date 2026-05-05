@@ -35,6 +35,71 @@ SEED_AMBIGUOUS_PRONOUN_RE = re.compile(
 SEED_ABSTRACT_RE = re.compile(r"(感悟|意义|重要性|体现|说明|反映|象征|态度|心情|感受|评价)")
 SEED_HARD_COMPOUND_RE = re.compile(r"(；|;|、|\n|以及|并且|同时|[，,]|\d+[.．、])")
 SEED_SOFT_COMPOUND_RE = re.compile(r"(和|或)")
+MULTIHOP_ANSWER_MAX_CHARS = 30
+MULTIHOP_SYNTHETIC_TRACE_RE = re.compile(
+    r"(第\s*[一二三四五六七八九十\d]+\s*步|hop|逐步检索|最终答案|先确定|再结合|先弄清|最后回到|最后再|让人先想到)",
+    re.IGNORECASE,
+)
+MULTIHOP_COMPOUND_ANSWER_RE = re.compile(r"(；|;|、|\n|以及|并且|同时|[，,]|\d+[.．、])")
+MULTIHOP_GENERIC_TERMS = {
+    "一个",
+    "一位",
+    "一种",
+    "哪个",
+    "哪位",
+    "什么",
+    "为何",
+    "如何",
+    "人物",
+    "地方",
+    "地点",
+    "内容",
+    "情节",
+    "文中",
+    "小说",
+    "作品",
+    "片段",
+    "回答",
+    "提到",
+    "相关",
+    "这种",
+    "这位",
+    "那个",
+    "那位",
+    "其中",
+    "后来",
+    "之前",
+    "之后",
+}
+
+
+class MultihopQualityError(ValueError):
+    def __init__(
+        self,
+        stage: str,
+        problem_codes: list[str],
+        chain: list[dict[str, Any]],
+        example: dict[str, Any] | None = None,
+        detail: str = "",
+    ) -> None:
+        super().__init__(", ".join(problem_codes))
+        self.stage = stage
+        self.problem_codes = problem_codes
+        self.chain = chain
+        self.example = example
+        self.detail = detail
+
+    def to_record(self) -> dict[str, Any]:
+        example = self.example or {}
+        return {
+            "chain_key": multihop_chain_key(self.chain),
+            "stage": self.stage,
+            "problem_codes": self.problem_codes,
+            "final_question": example.get("final_question", ""),
+            "final_answer": example.get("final_answer", ""),
+            "hops": self.chain,
+            "detail": self.detail,
+        }
 
 
 def _first_sentence(text: str, max_chars: int = 80) -> str:
@@ -526,6 +591,222 @@ def clean_seed_qa_records(
     return cleaned, dropped
 
 
+def seed_record_key(record: dict[str, Any]) -> str:
+    return "::".join(
+        [
+            str(record.get("doc_chunk_id", "")).strip(),
+            _normalize_for_match(record.get("question", "")),
+            _normalize_for_match(record.get("answer", "")),
+        ]
+    )
+
+
+def _normalize_for_match(value: Any) -> str:
+    text = re.sub(r"\s+", "", str(value or ""))
+    return re.sub(r"[。！？!?；;，,、：:\"'“”‘’（）()《》【】\[\]{}·.\-—_]", "", text)
+
+
+def _same_short_answer(left: Any, right: Any) -> bool:
+    return bool(_normalize_for_match(left)) and _normalize_for_match(left) == _normalize_for_match(right)
+
+
+def _is_signal_text(value: Any) -> bool:
+    text = _normalize_for_match(value)
+    if len(text) < 2:
+        return False
+    if text in MULTIHOP_GENERIC_TERMS:
+        return False
+    return not bool(re.fullmatch(r"[\d年月日元%％+-]+", text))
+
+
+def _contains_signal_text(container: Any, needle: Any) -> bool:
+    normalized_needle = _normalize_for_match(needle)
+    if not _is_signal_text(normalized_needle):
+        return False
+    return normalized_needle in _normalize_for_match(container)
+
+
+def _hop_seed_key(hop: dict[str, Any]) -> str:
+    return "::".join(
+        [
+            str(hop.get("doc_chunk_id", "")).strip(),
+            _normalize_for_match(hop.get("question", "")),
+            _normalize_for_match(hop.get("answer", "")),
+        ]
+    )
+
+
+def _candidate_seed_context(seed: dict[str, Any]) -> str:
+    entities = " ".join(_normalize_seed_entities(seed.get("entities", [])))
+    return f"{seed.get('question', '')} {entities}"
+
+
+def _chain_text(chain: list[dict[str, Any]]) -> str:
+    return " ".join(f"{hop.get('question', '')} {hop.get('answer', '')}" for hop in chain)
+
+
+def _has_same_target_link(chain: list[dict[str, Any]], seed: dict[str, Any]) -> bool:
+    candidate_answer = seed.get("answer", "")
+    if not _is_signal_text(candidate_answer):
+        return False
+    return any(_same_short_answer(candidate_answer, hop.get("answer", "")) for hop in chain)
+
+
+def _has_bridge_link(chain: list[dict[str, Any]], seed: dict[str, Any]) -> bool:
+    candidate_context = _candidate_seed_context(seed)
+    for hop in chain:
+        if _contains_signal_text(candidate_context, hop.get("answer", "")):
+            return True
+    candidate_answer = seed.get("answer", "")
+    return _contains_signal_text(_chain_text(chain), candidate_answer)
+
+
+def _is_valid_chain_extension(chain: list[dict[str, Any]], seed: dict[str, Any]) -> bool:
+    candidate_question = str(seed.get("question", "")).strip()
+    if not candidate_question or str(seed.get("answer", "")).strip() == "":
+        return False
+    if str(seed.get("doc_chunk_id", "")).strip() in {hop.get("doc_chunk_id") for hop in chain}:
+        return False
+    if any(candidate_question == str(hop.get("question", "")).strip() for hop in chain):
+        return False
+    return _has_bridge_link(chain, seed) or _has_same_target_link(chain, seed)
+
+
+def validate_multihop_example(
+    record: dict[str, Any],
+    valid_chunk_ids: set[str] | None = None,
+    seed_keys: set[str] | None = None,
+    seen_questions: set[str] | None = None,
+) -> list[str]:
+    problem_codes: list[str] = []
+    required_fields = {"final_question", "final_answer", "hop_count", "qa_type", "subset", "hops", "answer_aliases"}
+    missing_fields = sorted(field for field in required_fields if field not in record)
+    if missing_fields:
+        problem_codes.append("FIELD_MISSING")
+
+    final_question = str(record.get("final_question", "")).strip()
+    final_answer = str(record.get("final_answer", "")).strip()
+    hops = record.get("hops", [])
+    aliases = record.get("answer_aliases", [])
+
+    if not final_question or not final_answer:
+        problem_codes.append("FIELD_MISSING")
+    if seen_questions is not None and final_question in seen_questions:
+        problem_codes.append("DUPLICATE_FINAL_QUESTION")
+    if record.get("qa_type") != "inference":
+        problem_codes.append("TYPE_INVALID")
+    if not isinstance(hops, list) or len(hops) < 2 or record.get("hop_count") != len(hops):
+        problem_codes.append("HOP_COUNT_INVALID")
+    if isinstance(hops, list):
+        expected_indices = list(range(1, len(hops) + 1))
+        actual_indices = [hop.get("hop_idx") for hop in hops]
+        if actual_indices != expected_indices:
+            problem_codes.append("HOP_ORDER_INVALID")
+        chunk_ids = [str(hop.get("doc_chunk_id", "")).strip() for hop in hops]
+        if len(set(chunk_ids)) != len(chunk_ids):
+            problem_codes.append("DUP_CHUNK")
+        if valid_chunk_ids is not None and any(chunk_id not in valid_chunk_ids for chunk_id in chunk_ids):
+            problem_codes.append("CHUNK_MISSING")
+        for hop in hops:
+            if _normalize_seed_qa_type(hop.get("qa_type")) not in SEED_QA_TYPES:
+                problem_codes.append("TYPE_INVALID")
+                break
+        if seed_keys is not None:
+            missing_seed = any(_hop_seed_key(hop) not in seed_keys for hop in hops)
+            if missing_seed:
+                problem_codes.append("HOP_SEED_NOT_IN_CLEAN")
+        if hops and not _same_short_answer(final_answer, hops[-1].get("answer", "")):
+            problem_codes.append("FINAL_ANSWER_MISMATCH")
+        if hops and (
+            _normalize_for_match(final_question) == _normalize_for_match(hops[-1].get("question", ""))
+            or _normalize_for_match(hops[-1].get("question", "")) in _normalize_for_match(final_question)
+        ):
+            problem_codes.append("SINGLE_HOP_DEGENERATE")
+        for answer in [final_answer, *(hop.get("answer", "") for hop in hops)]:
+            if _contains_signal_text(final_question, answer):
+                problem_codes.append("ANSWER_LEAK")
+                break
+
+    if len(final_answer) > MULTIHOP_ANSWER_MAX_CHARS or MULTIHOP_COMPOUND_ANSWER_RE.search(final_answer):
+        problem_codes.append("ANSWER_NOT_SHORT")
+    if MULTIHOP_SYNTHETIC_TRACE_RE.search(final_question):
+        problem_codes.append("SYNTHETIC_TRACE")
+    if not isinstance(aliases, list) or not (1 <= len(aliases) <= 3):
+        problem_codes.append("ALIAS_INVALID")
+    else:
+        normalized_aliases = [_normalize_for_match(alias) for alias in aliases if str(alias).strip()]
+        if len(normalized_aliases) != len(aliases) or len(set(normalized_aliases)) != len(normalized_aliases):
+            problem_codes.append("ALIAS_INVALID")
+        if _normalize_for_match(final_answer) not in set(normalized_aliases):
+            problem_codes.append("ALIAS_INVALID")
+
+    return sorted(set(problem_codes))
+
+
+def build_multihop_judge_messages(example: dict[str, Any], chunks_by_id: dict[str, Chunk]) -> list[ChatMessage]:
+    hop_payloads = []
+    for hop in example.get("hops", []):
+        chunk = chunks_by_id.get(str(hop.get("doc_chunk_id", "")))
+        hop_payloads.append(
+            {
+                "hop_idx": hop.get("hop_idx"),
+                "question": hop.get("question"),
+                "answer": hop.get("answer"),
+                "doc_chunk_id": hop.get("doc_chunk_id"),
+                "qa_type": hop.get("qa_type"),
+                "chunk_text": chunk.text if chunk else "",
+            }
+        )
+    system_prompt = (
+        "你是严格的中文小说多跳 QA 质量审查员。"
+        "只判断样本是否满足多跳阅读问答训练要求，并只输出 JSON。"
+    )
+    user_prompt = f"""请审核下面多跳 QA 是否合格。
+
+必须全部满足：
+1. hop 间存在真实剧情、人物、地点、物品或事件依赖，不接受同名、字数、类别、题材等表面联想。
+2. final_question 必须需要全部 hop 才能回答，不能只看最后一跳或任意单个 chunk 即可回答。
+3. final_question 不能泄露任何中间 hop answer 或 final_answer。
+4. 给出全部 gold chunk 时，final_answer 必须可被明确支持。
+5. final_answer 必须是最后一跳 answer 的短答案表达。
+
+若不合格，problem_codes 只能使用：
+WEAK_LINKAGE、SINGLE_HOP_DEGENERATE、HOP_REDUNDANT、EVIDENCE_WEAK、ANSWER_LEAK、FINAL_ANSWER_MISMATCH、INCOMPLETE_ANSWER、ANSWER_NOT_SHORT、ALIAS_INVALID、SYNTHETIC_TRACE。
+
+输出 JSON 对象：
+{{"pass": true/false, "problem_codes": [], "reason": "不超过40字"}}
+
+待审样本：
+{json.dumps({"final_question": example.get("final_question"), "final_answer": example.get("final_answer"), "answer_aliases": example.get("answer_aliases"), "hops": hop_payloads}, ensure_ascii=False)}
+"""
+    return [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
+
+
+def parse_multihop_judge_content(content: str) -> list[str]:
+    payload = _extract_json_object(content)
+    passed = payload.get("pass", payload.get("passed"))
+    if not isinstance(passed, bool):
+        raise ValueError("Multihop judge response missing boolean pass.")
+    raw_codes = payload.get("problem_codes", [])
+    if isinstance(raw_codes, str):
+        raw_codes = [raw_codes]
+    if not isinstance(raw_codes, list):
+        raise ValueError("Multihop judge problem_codes must be a list.")
+    problem_codes = [str(code).strip() for code in raw_codes if str(code).strip()]
+    if passed and not problem_codes:
+        return []
+    return sorted(set(problem_codes or ["LLM_JUDGE_REJECTED"]))
+
+
+def judge_multihop_example(example: dict[str, Any], judge_llm_client: LLMClient, chunks_by_id: dict[str, Chunk]) -> list[str]:
+    try:
+        content = judge_llm_client.chat(build_multihop_judge_messages(example, chunks_by_id), temperature=0.0)
+        return parse_multihop_judge_content(content)
+    except Exception:
+        logger.exception("multihop_quality.judge_failed chain_key=%s", multihop_chain_key(example.get("hops", [])))
+        return ["JUDGE_FAILED"]
+
+
 def synthesize_multihop_examples(
     seeds: list[dict[str, Any]],
     chunks: list[Chunk],
@@ -535,6 +816,9 @@ def synthesize_multihop_examples(
     existing_questions: set[str] | None = None,
     max_concurrency: int = 1,
     raise_on_merge_failure: bool = False,
+    quality_gate: str = "rules",
+    judge_llm_client: LLMClient | None = None,
+    on_example_rejected: Callable[[dict[str, Any]], None] | None = None,
 ) -> list[dict[str, Any]]:
     return list(
         iter_synthesize_multihop_examples(
@@ -546,6 +830,9 @@ def synthesize_multihop_examples(
             existing_questions=existing_questions,
             max_concurrency=max_concurrency,
             raise_on_merge_failure=raise_on_merge_failure,
+            quality_gate=quality_gate,
+            judge_llm_client=judge_llm_client,
+            on_example_rejected=on_example_rejected,
         )
     )
 
@@ -560,9 +847,15 @@ def iter_synthesize_multihop_examples(
     max_concurrency: int = 1,
     raise_on_merge_failure: bool = False,
     on_chain_failed: Callable[[list[dict[str, Any]], Exception], None] | None = None,
+    quality_gate: str = "rules",
+    judge_llm_client: LLMClient | None = None,
+    seed_keys: set[str] | None = None,
+    on_example_rejected: Callable[[dict[str, Any]], None] | None = None,
 ) -> Iterable[dict[str, Any]]:
     if max_concurrency < 1:
         raise ValueError("max_concurrency must be >= 1.")
+    if quality_gate not in {"none", "rules", "llm"}:
+        raise ValueError("quality_gate must be one of: none, rules, llm.")
     logger.info(
         "multihop_synthesis.start seed_count=%s chunk_count=%s target_count=%s max_concurrency=%s",
         len(seeds),
@@ -572,6 +865,9 @@ def iter_synthesize_multihop_examples(
     )
     retriever = HybridRetriever(chunks)
     seeds_by_chunk = _group_seeds_by_chunk(seeds)
+    valid_chunk_ids = {chunk.chunk_id for chunk in chunks}
+    chunks_by_id = {chunk.chunk_id: chunk for chunk in chunks}
+    effective_seed_keys = seed_keys if seed_keys is not None else {seed_record_key(seed) for seed in seeds}
     seen_questions = set(existing_questions or set())
     seen_chain_keys = set(skip_chain_keys or set())
     generated_count = 0
@@ -589,7 +885,26 @@ def iter_synthesize_multihop_examples(
                     chain,
                     merge_llm_client=merge_llm_client,
                     raise_on_merge_failure=raise_on_merge_failure,
+                    quality_gate=quality_gate,
+                    judge_llm_client=judge_llm_client,
+                    valid_chunk_ids=valid_chunk_ids,
+                    seed_keys=effective_seed_keys,
+                    chunks_by_id=chunks_by_id,
                 )
+            except MultihopQualityError as exc:
+                if merge_llm_client is not None:
+                    completed_merge_count += 1
+                if on_example_rejected:
+                    on_example_rejected(exc.to_record())
+                logger.info(
+                    "multihop_synthesis.rejected stage=%s problem_codes=%s chain_key=%s accepted=%s target_count=%s",
+                    exc.stage,
+                    ",".join(exc.problem_codes),
+                    multihop_chain_key(chain),
+                    generated_count,
+                    target_count,
+                )
+                continue
             except Exception as exc:
                 if on_chain_failed:
                     on_chain_failed(chain, exc)
@@ -604,6 +919,18 @@ def iter_synthesize_multihop_examples(
                 completed_merge_count += 1
             if example["final_question"] in seen_questions:
                 skipped_duplicate_count += 1
+                if on_example_rejected:
+                    on_example_rejected(
+                        {
+                            "chain_key": multihop_chain_key(chain),
+                            "stage": "duplicate",
+                            "problem_codes": ["DUPLICATE_FINAL_QUESTION"],
+                            "final_question": example.get("final_question", ""),
+                            "final_answer": example.get("final_answer", ""),
+                            "hops": chain,
+                            "detail": "",
+                        }
+                    )
                 if merge_llm_client is not None:
                     logger.info(
                         "multihop_synthesis.progress completed_merges=%s accepted=%s skipped_duplicates=%s target_count=%s",
@@ -644,6 +971,11 @@ def iter_synthesize_multihop_examples(
                     chain,
                     merge_llm_client,
                     raise_on_merge_failure=raise_on_merge_failure,
+                    quality_gate=quality_gate,
+                    judge_llm_client=judge_llm_client,
+                    valid_chunk_ids=valid_chunk_ids,
+                    seed_keys=effective_seed_keys,
+                    chunks_by_id=chunks_by_id,
                 )
             ] = chain
             submitted_count += 1
@@ -669,6 +1001,21 @@ def iter_synthesize_multihop_examples(
                     completed_merge_count += 1
                     try:
                         example = future.result()
+                    except MultihopQualityError as exc:
+                        if on_example_rejected:
+                            on_example_rejected(exc.to_record())
+                        logger.info(
+                            "multihop_synthesis.rejected completed_merges=%s submitted=%s accepted=%s stage=%s problem_codes=%s chain_key=%s",
+                            completed_merge_count,
+                            submitted_count,
+                            generated_count,
+                            exc.stage,
+                            ",".join(exc.problem_codes),
+                            multihop_chain_key(chain),
+                        )
+                        if generated_count < target_count:
+                            submit_next(executor)
+                        continue
                     except Exception as exc:
                         if on_chain_failed:
                             on_chain_failed(chain, exc)
@@ -684,6 +1031,18 @@ def iter_synthesize_multihop_examples(
                         continue
                     if example["final_question"] in seen_questions:
                         skipped_duplicate_count += 1
+                        if on_example_rejected:
+                            on_example_rejected(
+                                {
+                                    "chain_key": multihop_chain_key(chain),
+                                    "stage": "duplicate",
+                                    "problem_codes": ["DUPLICATE_FINAL_QUESTION"],
+                                    "final_question": example.get("final_question", ""),
+                                    "final_answer": example.get("final_answer", ""),
+                                    "hops": chain,
+                                    "detail": "",
+                                }
+                            )
                         logger.info(
                             "multihop_synthesis.progress completed_merges=%s submitted=%s accepted=%s skipped_duplicates=%s target_count=%s",
                             completed_merge_count,
@@ -796,7 +1155,8 @@ def _select_next_seed(
         if result.chunk_id in used_chunk_ids:
             continue
         for seed in seeds_by_chunk.get(result.chunk_id, []):
-            return {**seed, "search_tools": _result_search_tools(result)}
+            if _is_valid_chain_extension(chain, seed):
+                return {**seed, "search_tools": _result_search_tools(result)}
     return None
 
 
@@ -837,11 +1197,38 @@ def multihop_chain_key(hops: Iterable[dict[str, Any]]) -> str:
     return "|".join(f"{hop.get('doc_chunk_id', '')}::{hop.get('question', '')}" for hop in hops)
 
 
+def _ensure_multihop_quality(
+    example: dict[str, Any],
+    *,
+    quality_gate: str,
+    valid_chunk_ids: set[str] | None,
+    seed_keys: set[str] | None,
+    judge_llm_client: LLMClient | None,
+    chunks_by_id: dict[str, Chunk] | None,
+) -> None:
+    if quality_gate == "none":
+        return
+    rule_codes = validate_multihop_example(example, valid_chunk_ids=valid_chunk_ids, seed_keys=seed_keys)
+    if rule_codes:
+        raise MultihopQualityError("rules", rule_codes, example.get("hops", []), example)
+    if quality_gate == "llm":
+        if judge_llm_client is None or chunks_by_id is None:
+            raise MultihopQualityError("judge", ["JUDGE_FAILED"], example.get("hops", []), example)
+        judge_codes = judge_multihop_example(example, judge_llm_client, chunks_by_id)
+        if judge_codes:
+            raise MultihopQualityError("judge", judge_codes, example.get("hops", []), example)
+
+
 def _build_stepwise_example(
     chain: list[dict[str, Any]],
     merge_llm_client: LLMClient | None = None,
     *,
     raise_on_merge_failure: bool = False,
+    quality_gate: str = "rules",
+    judge_llm_client: LLMClient | None = None,
+    valid_chunk_ids: set[str] | None = None,
+    seed_keys: set[str] | None = None,
+    chunks_by_id: dict[str, Chunk] | None = None,
 ) -> dict[str, Any]:
     hop_count = len(chain)
     merged = (
@@ -853,7 +1240,7 @@ def _build_stepwise_example(
     final_question = merged.get("final_question") or _build_stepwise_question(chain)
     qa_type = merged.get("qa_type") or "inference"
     answer_aliases = merged.get("answer_aliases") or [final_answer, _first_sentence(final_answer)]
-    return {
+    example = {
         "final_question": final_question,
         "final_answer": final_answer,
         "hop_count": hop_count,
@@ -862,6 +1249,15 @@ def _build_stepwise_example(
         "hops": [dict(hop) for hop in chain],
         "answer_aliases": answer_aliases,
     }
+    _ensure_multihop_quality(
+        example,
+        quality_gate=quality_gate,
+        valid_chunk_ids=valid_chunk_ids,
+        seed_keys=seed_keys,
+        judge_llm_client=judge_llm_client,
+        chunks_by_id=chunks_by_id,
+    )
+    return example
 
 
 def build_stepwise_example_from_merge(chain: list[dict[str, Any]], merged: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -946,12 +1342,14 @@ def _build_multihop_merge_messages(chain: list[dict[str, Any]]) -> list[ChatMess
     user_prompt = f"""请基于以下逐跳 QA 链生成多跳 QA。
 
 要求：
-1. final_question 必须自然，不能直接暴露“第1步/第2步”。
-2. final_question 必须需要全部 hop 才能回答。
-3. final_answer 默认使用最后一跳 answer，除非链路逻辑要求更准确的短答案。
-4. qa_type 取 inference。
-5. answer_aliases 给出 1-3 个可接受短答案。
-6. 输出 JSON 对象，字段为 final_question、final_answer、qa_type、answer_aliases。
+1. final_question 必须自然，不能出现“第1步/第2步/hop/先确定/再结合/最后/最终答案”等合成痕迹。
+2. final_question 必须需要全部 hop 才能回答，不能退化为只看最后一跳或任意单个 chunk 就能回答。
+3. final_question 禁止直接包含任何 hop 的 answer，也禁止包含 final_answer。
+4. final_question 只能用前序 hop 可推导出的描述来定位目标，不能把中间答案文本写出来。
+5. final_answer 必须严格等于最后一跳 answer，不要组合多个答案，不要改写成长句。
+6. qa_type 固定取 inference。
+7. answer_aliases 给出 1-3 个可接受短答案，必须包含 final_answer，不能重复，不能引入冲突事实。
+8. 输出 JSON 对象，字段只能为 final_question、final_answer、qa_type、answer_aliases。
 
 逐跳 QA：
 {hop_lines}

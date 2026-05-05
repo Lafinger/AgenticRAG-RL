@@ -126,6 +126,18 @@ def test_newapi_defaults_can_come_from_environment(monkeypatch) -> None:
     assert resolve_judge_model("newapi") == "env-newapi-judge"
 
 
+def test_newapi_builtin_defaults_use_gpt_5_5(monkeypatch) -> None:
+    monkeypatch.delenv("NEWAPI_MODEL", raising=False)
+    monkeypatch.delenv("NEWAPI_KG_MODEL", raising=False)
+    monkeypatch.delenv("NEWAPI_THINKING_MODEL", raising=False)
+    monkeypatch.delenv("NEWAPI_JUDGE_MODEL", raising=False)
+
+    assert get_newapi_model() == "gpt-5.5"
+    assert resolve_kg_model("newapi") == "gpt-5.5"
+    assert resolve_thinking_model("newapi") == "gpt-5.5"
+    assert resolve_judge_model("newapi") == "gpt-5.5"
+
+
 def test_rightcode_defaults_can_come_from_environment(monkeypatch) -> None:
     monkeypatch.setenv("RIGHTCODE_MODEL", "env-rc-model")
     monkeypatch.setenv("RIGHTCODE_KG_MODEL", "env-rc-kg")
@@ -194,7 +206,7 @@ def test_newapi_online_inference_uses_openai_compatible_chat_path(monkeypatch) -
     monkeypatch.setattr(httpx, "post", fake_post)
     client = NewAPILLMClient(
         api_key="sk-test",
-        model="deepseek-v4-pro",
+        model="gpt-5.5",
         base_url="https://api.6i2.com/v1",
         timeout_seconds=123,
     )
@@ -205,7 +217,7 @@ def test_newapi_online_inference_uses_openai_compatible_chat_path(monkeypatch) -
     assert calls[0]["url"] == "https://api.6i2.com/v1/chat/completions"
     assert calls[0]["headers"]["Authorization"] == "Bearer sk-test"
     assert calls[0]["json"] == {
-        "model": "deepseek-v4-pro",
+        "model": "gpt-5.5",
         "messages": [{"role": "user", "content": "你好"}],
         "temperature": 0.2,
     }

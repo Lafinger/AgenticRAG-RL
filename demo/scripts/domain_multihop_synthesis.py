@@ -18,6 +18,7 @@ from agentic_rag_rl.llm_client import (
     get_doubao_batch_job_config,
     get_doubao_use_batch_inference,
     resolve_llm_base_url,
+    resolve_judge_model,
     resolve_thinking_model,
     split_doubao_model_version,
 )
@@ -27,9 +28,12 @@ from agentic_rag_rl.synthesis import (
     _iter_multihop_candidate_chains,
     build_multihop_merge_messages,
     build_stepwise_example_from_merge,
+    judge_multihop_example,
     iter_synthesize_multihop_examples,
     multihop_chain_key,
     parse_multihop_merge_content,
+    seed_record_key,
+    validate_multihop_example,
 )
 
 
@@ -39,6 +43,10 @@ def _default_failed_output(output: Path) -> Path:
 
 def _default_checkpoint_output(output: Path) -> Path:
     return output.with_name(f"{output.stem}.checkpoint.jsonl")
+
+
+def _default_rejected_output(output: Path) -> Path:
+    return output.with_name(f"{output.stem}.rejected.jsonl")
 
 
 def _append_record(path: Path, record: dict) -> None:
@@ -65,6 +73,7 @@ def main() -> None:
     parser.add_argument("--env-file", default=str(ROOT / ".env"))
     parser.add_argument("--llm-provider", default=DEFAULT_LLM_PROVIDER, choices=LLM_PROVIDER_CHOICES)
     parser.add_argument("--merge-model")
+    parser.add_argument("--judge-model", help="Judge model for LLM quality gate. Defaults to merge model.")
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
     parser.add_argument("--timeout-seconds", type=float, help="Online LLM request timeout for LLM merge.")
@@ -85,15 +94,22 @@ def main() -> None:
     parser.add_argument("--batch-wait-timeout", type=float, help="Maximum seconds to wait for Batch Job completion.")
     parser.add_argument("--batch-work-dir", default=str(ROOT / "data" / "batch_jobs" / "multihop_merge"), help="Local Batch Job work dir.")
     parser.add_argument("--batch-max-candidates", type=int, help="Maximum candidate chains submitted to one Batch Job.")
+    parser.add_argument("--quality-gate", default="llm", choices=["rules", "llm"], help="Quality gate before appending examples.")
+    parser.add_argument("--candidate-multiplier", type=int, help="Candidate chain multiplier for stricter quality gates.")
     parser.add_argument("--disable-llm-merge", action="store_true")
     parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent LLM merge requests.")
     parser.add_argument("--overwrite", action="store_true", help="Clear output and regenerate from the beginning.")
     parser.add_argument("--failed-output", help="JSONL file for failed LLM merge chains.")
+    parser.add_argument("--rejected-output", help="JSONL file for rejected merged examples.")
     parser.add_argument("--checkpoint-output", help="JSONL checkpoint file for successful and failed chains.")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()
     if args.max_concurrency < 1:
         parser.error("--max-concurrency must be >= 1.")
+    if args.candidate_multiplier is not None and args.candidate_multiplier < 1:
+        parser.error("--candidate-multiplier must be >= 1.")
+    if args.quality_gate == "llm" and args.disable_llm_merge:
+        parser.error("--quality-gate llm requires LLM merge; remove --disable-llm-merge or use --quality-gate rules.")
 
     _configure_logging(args.log_level)
     load_env_file(args.env_file)
@@ -101,29 +117,39 @@ def main() -> None:
     if batch_inference_enabled and args.llm_provider != "doubao":
         parser.error("--use-batch-inference only supports --llm-provider doubao.")
     merge_model = resolve_thinking_model(args.llm_provider, args.merge_model)
+    judge_model = resolve_judge_model(args.llm_provider, args.judge_model) if args.judge_model else merge_model
     base_url = resolve_llm_base_url(args.llm_provider, args.base_url)
+    candidate_multiplier = args.candidate_multiplier or (20 if args.quality_gate == "llm" else 10)
     logging.info(
-        "domain_multihop_synthesis.start seeds=%s corpus=%s output=%s target_count=%s llm_merge=%s merge_model=%s max_concurrency=%s batch_inference=%s",
+        "domain_multihop_synthesis.start seeds=%s corpus=%s output=%s target_count=%s llm_merge=%s merge_model=%s quality_gate=%s judge_model=%s max_concurrency=%s batch_inference=%s",
         args.seeds,
         args.corpus,
         args.output,
         args.target_count,
         not args.disable_llm_merge,
         merge_model,
+        args.quality_gate,
+        judge_model,
         args.max_concurrency,
         batch_inference_enabled,
     )
     seeds = load_jsonl(args.seeds)
     chunks = load_chunks(args.corpus)
+    chunks_by_id = {chunk.chunk_id: chunk for chunk in chunks}
+    valid_chunk_ids = set(chunks_by_id)
+    seed_keys = {seed_record_key(seed) for seed in seeds}
     logging.info("domain_multihop_synthesis.loaded_inputs seed_count=%s chunk_count=%s", len(seeds), len(chunks))
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     failed_output_path = Path(args.failed_output) if args.failed_output else _default_failed_output(output_path)
     checkpoint_output_path = Path(args.checkpoint_output) if args.checkpoint_output else _default_checkpoint_output(output_path)
+    rejected_output_path = Path(args.rejected_output) if args.rejected_output else _default_rejected_output(output_path)
     if args.overwrite and failed_output_path.exists():
         failed_output_path.unlink()
     if args.overwrite and checkpoint_output_path.exists():
         checkpoint_output_path.unlink()
+    if args.overwrite and rejected_output_path.exists():
+        rejected_output_path.unlink()
     existing_examples = [] if args.overwrite or not output_path.exists() else load_jsonl(output_path)
     existing_chain_keys = {multihop_chain_key(record.get("hops", [])) for record in existing_examples}
     existing_questions = {
@@ -154,10 +180,27 @@ def main() -> None:
         _append_record(failed_output_path, failed_record)
         _append_record(checkpoint_output_path, failed_record)
 
+    rejected_count = 0
+
+    def record_rejected_example(record: dict) -> None:
+        nonlocal rejected_count
+        rejected_count += 1
+        _append_record(rejected_output_path, {**record, "status": "rejected"})
+
+    judge_llm_client = None
+    if args.quality_gate == "llm":
+        judge_llm_client = create_llm_client(
+            args.llm_provider,
+            api_key=args.api_key,
+            model=judge_model,
+            base_url=base_url,
+            timeout_seconds=args.timeout_seconds,
+        )
+
     if batch_inference_enabled and not args.disable_llm_merge:
         stats = {"extension_attempt_count": 0}
         seen_chain_keys = set(existing_chain_keys)
-        candidate_limit = args.batch_max_candidates or max(remaining_count * 5, remaining_count)
+        candidate_limit = args.batch_max_candidates or max(remaining_count * candidate_multiplier, remaining_count)
         candidate_chains = []
         candidate_iter = _iter_multihop_candidate_chains(
             seeds,
@@ -215,7 +258,51 @@ def main() -> None:
                     merged = parse_multihop_merge_content(result.content)
                     example = build_stepwise_example_from_merge(chain, merged)
                     if example["final_question"] in seen_questions:
+                        record_rejected_example(
+                            {
+                                "chain_key": chain_key,
+                                "stage": "duplicate",
+                                "problem_codes": ["DUPLICATE_FINAL_QUESTION"],
+                                "final_question": example.get("final_question", ""),
+                                "final_answer": example.get("final_answer", ""),
+                                "hops": chain,
+                                "detail": "",
+                            }
+                        )
                         continue
+                    rule_codes = validate_multihop_example(
+                        example,
+                        valid_chunk_ids=valid_chunk_ids,
+                        seed_keys=seed_keys,
+                    )
+                    if rule_codes:
+                        record_rejected_example(
+                            {
+                                "chain_key": chain_key,
+                                "stage": "rules",
+                                "problem_codes": rule_codes,
+                                "final_question": example.get("final_question", ""),
+                                "final_answer": example.get("final_answer", ""),
+                                "hops": chain,
+                                "detail": "",
+                            }
+                        )
+                        continue
+                    if args.quality_gate == "llm":
+                        judge_codes = judge_multihop_example(example, judge_llm_client, chunks_by_id)  # type: ignore[arg-type]
+                        if judge_codes:
+                            record_rejected_example(
+                                {
+                                    "chain_key": chain_key,
+                                    "stage": "judge",
+                                    "problem_codes": judge_codes,
+                                    "final_question": example.get("final_question", ""),
+                                    "final_answer": example.get("final_answer", ""),
+                                    "hops": chain,
+                                    "detail": "",
+                                }
+                            )
+                            continue
                 except Exception as exc:
                     failed_count += 1
                     record_failed_chain(chain, exc)
@@ -234,17 +321,28 @@ def main() -> None:
                     },
                 )
                 logging.info(
-                    "domain_multihop_synthesis.batch_appended generated_count=%s total_count=%s failed_count=%s",
+                    "domain_multihop_synthesis.batch_appended generated_count=%s total_count=%s failed_count=%s rejected_count=%s",
                     generated_count,
                     len(existing_examples) + generated_count,
                     failed_count,
+                    rejected_count,
                 )
         total_count = len(existing_examples) + generated_count
-        logging.info("domain_multihop_synthesis.done output=%s multihop_count=%s", args.output, total_count)
+        logging.info(
+            "domain_multihop_synthesis.done output=%s multihop_count=%s rejected_count=%s remaining_count=%s",
+            args.output,
+            total_count,
+            rejected_count,
+            max(args.target_count - total_count, 0),
+        )
         print(f"multihop_count={total_count}")
+        print(f"rejected_count={rejected_count}")
+        print(f"remaining_count={max(args.target_count - total_count, 0)}")
         if failed_count:
             print(f"failed_count={failed_count}")
             print(f"failed_output={failed_output_path}")
+        if rejected_count:
+            print(f"rejected_output={rejected_output_path}")
         return
 
     merge_llm_client = None
@@ -275,6 +373,10 @@ def main() -> None:
             max_concurrency=args.max_concurrency,
             raise_on_merge_failure=merge_llm_client is not None,
             on_chain_failed=record_failed_chain_with_count,
+            quality_gate=args.quality_gate,
+            judge_llm_client=judge_llm_client,
+            seed_keys=seed_keys,
+            on_example_rejected=record_rejected_example,
         ):
             write_jsonl_record(handle, example)
             handle.flush()
@@ -288,17 +390,28 @@ def main() -> None:
                 },
             )
             logging.info(
-                "domain_multihop_synthesis.appended generated_count=%s total_count=%s failed_count=%s",
+                "domain_multihop_synthesis.appended generated_count=%s total_count=%s failed_count=%s rejected_count=%s",
                 generated_count,
                 len(existing_examples) + generated_count,
                 failed_count,
+                rejected_count,
             )
     total_count = len(existing_examples) + generated_count
-    logging.info("domain_multihop_synthesis.done output=%s multihop_count=%s", args.output, total_count)
+    logging.info(
+        "domain_multihop_synthesis.done output=%s multihop_count=%s rejected_count=%s remaining_count=%s",
+        args.output,
+        total_count,
+        rejected_count,
+        max(args.target_count - total_count, 0),
+    )
     print(f"multihop_count={total_count}")
+    print(f"rejected_count={rejected_count}")
+    print(f"remaining_count={max(args.target_count - total_count, 0)}")
     if failed_count:
         print(f"failed_count={failed_count}")
         print(f"failed_output={failed_output_path}")
+    if rejected_count:
+        print(f"rejected_output={rejected_output_path}")
 
 
 if __name__ == "__main__":

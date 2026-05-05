@@ -259,7 +259,7 @@ uv run python .\scripts\build_index.py `
   --embedding-model .\models\bge-m3 `
   --reranker-model .\models\bge-reranker-v2-m3 `
   --llm-provider newapi `
-  --kg-model deepseek-v4-pro `
+  --kg-model gpt-5.5 `
   --max-concurrency 5
 ```
 
@@ -300,20 +300,20 @@ uv run python .\scripts\build_index.py `
 | Provider | 接口 | API Key | 默认模型 | 是否支持 Batch Job |
 | --- | --- | --- | --- | --- |
 | `doubao` | 火山方舟 OpenAI-compatible | `ARK_API_KEY` | `doubao-seed-2-0-pro-260215` | 支持 |
-| `newapi` | `https://api.6i2.com/v1` OpenAI-compatible | `NEWAPI_API_KEY` | `deepseek-v4-pro` | 不支持 |
+| `newapi` | `https://api.6i2.com/v1` OpenAI-compatible | `NEWAPI_API_KEY` | `gpt-5.5` | 不支持 |
 | `rightcode` | `https://api.right.codes/v1` OpenAI-compatible | `RIGHTCODE_API_KEY` | `gpt-5.5` | 不支持 |
 
 可通过命令行选择 provider 和模型：
 
 | 业务 | provider 参数 | 模型参数 |
 | --- | --- | --- |
-| Step 2 KG 三元组抽取 | `--llm-provider newapi` | `--kg-model deepseek-v4-pro` |
-| Step 3 seed QA 生成 | `--llm-provider newapi` | `--model deepseek-v4-pro` |
-| Step 4 多跳 QA 合并 | `--llm-provider newapi` | `--merge-model deepseek-v4-pro` |
-| LLM-as-Judge | `--llm-provider newapi` | `--judge-model deepseek-v4-pro` |
+| Step 2 KG 三元组抽取 | `--llm-provider newapi` | `--kg-model gpt-5.5` |
+| Step 3 seed QA 生成 | `--llm-provider newapi` | `--model gpt-5.5` |
+| Step 4 多跳 QA 合并 + 质量门禁 | `--llm-provider newapi` | `--merge-model gpt-5.5 --judge-model gpt-5.5` |
+| LLM-as-Judge | `--llm-provider newapi` | `--judge-model gpt-5.5` |
 | Step 2 KG 三元组抽取 | `--llm-provider rightcode` | `--kg-model gpt-5.5` |
 | Step 3 seed QA 生成 | `--llm-provider rightcode` | `--model gpt-5.5` |
-| Step 4 多跳 QA 合并 | `--llm-provider rightcode` | `--merge-model gpt-5.5` |
+| Step 4 多跳 QA 合并 + 质量门禁 | `--llm-provider rightcode` | `--merge-model gpt-5.5 --judge-model gpt-5.5` |
 | LLM-as-Judge | `--llm-provider rightcode` | `--judge-model gpt-5.5` |
 
 也可以在 `.env` 中配置默认值：
@@ -321,10 +321,10 @@ uv run python .\scripts\build_index.py `
 ```text
 NEWAPI_API_KEY=...
 NEWAPI_BASE_URL=https://api.6i2.com/v1
-NEWAPI_MODEL=deepseek-v4-pro
-NEWAPI_KG_MODEL=deepseek-v4-pro
-NEWAPI_THINKING_MODEL=deepseek-v4-pro
-NEWAPI_JUDGE_MODEL=deepseek-v4-pro
+NEWAPI_MODEL=gpt-5.5
+NEWAPI_KG_MODEL=gpt-5.5
+NEWAPI_THINKING_MODEL=gpt-5.5
+NEWAPI_JUDGE_MODEL=gpt-5.5
 RIGHTCODE_API_KEY=...
 RIGHTCODE_BASE_URL=https://api.right.codes/v1
 RIGHTCODE_MODEL=gpt-5.5
@@ -378,7 +378,7 @@ DOUBAO_BATCH_COMPLETION_WINDOW=1d
 | --- | --- | --- | --- | --- |
 | Step 2 KG 三元组抽取 | `data/batch_jobs/kg/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `data/novel/indexes/triples_cache.jsonl`、`knowledge_graph.json`、`entity_embeddings.pkl` | 构建 KG 索引和图检索 |
 | Step 3 seed QA 生成 | `data/batch_jobs/seed_qa/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `data/novel_eval/seeds.jsonl`、`seeds.checkpoint.jsonl`、`seeds.failed.jsonl` | Step 4 输入和 seed 审计 |
-| Step 4 多跳 QA 合并 | `data/batch_jobs/multihop_merge/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `data/novel_eval/qa_pairs.jsonl`、`qa_pairs.checkpoint.jsonl`、`qa_pairs.failed.jsonl` | SFT、GRPO 和 eval 基础 QA |
+| Step 4 多跳 QA 合并 | `data/batch_jobs/multihop_merge/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `data/novel_eval/qa_pairs.jsonl`、`qa_pairs.checkpoint.jsonl`、`qa_pairs.failed.jsonl`、`qa_pairs.rejected.jsonl` | SFT、GRPO 和 eval 基础 QA |
 | LLM-as-Judge | `data/batch_jobs/llm_judge/` | `requests.jsonl`、`results.jsonl`、`errors.jsonl` | `--output` 指定的 judged JSON，以及对应 `*_judged.checkpoint.jsonl` | 评测报告和诊断分析 |
 
 **怎么看 Batch Job 执行状态和进度**：
@@ -545,7 +545,7 @@ flowchart TD
 - 清洗脚本：`scripts/clean_seed_qa.py`
 - 环境文件：复制 `.env.example` 为 `.env`，填写所选供应商 API Key
 - 默认 Provider：`doubao`，也可用 `--llm-provider newapi` 或 `--llm-provider rightcode`
-- 默认模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，NewAPI 使用 `deepseek-v4-pro`，RightCode 使用 `gpt-5.5`
+- 默认模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，NewAPI 使用 `gpt-5.5`，RightCode 使用 `gpt-5.5`
 - 默认最大并发：`5`
 - 默认 Base URL：`https://ark.cn-beijing.volces.com/api/v3`
 - 输出：`data/novel_eval/seeds.jsonl`
@@ -577,7 +577,7 @@ uv run python .\scripts\gen_seed_qa.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\seeds.jsonl `
   --llm-provider newapi `
-  --model deepseek-v4-pro `
+  --model gpt-5.5 `
   --max-concurrency 5
 ```
 
@@ -698,7 +698,7 @@ entities 格式异常样本数
 - 多跳样本不是把几个单跳问题机械拼接，而是把 `N-hop 链 + 新 QA` 合并为一个自然的 `(N+1)-hop final_question`。
 - 每扩展一跳都必须保留完整 `hops[]`，包括 `question/answer/doc_chunk_id/qa_type/search_tools`。
 - 最终问题必须让模型通过多轮检索收集证据才能回答，不能把中间答案直接写进问题里。
-- 合并后的 `final_answer` 默认取最后一跳短答案；只有链路逻辑要求组合答案时才允许偏离。
+- 合并后的 `final_answer` 在当前 v1 流程中强制等于最后一跳短答案，避免组合答案和偏离 gold hop。
 - 结构清洗只能证明字段和 chunk 引用有效，不能替代语义级四重验证。
 
 **逐跳扩展流程**：
@@ -715,18 +715,21 @@ Step 2: 基于当前链路检索候选 chunk
 Step 3: 从候选 chunk 中选择可接续的 seed QA 作为下一跳
         新 hop 必须来自新的 doc_chunk_id
         新 hop 的 qa_type 继续使用 seed QA 的 5 类类型
+        只接受答案/实体桥接链，或同一目标多证据链
+        拒绝只靠泛词、类别、题材、字数或表面联想连接的链
         记录候选 chunk 被哪些检索工具命中到 search_tools
 
 Step 4: 使用 merge prompt 合并 N-hop 链和新 QA
         输出 final_question / final_answer / qa_type / answer_aliases
         final_question 必须自然、无合成痕迹、无中间答案泄露
+        final_answer 必须等于最后一跳 answer
 
 Step 5: 对候选多跳样本做质量验证
-        规则检查：字段、hop 数、chunk 引用、答案长度、别名数量
-        语义检查：链路是否合理，是否存在虚假关联或简单拼接
-        多跳必要性检查：不能只看最后一跳或单个 chunk 就能回答
+        规则检查：字段、hop 数、chunk 引用、当前 seed 成员、答案长度、别名数量
+        LLM Judge：链路是否合理，是否存在虚假关联、简单拼接或单跳退化
+        不通过样本写入 qa_pairs.rejected.jsonl，不进入 qa_pairs.jsonl
 
-Step 6: 通过检查后写入 qa_pairs.jsonl
+Step 6: 通过规则门禁和 LLM 语义门禁后写入 qa_pairs.jsonl
         保留 final_question/final_answer/hop_count/qa_type/subset/hops/answer_aliases
 ```
 
@@ -740,11 +743,13 @@ flowchart TD
     E --> F["候选 chunk 合并去重"]
     F --> G["跳过已用 doc_chunk_id"]
     G --> H["选择候选 chunk 中的 seed QA"]
-    H --> I["追加为 hop2 / hop3"]
-    I --> J["merge prompt 合并多跳问题"]
-    J --> K["规则检查"]
-    K --> L["语义和多跳必要性检查"]
-    L --> M["写入 qa_pairs.jsonl"]
+    H --> I["桥接 / 同目标预筛选"]
+    I --> J["追加为 hop2 / hop3"]
+    J --> K["merge prompt 合并多跳问题"]
+    K --> L["规则门禁"]
+    L --> N["LLM Judge 语义门禁"]
+    N --> O["拒绝样本写入 rejected"]
+    N --> M["通过后写入 qa_pairs.jsonl"]
 ```
 
 **小说域适配**：
@@ -763,12 +768,16 @@ flowchart TD
 
 - `domain_multihop_synthesis.py` 默认加载 `seeds_clean.jsonl` 和 `corpus.jsonl`，并在内存中创建 `HybridRetriever`。
 - 每条 seed QA 会先作为 `hop1`；扩展下一跳时，主查询使用当前 hop 的 `question`，辅查询使用当前 hop 的 `answer`。
-- 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`，从新的 chunk 中选择已有 seed QA 作为下一跳。
-- 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，生成 `final_question/final_answer/qa_type/answer_aliases`。
+- 检索结果会合并去重，并跳过已经使用过的 `doc_chunk_id`；下一跳必须和当前链路形成答案/实体桥接，或属于同一目标的多证据链。
+- 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，生成 `final_question/final_answer/qa_type/answer_aliases`；当前 v1 强制 `final_answer` 等于最后一跳 `answer`。
+- `--quality-gate` 默认是 `llm`：先做规则门禁，再调用同一 provider 的 Judge 模型做语义和多跳必要性审查；只想做低成本硬规则检查时可设为 `rules`。
+- `--judge-model` 默认跟随 `--merge-model`；如果显式传入，则用于 Step 4 生成后的 LLM 语义门禁。
+- 被规则门禁或 Judge 拒绝的候选样本不会写入 `qa_pairs.jsonl`，会写入 `qa_pairs.rejected.jsonl`，包含 `chain_key/stage/problem_codes/final_question/hops` 等追踪字段。
+- `--candidate-multiplier` 控制严格门禁下的候选放大倍数；`llm` 模式默认 `20`，`rules` 模式默认 `10`。
 - LLM 合并默认最大并发数为 `5`，可通过 `--max-concurrency` 调整；输出按 merge 完成顺序写入，断点续写仍按 hop 链路签名判断。
 - LLM 合并会打印 `multihop_synthesis.progress` / `multihop_synthesis.added`，显示已完成 merge、已接受样本、重复跳过数和目标数量。
 - 使用真实 LLM merge 时，合并失败的链路会写入 `qa_pairs.failed.jsonl` 和 `qa_pairs.checkpoint.jsonl` 的 `status=failed` 记录；重新执行同一命令时，失败链路不会被当作已完成，会重新尝试生成。
-- 如果只想本机离线 smoke，可以加 `--disable-llm-merge`，此时会回退到规则模板合并；该模式只适合连通性测试，不适合作为正式训练数据。
+- 如果只想本机离线 smoke，可以加 `--disable-llm-merge --quality-gate rules`，此时会回退到规则模板合并；严格规则可能拒绝模板题，该模式只适合连通性测试，不适合作为正式训练数据。
 - 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 hop 级 `qa_type` 继承 seed QA 的 5 类类型。
 - `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
 - 脚本默认启用断点续写：如果 `qa_pairs.jsonl` 已存在，会读取已有样本数量和 hop 链路签名，只补齐到 `--target-count`，并跳过已经生成过的链路。
@@ -783,13 +792,14 @@ flowchart TD
 | hop 顺序 | `hop_idx` 从 1 连续递增 |
 | chunk 可用性 | 每个 `doc_chunk_id` 必须存在于 `data/novel/corpus.jsonl` |
 | chunk 去重 | 同一条多跳链内不重复使用同一个 `doc_chunk_id` |
+| seed 成员 | 每个 hop 的 `doc_chunk_id/question/answer` 必须仍存在于当前 `seeds_clean.jsonl` |
 | 顶层类型 | 多跳样本 `qa_type` 固定为 `inference` |
 | hop 类型 | hop 级 `qa_type` 只能是 `character/place/object/relation/action_result` |
 | 自然性 | `final_question` 不能出现“第1步 / 第2步 / hop / 逐步检索 / 最终答案是什么”等合成痕迹 |
 | 无泄露 | `final_question` 不能直接包含中间 hop answer 或最终答案 |
 | 多跳必要性 | 不能退化成只看最后一跳即可回答的单跳题 |
-| 答案短化 | `final_answer` 应为短答案；拒绝长段解释、编号列表和多个事实并列 |
-| 别名约束 | `answer_aliases` 给出 1-3 个短别名，不能重复，不能引入冲突事实 |
+| 答案短化 | `final_answer` 必须等于最后一跳 `answer`，且应为短答案；拒绝长段解释、编号列表和多个事实并列 |
+| 别名约束 | `answer_aliases` 给出 1-3 个短别名，必须包含 `final_answer`，不能重复，不能引入冲突事实 |
 
 **四重验证目标**：
 
@@ -802,7 +812,7 @@ flowchart TD
 | 单文档不可答 | 确保需要多跳证据 | 任意单个 gold chunk 都不足以回答完整 `final_question` |
 | 全文档可答 | 确保问题本身可回答 | 给出所有 gold chunks 时，LLM 能得到与 `final_answer/answer_aliases` 等价的答案 |
 
-当前 `clean_synthesis.py` 只做 hop 数和 `doc_chunk_id` 有效性清洗，不能替代上面的四重验证。正式训练数据应在 Step 5 前至少完成规则检查；如果要严格复现根项目质量控制，应新增或执行 LLM 验证流程，并保存每条样本的验证结果，便于追溯。
+当前 `domain_multihop_synthesis.py` 默认在写入前执行规则门禁和 LLM Judge 语义门禁，拒绝样本会进入 `qa_pairs.rejected.jsonl` 便于追溯。`clean_synthesis.py` 仍只做 hop 数和 `doc_chunk_id` 有效性清洗，不能替代 Step 4 的语义级质量门禁。
 
 **需要**：
 
@@ -811,9 +821,12 @@ flowchart TD
 - 脚本：`scripts/domain_multihop_synthesis.py`
 - 环境文件：`.env` 中填写所选供应商 API Key
 - 默认 Provider：`doubao`，也可用 `--llm-provider newapi` 或 `--llm-provider rightcode`
-- 默认合并模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，NewAPI 使用 `deepseek-v4-pro`，RightCode 使用 `gpt-5.5`
+- 默认合并模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，NewAPI 使用 `gpt-5.5`，RightCode 使用 `gpt-5.5`
+- 默认质量门禁：`--quality-gate llm`，先规则过滤，再调用 `--judge-model` 做语义审查
+- 默认候选放大：LLM 门禁模式下 `--candidate-multiplier 20`
 - 默认最大并发：`5`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
+- 拒绝样本输出：`data/novel_eval/qa_pairs.rejected.jsonl`
 
 **怎么做**：
 
@@ -823,10 +836,12 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier 20 `
   --max-concurrency 5
 ```
 
-`--max-concurrency` 控制同时发起的多跳 merge LLM 请求数。默认值是 `5`；如果遇到接口限流或合并失败数上升，可以先降到 `1` 或 `2`。
+`--max-concurrency` 控制同时发起的多跳 merge LLM 请求数。默认值是 `5`；如果遇到接口限流或合并失败数上升，可以先降到 `1` 或 `2`。`--quality-gate llm` 是正式数据默认模式；如果只想先看硬规则过滤结果，可改为 `--quality-gate rules`。
 
 如果使用 NewAPI 在线模型做多跳 QA 合并：
 
@@ -837,9 +852,14 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
   --llm-provider newapi `
-  --merge-model deepseek-v4-pro `
+  --merge-model gpt-5.5 `
+  --judge-model gpt-5.5 `
+  --quality-gate llm `
+  --candidate-multiplier 20 `
   --max-concurrency 5
 ```
+
+NewAPI 的模型名必须以当前网关实际可用通道为准；如果 `gpt-5.5` 返回 `model_not_found`，需要替换为该 NewAPI 分组下可用的模型名。
 
 如果使用 RightCode 在线模型做多跳 QA 合并：
 
@@ -851,6 +871,9 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --target-count 50 `
   --llm-provider rightcode `
   --merge-model gpt-5.5 `
+  --judge-model gpt-5.5 `
+  --quality-gate llm `
+  --candidate-multiplier 20 `
   --max-concurrency 5
 ```
 
@@ -862,10 +885,12 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier 20 `
   --use-batch-inference
 ```
 
-批量模式会先构造候选 hop 链，把每条候选链的 merge prompt 写入 Batch Job。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 `final_question/final_answer/qa_type/answer_aliases`，并写入业务执行产物 `data/novel_eval/qa_pairs.jsonl` 和 checkpoint。`qa_pairs.jsonl` 是后续 SFT、GRPO 和 eval 使用的多跳 QA 主文件，不是 Batch Job 原始响应文件。默认提交候选数为 `target-count * 5`，可用 `--batch-max-candidates` 调整。
+批量模式会先构造候选 hop 链，把每条候选链的 merge prompt 写入 Batch Job。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 `final_question/final_answer/qa_type/answer_aliases`，通过规则门禁和可选 LLM Judge 后写入业务执行产物 `data/novel_eval/qa_pairs.jsonl` 和 checkpoint。`qa_pairs.jsonl` 是后续 SFT、GRPO 和 eval 使用的多跳 QA 主文件，不是 Batch Job 原始响应文件。默认提交候选数为 `target-count * candidate-multiplier`，`llm` 模式默认 multiplier 为 `20`，可用 `--batch-max-candidates` 调整绝对候选数。
 
 失败后继续执行同一条命令即可续写；如果确认要从头合成，执行：
 
@@ -875,6 +900,8 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier 20 `
   --max-concurrency 5 `
   --overwrite
 ```
@@ -884,6 +911,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 - `data/novel_eval/qa_pairs.jsonl`
 - `data/novel_eval/qa_pairs.checkpoint.jsonl`
 - `data/novel_eval/qa_pairs.failed.jsonl`，仅当部分候选链多次失败时产生
+- `data/novel_eval/qa_pairs.rejected.jsonl`，记录未通过规则门禁或 LLM Judge 的候选样本
 - `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，仅使用 Doubao 批量推理任务时产生，属于 Batch Job 原始备份 / 可追溯文件
 - 每条样本包含 `final_question/final_answer/hop_count/qa_type/subset/hops/answer_aliases`
 - `hop_count >= 2`
@@ -907,9 +935,10 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 | --- | --- |
 | 自然性 | `final_question` 必须是自然中文问题，不能直接暴露“第 1 步 / 第 2 步 / hop”这类合成痕迹 |
 | 多跳必要性 | `final_question` 必须需要全部 hop 才能回答，不能退化为只看最后一跳即可回答的单跳题 |
-| 答案短化 | `final_answer` 默认使用最后一跳 `answer`，除非链路逻辑要求更准确的短答案 |
+| 无答案泄露 | `final_question` 禁止直接包含任何 hop 的 `answer`，也禁止包含 `final_answer` |
+| 答案短化 | 当前 v1 强制 `final_answer` 等于最后一跳 `answer`，不允许组合多个答案 |
 | 类型固定 | 合并后的多跳样本 `qa_type` 固定为 `inference`，hop 级类型仍继承 seed QA 的 5 类 |
-| 别名约束 | `answer_aliases` 给出 1-3 个可接受短答案，不能引入与标准答案冲突的新事实 |
+| 别名约束 | `answer_aliases` 给出 1-3 个可接受短答案，必须包含 `final_answer`，不能重复，不能引入冲突事实 |
 | 输出格式 | 只能输出 JSON 对象，字段为 `final_question/final_answer/qa_type/answer_aliases`，不能输出解释文本 |
 
 ## Step 5: 清洗、划分和 answer aliases 增强
@@ -1513,7 +1542,7 @@ uv run python .\scripts\run_llm_judge.py `
   .\results\agentic_eval.json `
   --output .\results\agentic_eval_judged.json `
   --llm-provider newapi `
-  --judge-model deepseek-v4-pro `
+  --judge-model gpt-5.5 `
   --max-concurrency 5
 ```
 
@@ -1579,7 +1608,7 @@ uv run python .\scripts\parse_text_corpus.py --input-dir .\data\original_data --
 uv run python .\scripts\build_index.py --corpus .\data\novel\corpus.jsonl --index-dir .\data\novel\indexes --embedding-model .\models\bge-m3 --reranker-model .\models\bge-reranker-v2-m3 --max-concurrency 5 --skip-kg
 uv run python .\scripts\gen_seed_qa.py --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds.jsonl
 uv run python .\scripts\clean_seed_qa.py --input .\data\novel_eval\seeds.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\seeds_clean.jsonl --dropped-output .\data\novel_eval\seeds_dropped.jsonl
-uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50 --max-concurrency 5
+uv run python .\scripts\domain_multihop_synthesis.py --seeds .\data\novel_eval\seeds_clean.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\qa_pairs.jsonl --target-count 50 --quality-gate llm --candidate-multiplier 20 --max-concurrency 5
 uv run python .\scripts\build_oracle_traces.py --qa .\data\novel_eval\qa_pairs.jsonl --corpus .\data\novel\corpus.jsonl --output .\data\novel_eval\traces_oracle_zh.jsonl --use-zh
 uv run python .\scripts\trace_to_sft.py --input .\data\novel_eval\traces_oracle_zh.jsonl --output-dir .\data\novel_eval\sft --lang zh
 uv run python .\scripts\convert_sft_to_unsloth.py --input-dir .\data\novel_eval\sft --output-dir .\data\novel_eval\sft_zh_unsloth
