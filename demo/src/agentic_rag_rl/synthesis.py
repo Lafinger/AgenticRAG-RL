@@ -774,7 +774,7 @@ def build_multihop_judge_messages(example: dict[str, Any], chunks_by_id: dict[st
 WEAK_LINKAGE、SINGLE_HOP_DEGENERATE、HOP_REDUNDANT、EVIDENCE_WEAK、ANSWER_LEAK、FINAL_ANSWER_MISMATCH、INCOMPLETE_ANSWER、ANSWER_NOT_SHORT、ALIAS_INVALID、SYNTHETIC_TRACE。
 
 输出 JSON 对象：
-{{"pass": true/false, "problem_codes": [], "reason": "不超过40字"}}
+{{"pass": true/false, "problem_codes": [], "score": 1-100, "reason": "不超过40字"}}
 
 待审样本：
 {json.dumps({"final_question": example.get("final_question"), "final_answer": example.get("final_answer"), "answer_aliases": example.get("answer_aliases"), "hops": hop_payloads}, ensure_ascii=False)}
@@ -782,7 +782,7 @@ WEAK_LINKAGE、SINGLE_HOP_DEGENERATE、HOP_REDUNDANT、EVIDENCE_WEAK、ANSWER_LE
     return [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
 
 
-def parse_multihop_judge_content(content: str) -> list[str]:
+def parse_multihop_judge_result(content: str) -> dict[str, Any]:
     payload = _extract_json_object(content)
     passed = payload.get("pass", payload.get("passed"))
     if not isinstance(passed, bool):
@@ -794,8 +794,47 @@ def parse_multihop_judge_content(content: str) -> list[str]:
         raise ValueError("Multihop judge problem_codes must be a list.")
     problem_codes = [str(code).strip() for code in raw_codes if str(code).strip()]
     if passed and not problem_codes:
-        return []
-    return sorted(set(problem_codes or ["LLM_JUDGE_REJECTED"]))
+        problem_codes = []
+    else:
+        problem_codes = sorted(set(problem_codes or ["LLM_JUDGE_REJECTED"]))
+    raw_score = payload.get("score", 50 if passed else 0)
+    try:
+        score = int(float(raw_score))
+    except (TypeError, ValueError):
+        score = 50 if passed else 0
+    score = max(0, min(100, score))
+    return {"problem_codes": problem_codes, "score": score}
+
+
+def parse_multihop_judge_content(content: str) -> list[str]:
+    return list(parse_multihop_judge_result(content)["problem_codes"])
+
+
+def evaluate_multihop_example(
+    example: dict[str, Any],
+    *,
+    quality_gate: str,
+    valid_chunk_ids: set[str] | None,
+    seed_keys: set[str] | None,
+    judge_llm_client: LLMClient | None,
+    chunks_by_id: dict[str, Chunk] | None,
+) -> tuple[list[str], int, str]:
+    if quality_gate == "none":
+        return [], 50, "none"
+    rule_codes = validate_multihop_example(example, valid_chunk_ids=valid_chunk_ids, seed_keys=seed_keys)
+    if rule_codes:
+        return rule_codes, 0, "rules"
+    if quality_gate == "llm":
+        if judge_llm_client is None or chunks_by_id is None:
+            return ["JUDGE_FAILED"], 0, "judge"
+        try:
+            content = judge_llm_client.chat(build_multihop_judge_messages(example, chunks_by_id), temperature=0.0)
+            result = parse_multihop_judge_result(content)
+            return list(result["problem_codes"]), int(result["score"]), "judge"
+        except Exception:
+            logger.exception("multihop_quality.judge_failed chain_key=%s", multihop_chain_key(example.get("hops", [])))
+            return ["JUDGE_FAILED"], 0, "judge"
+    return [], 50, "rules"
 
 
 def judge_multihop_example(example: dict[str, Any], judge_llm_client: LLMClient, chunks_by_id: dict[str, Chunk]) -> list[str]:
@@ -805,6 +844,94 @@ def judge_multihop_example(example: dict[str, Any], judge_llm_client: LLMClient,
     except Exception:
         logger.exception("multihop_quality.judge_failed chain_key=%s", multihop_chain_key(example.get("hops", [])))
         return ["JUDGE_FAILED"]
+
+
+def build_multihop_rank_messages(examples: list[dict[str, Any]], chunks_by_id: dict[str, Chunk]) -> list[ChatMessage]:
+    candidates = []
+    for index, example in enumerate(examples, start=1):
+        hop_payloads = []
+        for hop in example.get("hops", []):
+            chunk = chunks_by_id.get(str(hop.get("doc_chunk_id", "")))
+            hop_payloads.append(
+                {
+                    "hop_idx": hop.get("hop_idx"),
+                    "question": hop.get("question"),
+                    "answer": hop.get("answer"),
+                    "doc_chunk_id": hop.get("doc_chunk_id"),
+                    "qa_type": hop.get("qa_type"),
+                    "chunk_text": chunk.text if chunk else "",
+                }
+            )
+        candidates.append(
+            {
+                "index": index,
+                "final_question": example.get("final_question"),
+                "final_answer": example.get("final_answer"),
+                "answer_aliases": example.get("answer_aliases"),
+                "hop_count": example.get("hop_count"),
+                "hops": hop_payloads,
+            }
+        )
+    system_prompt = (
+        "你是严格的中文小说多跳 QA 排序员。"
+        "候选都已通过基础门禁，请只选出最适合训练和评测的一条，并只输出 JSON。"
+    )
+    user_prompt = f"""请从下面候选中选出最佳多跳 QA。
+
+优先标准：
+1. 多跳必要性更强，不能单跳回答。
+2. hop 间剧情、人物、地点、物品或事件依赖更自然。
+3. gold chunk 对 final_answer 支持更明确。
+4. final_question 更自然简洁，且不泄露答案。
+
+输出 JSON 对象：
+{{"winner_index": 1-based整数, "reason": "不超过40字"}}
+
+候选：
+{json.dumps(candidates, ensure_ascii=False)}
+"""
+    return [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
+
+
+def parse_multihop_rank_content(content: str, candidate_count: int) -> int:
+    payload = _extract_json_object(content)
+    raw_index = payload.get("winner_index", payload.get("winner"))
+    try:
+        winner_index = int(raw_index)
+    except (TypeError, ValueError):
+        raise ValueError("Multihop rank response missing integer winner_index.") from None
+    if winner_index < 1 or winner_index > candidate_count:
+        raise ValueError("Multihop rank winner_index out of range.")
+    return winner_index - 1
+
+
+def _fallback_rank_index(examples: list[dict[str, Any]], scores: list[int]) -> int:
+    return max(
+        range(len(examples)),
+        key=lambda index: (
+            scores[index] if index < len(scores) else 0,
+            int(examples[index].get("hop_count") or len(examples[index].get("hops", []))),
+            -len(str(examples[index].get("final_question", ""))),
+            -index,
+        ),
+    )
+
+
+def rank_multihop_examples(
+    examples: list[dict[str, Any]],
+    scores: list[int],
+    rank_llm_client: LLMClient | None,
+    chunks_by_id: dict[str, Chunk],
+) -> tuple[int, str, bool]:
+    if len(examples) <= 1:
+        return 0, "", False
+    if rank_llm_client is not None:
+        try:
+            content = rank_llm_client.chat(build_multihop_rank_messages(examples, chunks_by_id), temperature=0.0)
+            return parse_multihop_rank_content(content, len(examples)), "rank_llm", False
+        except Exception:
+            logger.exception("multihop_rank.rank_failed candidate_count=%s", len(examples))
+    return _fallback_rank_index(examples, scores), "fallback_judge_score", True
 
 
 def synthesize_multihop_examples(
@@ -1090,6 +1217,192 @@ def iter_synthesize_multihop_examples(
         "multihop_synthesis.done generated_count=%s target_count=%s extension_attempt_count=%s",
         generated_count,
         target_count,
+        stats["extension_attempt_count"],
+    )
+
+
+def _take_candidate_group(candidate_iter: Iterable[list[dict[str, Any]]], group_size: int) -> list[list[dict[str, Any]]]:
+    group = []
+    iterator = iter(candidate_iter)
+    for _ in range(group_size):
+        try:
+            group.append(next(iterator))
+        except StopIteration:
+            break
+    return group
+
+
+def iter_synthesize_multihop_examples_by_candidate_groups(
+    seeds: list[dict[str, Any]],
+    chunks: list[Chunk],
+    group_count: int,
+    candidate_multiplier: int,
+    merge_llm_client: LLMClient | None = None,
+    skip_chain_keys: set[str] | None = None,
+    existing_questions: set[str] | None = None,
+    max_concurrency: int = 1,
+    raise_on_merge_failure: bool = False,
+    on_chain_failed: Callable[[list[dict[str, Any]], Exception], None] | None = None,
+    quality_gate: str = "rules",
+    judge_llm_client: LLMClient | None = None,
+    rank_llm_client: LLMClient | None = None,
+    seed_keys: set[str] | None = None,
+    on_example_rejected: Callable[[dict[str, Any]], None] | None = None,
+) -> Iterable[dict[str, Any]]:
+    if max_concurrency < 1:
+        raise ValueError("max_concurrency must be >= 1.")
+    if candidate_multiplier < 1:
+        raise ValueError("candidate_multiplier must be >= 1.")
+    if quality_gate not in {"none", "rules", "llm"}:
+        raise ValueError("quality_gate must be one of: none, rules, llm.")
+    retriever = HybridRetriever(chunks)
+    seeds_by_chunk = _group_seeds_by_chunk(seeds)
+    valid_chunk_ids = {chunk.chunk_id for chunk in chunks}
+    chunks_by_id = {chunk.chunk_id: chunk for chunk in chunks}
+    effective_seed_keys = seed_keys if seed_keys is not None else {seed_record_key(seed) for seed in seeds}
+    seen_questions = set(existing_questions or set())
+    seen_chain_keys = set(skip_chain_keys or set())
+    stats = {"extension_attempt_count": 0}
+    candidate_iter = iter(_iter_multihop_candidate_chains(seeds, seeds_by_chunk, retriever, seen_chain_keys, stats))
+    generated_count = 0
+
+    def build_candidate(chain: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any] | None, Exception | None]:
+        try:
+            example = _build_stepwise_example(
+                chain,
+                merge_llm_client=merge_llm_client,
+                raise_on_merge_failure=raise_on_merge_failure,
+                quality_gate="none",
+                judge_llm_client=None,
+                valid_chunk_ids=valid_chunk_ids,
+                seed_keys=effective_seed_keys,
+                chunks_by_id=chunks_by_id,
+            )
+            return chain, example, None
+        except Exception as exc:
+            return chain, None, exc
+
+    for group_index in range(1, group_count + 1):
+        group = _take_candidate_group(candidate_iter, candidate_multiplier)
+        if not group:
+            break
+        if merge_llm_client is not None and max_concurrency > 1 and len(group) > 1:
+            with ThreadPoolExecutor(max_workers=min(max_concurrency, len(group))) as executor:
+                built = list(executor.map(build_candidate, group))
+        else:
+            built = [build_candidate(chain) for chain in group]
+        accepted_examples: list[dict[str, Any]] = []
+        accepted_scores: list[int] = []
+        group_seen_questions: set[str] = set()
+        group_chain_keys = [multihop_chain_key(chain) for chain in group]
+        for chain, example, error in built:
+            chain_key = multihop_chain_key(chain)
+            if error is not None:
+                if on_chain_failed:
+                    on_chain_failed(chain, error)
+                logger.error(
+                    "multihop_synthesis.group_merge_failed chain_key=%s",
+                    chain_key,
+                    exc_info=(type(error), error, error.__traceback__),
+                )
+                continue
+            assert example is not None
+            final_question = str(example.get("final_question", "")).strip()
+            if final_question in seen_questions or final_question in group_seen_questions:
+                if on_example_rejected:
+                    on_example_rejected(
+                        {
+                            "chain_key": chain_key,
+                            "stage": "duplicate",
+                            "problem_codes": ["DUPLICATE_FINAL_QUESTION"],
+                            "final_question": example.get("final_question", ""),
+                            "final_answer": example.get("final_answer", ""),
+                            "hops": chain,
+                            "detail": f"group_index={group_index}",
+                        }
+                    )
+                continue
+            group_seen_questions.add(final_question)
+            problem_codes, score, reject_stage = evaluate_multihop_example(
+                example,
+                quality_gate=quality_gate,
+                valid_chunk_ids=valid_chunk_ids,
+                seed_keys=effective_seed_keys,
+                judge_llm_client=judge_llm_client,
+                chunks_by_id=chunks_by_id,
+            )
+            if problem_codes:
+                if on_example_rejected:
+                    on_example_rejected(
+                        {
+                            "chain_key": chain_key,
+                            "stage": reject_stage,
+                            "problem_codes": problem_codes,
+                            "final_question": example.get("final_question", ""),
+                            "final_answer": example.get("final_answer", ""),
+                            "hops": chain,
+                            "detail": f"group_index={group_index}",
+                            "score": score,
+                        }
+                    )
+                continue
+            accepted_examples.append(example)
+            accepted_scores.append(score)
+        if not accepted_examples:
+            if on_example_rejected:
+                on_example_rejected(
+                    {
+                        "chain_key": f"group-{group_index}",
+                        "stage": "group",
+                        "problem_codes": ["NO_PASSING_CANDIDATE"],
+                        "final_question": "",
+                        "final_answer": "",
+                        "hops": [],
+                        "detail": f"group_index={group_index};candidate_count={len(group)}",
+                        "candidate_chain_keys": group_chain_keys,
+                    }
+                )
+            continue
+        winner_index, rank_reason, rank_fallback = rank_multihop_examples(
+            accepted_examples,
+            accepted_scores,
+            rank_llm_client,
+            chunks_by_id,
+        )
+        winner = accepted_examples[winner_index]
+        winner_chain_key = multihop_chain_key(winner.get("hops", []))
+        for index, example in enumerate(accepted_examples):
+            if index == winner_index:
+                continue
+            if on_example_rejected:
+                on_example_rejected(
+                    {
+                        "chain_key": multihop_chain_key(example.get("hops", [])),
+                        "stage": "rank",
+                        "problem_codes": ["NOT_BEST_CANDIDATE"],
+                        "final_question": example.get("final_question", ""),
+                        "final_answer": example.get("final_answer", ""),
+                        "hops": example.get("hops", []),
+                        "detail": f"group_index={group_index};winner_chain_key={winner_chain_key};rank_reason={rank_reason}",
+                        "score": accepted_scores[index],
+                    }
+                )
+        seen_questions.add(str(winner.get("final_question", "")).strip())
+        generated_count += 1
+        logger.info(
+            "multihop_synthesis.group_added group_index=%s total_count=%s group_size=%s accepted_in_group=%s rank_fallback=%s",
+            group_index,
+            generated_count,
+            len(group),
+            len(accepted_examples),
+            rank_fallback,
+        )
+        yield winner
+
+    logger.info(
+        "multihop_synthesis.group_done generated_count=%s group_count=%s extension_attempt_count=%s",
+        generated_count,
+        group_count,
         stats["extension_attempt_count"],
     )
 

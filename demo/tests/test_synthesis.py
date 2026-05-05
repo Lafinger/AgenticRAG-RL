@@ -12,6 +12,7 @@ from agentic_rag_rl.synthesis import (
     clean_multihop_examples,
     generate_seed_qa,
     generate_seed_questions,
+    iter_synthesize_multihop_examples_by_candidate_groups,
     iter_synthesize_multihop_examples,
     iter_seed_question_batches,
     seed_record_key,
@@ -96,6 +97,23 @@ class FakeMergeLLMClient:
 }""" % (final_answer, final_answer)
 
 
+class DistinctMergeLLMClient:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del temperature
+        self.calls += 1
+        answers = [line.split(": ", 1)[1] for line in messages[-1]["content"].splitlines() if line.startswith("- answer: ")]
+        final_answer = answers[-1] if answers else "学校"
+        return f"""{{
+  "final_question": "候选{self.calls}最终指向哪里？",
+  "final_answer": "{final_answer}",
+  "qa_type": "inference",
+  "answer_aliases": ["{final_answer}"]
+}}"""
+
+
 class SlowMergeLLMClient:
     def __init__(self) -> None:
         self.calls = 0
@@ -167,6 +185,35 @@ class RejectingJudgeLLMClient:
     def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
         del messages, temperature
         return '{"pass": false, "problem_codes": ["WEAK_LINKAGE"], "reason": "链路牵强"}'
+
+
+class ScoreByAnswerJudgeLLMClient:
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del temperature
+        content = messages[-1]["content"]
+        score = 95 if '"final_answer": "学校"' in content else 70
+        return f'{{"pass": true, "problem_codes": [], "score": {score}, "reason": "链路成立"}}'
+
+
+class SelectingRankLLMClient:
+    def __init__(self, winner_index: int = 2) -> None:
+        self.winner_index = winner_index
+        self.calls = 0
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del messages, temperature
+        self.calls += 1
+        return f'{{"winner_index": {self.winner_index}, "reason": "第二条更自然"}}'
+
+
+class BrokenRankLLMClient:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def chat(self, messages: list[dict[str, str]], *, temperature: float = 0.2) -> str:
+        del messages, temperature
+        self.calls += 1
+        return '{"winner_index": 99, "reason": "越界"}'
 
 
 class FlakySeedLLMClient:
@@ -522,6 +569,95 @@ def test_llm_quality_gate_rejects_or_accepts_after_rules() -> None:
 
     assert len(accepted) == 1
     assert accepted[0]["final_answer"] == "学校"
+
+
+def test_grouped_synthesis_does_not_replenish_failed_groups() -> None:
+    chunks, seeds = _bridge_chunks_and_seeds()
+    rejected: list[dict] = []
+
+    examples = list(
+        iter_synthesize_multihop_examples_by_candidate_groups(
+            seeds,
+            chunks,
+            group_count=2,
+            candidate_multiplier=1,
+            merge_llm_client=RejectThenAcceptMergeLLMClient(),
+            quality_gate="rules",
+            on_example_rejected=rejected.append,
+        )
+    )
+
+    assert len(examples) == 1
+    assert examples[0]["final_answer"] == "学校"
+    assert any(record["problem_codes"] == ["NO_PASSING_CANDIDATE"] for record in rejected)
+
+
+def test_grouped_synthesis_ranks_multiple_passing_candidates() -> None:
+    chunks, seeds = _bridge_chunks_and_seeds()
+    rejected: list[dict] = []
+    rank_client = SelectingRankLLMClient(winner_index=2)
+
+    examples = list(
+        iter_synthesize_multihop_examples_by_candidate_groups(
+            seeds,
+            chunks,
+            group_count=1,
+            candidate_multiplier=2,
+            merge_llm_client=DistinctMergeLLMClient(),
+            quality_gate="llm",
+            judge_llm_client=ScoreByAnswerJudgeLLMClient(),
+            rank_llm_client=rank_client,
+            on_example_rejected=rejected.append,
+        )
+    )
+
+    assert len(examples) == 1
+    assert examples[0]["final_answer"] == "学校"
+    assert rank_client.calls == 1
+    assert any(record["problem_codes"] == ["NOT_BEST_CANDIDATE"] for record in rejected)
+
+
+def test_grouped_synthesis_falls_back_to_judge_score_when_rank_fails() -> None:
+    chunks, seeds = _bridge_chunks_and_seeds()
+    rank_client = BrokenRankLLMClient()
+
+    examples = list(
+        iter_synthesize_multihop_examples_by_candidate_groups(
+            seeds,
+            chunks,
+            group_count=1,
+            candidate_multiplier=2,
+            merge_llm_client=DistinctMergeLLMClient(),
+            quality_gate="llm",
+            judge_llm_client=ScoreByAnswerJudgeLLMClient(),
+            rank_llm_client=rank_client,
+        )
+    )
+
+    assert len(examples) == 1
+    assert examples[0]["final_answer"] == "学校"
+    assert rank_client.calls == 1
+
+
+def test_unlimited_online_mode_can_replenish_to_target_count() -> None:
+    chunks, seeds = _bridge_chunks_and_seeds()
+    rejected: list[dict] = []
+    merge_client = RejectThenAcceptMergeLLMClient()
+
+    examples = list(
+        iter_synthesize_multihop_examples(
+            seeds,
+            chunks,
+            target_count=1,
+            merge_llm_client=merge_client,
+            quality_gate="rules",
+            on_example_rejected=rejected.append,
+        )
+    )
+
+    assert len(examples) == 1
+    assert merge_client.calls == 2
+    assert rejected[0]["stage"] == "rules"
 
 
 def test_iter_synthesize_multihop_examples_respects_merge_concurrency() -> None:

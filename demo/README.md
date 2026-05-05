@@ -772,15 +772,18 @@ flowchart TD
 - 多跳合并默认使用 `doubao-seed-2-0-pro-260215`，生成 `final_question/final_answer/qa_type/answer_aliases`；当前 v1 强制 `final_answer` 等于最后一跳 `answer`。
 - `--quality-gate` 默认是 `llm`：先做规则门禁，再调用同一 provider 的 Judge 模型做语义和多跳必要性审查；只想做低成本硬规则检查时可设为 `rules`。
 - `--judge-model` 默认跟随 `--merge-model`；如果显式传入，则用于 Step 4 生成后的 LLM 语义门禁。
+- `--rank-model` 默认跟随 `--judge-model`；当同一候选组内有多条样本通过门禁时，用于选择最优样本。
 - 被规则门禁或 Judge 拒绝的候选样本不会写入 `qa_pairs.jsonl`，会写入 `qa_pairs.rejected.jsonl`，包含 `chain_key/stage/problem_codes/final_question/hops` 等追踪字段。
-- `--candidate-multiplier` 控制严格门禁下的候选放大倍数；`llm` 模式默认 `5`，`rules` 模式默认 `10`。
-- LLM 合并默认最大并发数为 `5`，可通过 `--max-concurrency` 调整；输出按 merge 完成顺序写入，断点续写仍按 hop 链路签名判断。
-- LLM 合并会打印 `multihop_synthesis.progress` / `multihop_synthesis.added`，显示已完成 merge、已接受样本、重复跳过数和目标数量。
+- `--candidate-multiplier N` 控制每个输出槽位最多生成 N 条候选；`llm` 模式默认 `5`，`rules` 模式默认 `10`。
+- 正数倍率模式下，`--target-count 50 --candidate-multiplier 5` 表示最多处理 50 个候选组，每组最多 5 条候选，每组最多写入 1 条最终 QA；如果某组没有候选通过门禁，会直接放弃该组，所以最终输出可能小于 50。
+- 在线模式可设置 `--candidate-multiplier -1` 使用旧补样语义：持续尝试候选，直到通过样本达到 `--target-count` 或候选耗尽；`--use-batch-inference` 不支持 `-1`。
+- LLM 合并默认最大并发数为 `5`，可通过 `--max-concurrency` 调整；正数倍率模式下并发发生在同一候选组内。
+- LLM 合并会打印 `multihop_synthesis.group_added` / `multihop_synthesis.appended`，显示候选组、已写入样本、失败数和拒绝数。
 - 使用真实 LLM merge 时，合并失败的链路会写入 `qa_pairs.failed.jsonl` 和 `qa_pairs.checkpoint.jsonl` 的 `status=failed` 记录；重新执行同一命令时，失败链路不会被当作已完成，会重新尝试生成。
 - 如果只想本机离线 smoke，可以加 `--disable-llm-merge --quality-gate rules`，此时会回退到规则模板合并；严格规则可能拒绝模板题，该模式只适合连通性测试，不适合作为正式训练数据。
 - 每个 hop 都保留 `question/answer/doc_chunk_id/qa_type/search_tools`，其中 hop 级 `qa_type` 继承 seed QA 的 5 类类型。
-- `--target-count` 控制生成数量，本机 smoke 可以使用较小数量，完整训练可以扩展。
-- 脚本默认启用断点续写：如果 `qa_pairs.jsonl` 已存在，会读取已有样本数量和 hop 链路签名，只补齐到 `--target-count`，并跳过已经生成过的链路。
+- `--target-count` 在正数倍率模式下控制候选组数量，在 `--candidate-multiplier -1` 模式下控制目标通过样本数量。
+- 脚本默认启用断点续写：如果 `qa_pairs.jsonl` 已存在，会读取已有样本数量和 hop 链路签名，只处理剩余槽位，并跳过已经生成过的链路。
 - 如果要清空旧结果重新合成，需要显式添加 `--overwrite`。
 
 **正式数据质量门槛**：
@@ -823,7 +826,7 @@ flowchart TD
 - 默认 Provider：`doubao`，也可用 `--llm-provider newapi` 或 `--llm-provider rightcode`
 - 默认合并模型：Doubao 使用 `doubao-seed-2-0-pro-260215`，NewAPI 使用 `gpt-5.5`，RightCode 使用 `gpt-5.5`
 - 默认质量门禁：`--quality-gate llm`，先规则过滤，再调用 `--judge-model` 做语义审查
-- 默认候选放大：LLM 门禁模式下 `--candidate-multiplier 5`
+- 默认候选倍率：LLM 门禁模式下 `--candidate-multiplier 5`，即每个输出槽位最多 5 条候选
 - 默认最大并发：`5`
 - 输出：`data/novel_eval/qa_pairs.jsonl`
 - 拒绝样本输出：`data/novel_eval/qa_pairs.rejected.jsonl`
@@ -841,7 +844,20 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --max-concurrency 5
 ```
 
-`--max-concurrency` 控制同时发起的多跳 merge LLM 请求数。默认值是 `5`；如果遇到接口限流或合并失败数上升，可以先降到 `1` 或 `2`。`--quality-gate llm` 是正式数据默认模式；如果只想先看硬规则过滤结果，可改为 `--quality-gate rules`。
+`--candidate-multiplier 5` 的正数模式不会补样到 50 条通过样本，而是处理 50 个候选组，每组最多 5 条，组内通过门禁的候选会由 `--rank-model` 选择最优样本写入。`--max-concurrency` 控制同一候选组内同时发起的多跳 merge 请求数。默认值是 `5`；如果遇到接口限流或合并失败数上升，可以先降到 `1` 或 `2`。`--quality-gate llm` 是正式数据默认模式；如果只想先看硬规则过滤结果，可改为 `--quality-gate rules`。
+
+如果需要旧的“持续补样直到得到 50 条通过样本”语义，使用在线模式并设置 `--candidate-multiplier -1`：
+
+```powershell
+uv run python .\scripts\domain_multihop_synthesis.py `
+  --seeds .\data\novel_eval\seeds_clean.jsonl `
+  --corpus .\data\novel\corpus.jsonl `
+  --output .\data\novel_eval\qa_pairs.jsonl `
+  --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier -1 `
+  --max-concurrency 5
+```
 
 如果使用 NewAPI 在线模型做多跳 QA 合并：
 
@@ -890,7 +906,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --use-batch-inference
 ```
 
-批量模式会先构造候选 hop 链，把每条候选链的 merge prompt 写入 Batch Job。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 `final_question/final_answer/qa_type/answer_aliases`，通过规则门禁和可选 LLM Judge 后写入业务执行产物 `data/novel_eval/qa_pairs.jsonl` 和 checkpoint。`qa_pairs.jsonl` 是后续 SFT、GRPO 和 eval 使用的多跳 QA 主文件，不是 Batch Job 原始响应文件。默认提交候选数为 `target-count * candidate-multiplier`，`llm` 模式默认 multiplier 为 `5`，可用 `--batch-max-candidates` 调整绝对候选数。
+批量模式会先构造 `target-count * candidate-multiplier` 条候选 hop 链，把每条候选链的 merge prompt 写入 Batch Job。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再按连续候选组解析 `final_question/final_answer/qa_type/answer_aliases`。每组候选通过规则门禁和可选 LLM Judge 后，如果有多条通过，则调用 `--rank-model` 选出 1 条最佳样本写入 `data/novel_eval/qa_pairs.jsonl` 和 checkpoint；如果全组没有通过样本，则放弃该组并记录 `NO_PASSING_CANDIDATE`。`qa_pairs.jsonl` 是后续 SFT、GRPO 和 eval 使用的多跳 QA 主文件，不是 Batch Job 原始响应文件。可用 `--batch-max-candidates` 调整绝对候选数；批量模式不支持 `--candidate-multiplier -1`。
 
 失败后继续执行同一条命令即可续写；如果确认要从头合成，执行：
 
@@ -911,7 +927,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
 - `data/novel_eval/qa_pairs.jsonl`
 - `data/novel_eval/qa_pairs.checkpoint.jsonl`
 - `data/novel_eval/qa_pairs.failed.jsonl`，仅当部分候选链多次失败时产生
-- `data/novel_eval/qa_pairs.rejected.jsonl`，记录未通过规则门禁或 LLM Judge 的候选样本
+- `data/novel_eval/qa_pairs.rejected.jsonl`，记录未通过规则门禁、LLM Judge、组内无通过候选或通过但未被 Rank 选中的候选样本
 - `data/batch_jobs/multihop_merge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，仅使用 Doubao 批量推理任务时产生，属于 Batch Job 原始备份 / 可追溯文件
 - 每条样本包含 `final_question/final_answer/hop_count/qa_type/subset/hops/answer_aliases`
 - `hop_count >= 2`
