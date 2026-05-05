@@ -14,7 +14,7 @@ def run_help(script: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_llm_business_scripts_accept_rightcode_provider() -> None:
+def test_llm_business_scripts_accept_newapi_and_rightcode_providers() -> None:
     scripts = [
         "scripts/build_index.py",
         "scripts/gen_seed_qa.py",
@@ -25,10 +25,10 @@ def test_llm_business_scripts_accept_rightcode_provider() -> None:
     for script in scripts:
         result = run_help(script)
         assert result.returncode == 0
-        assert "doubao,xingjianya,rightcode" in result.stdout
+        assert "doubao,newapi,rightcode" in result.stdout
 
 
-def test_build_index_rejects_xingjianya_batch_inference() -> None:
+def test_build_index_rejects_newapi_batch_inference() -> None:
     result = subprocess.run(
         [
             sys.executable,
@@ -40,7 +40,7 @@ def test_build_index_rejects_xingjianya_batch_inference() -> None:
             "--embedding-model",
             "BAAI/bge-m3",
             "--llm-provider",
-            "xingjianya",
+            "newapi",
             "--use-batch-inference",
         ],
         capture_output=True,

@@ -10,18 +10,18 @@ from agentic_rag_rl.llm_client import (
     DoubaoBatchJobClient,
     DoubaoBatchJobConfig,
     DoubaoLLMClient,
+    NewAPILLMClient,
     RightCodeLLMClient,
-    XingJianYaLLMClient,
     create_llm_client,
     get_doubao_batch_job_config,
     get_doubao_base_url,
     get_doubao_model,
     get_doubao_thinking_model,
     get_doubao_use_batch_inference,
+    get_newapi_base_url,
+    get_newapi_model,
     get_rightcode_base_url,
     get_rightcode_model,
-    get_xingjianya_base_url,
-    get_xingjianya_model,
     resolve_judge_model,
     resolve_kg_model,
     resolve_thinking_model,
@@ -49,10 +49,10 @@ def test_create_llm_client_returns_doubao_client() -> None:
     assert isinstance(client, DoubaoLLMClient)
 
 
-def test_create_llm_client_returns_xingjianya_client() -> None:
-    client = create_llm_client("xingjianya", api_key="test-key", transport=lambda _: "ok")
+def test_create_llm_client_returns_newapi_client() -> None:
+    client = create_llm_client("newapi", api_key="test-key", transport=lambda _: "ok")
 
-    assert isinstance(client, XingJianYaLLMClient)
+    assert isinstance(client, NewAPILLMClient)
 
 
 def test_create_llm_client_returns_rightcode_client() -> None:
@@ -73,11 +73,11 @@ def test_doubao_llm_client_requires_api_key_for_real_transport(monkeypatch) -> N
         DoubaoLLMClient(api_key="")
 
 
-def test_xingjianya_llm_client_requires_api_key_for_real_transport(monkeypatch) -> None:
-    monkeypatch.delenv("XINGJIANYA_API_KEY", raising=False)
+def test_newapi_llm_client_requires_api_key_for_real_transport(monkeypatch) -> None:
+    monkeypatch.delenv("NEWAPI_API_KEY", raising=False)
 
-    with pytest.raises(ValueError, match="XINGJIANYA_API_KEY"):
-        XingJianYaLLMClient(api_key="")
+    with pytest.raises(ValueError, match="NEWAPI_API_KEY"):
+        NewAPILLMClient(api_key="")
 
 
 def test_rightcode_llm_client_requires_api_key_for_real_transport(monkeypatch) -> None:
@@ -112,18 +112,18 @@ def test_doubao_defaults_can_come_from_environment(monkeypatch) -> None:
     assert get_doubao_use_batch_inference() is True
 
 
-def test_xingjianya_defaults_can_come_from_environment(monkeypatch) -> None:
-    monkeypatch.setenv("XINGJIANYA_MODEL", "env-xjy-model")
-    monkeypatch.setenv("XINGJIANYA_KG_MODEL", "env-xjy-kg")
-    monkeypatch.setenv("XINGJIANYA_THINKING_MODEL", "env-xjy-thinking")
-    monkeypatch.setenv("XINGJIANYA_JUDGE_MODEL", "env-xjy-judge")
-    monkeypatch.setenv("XINGJIANYA_BASE_URL", "https://xjy.example/v1")
+def test_newapi_defaults_can_come_from_environment(monkeypatch) -> None:
+    monkeypatch.setenv("NEWAPI_MODEL", "env-newapi-model")
+    monkeypatch.setenv("NEWAPI_KG_MODEL", "env-newapi-kg")
+    monkeypatch.setenv("NEWAPI_THINKING_MODEL", "env-newapi-thinking")
+    monkeypatch.setenv("NEWAPI_JUDGE_MODEL", "env-newapi-judge")
+    monkeypatch.setenv("NEWAPI_BASE_URL", "https://newapi.example/v1")
 
-    assert get_xingjianya_model() == "env-xjy-model"
-    assert get_xingjianya_base_url() == "https://xjy.example/v1"
-    assert resolve_kg_model("xingjianya") == "env-xjy-kg"
-    assert resolve_thinking_model("xingjianya") == "env-xjy-thinking"
-    assert resolve_judge_model("xingjianya") == "env-xjy-judge"
+    assert get_newapi_model() == "env-newapi-model"
+    assert get_newapi_base_url() == "https://newapi.example/v1"
+    assert resolve_kg_model("newapi") == "env-newapi-kg"
+    assert resolve_thinking_model("newapi") == "env-newapi-thinking"
+    assert resolve_judge_model("newapi") == "env-newapi-judge"
 
 
 def test_rightcode_defaults_can_come_from_environment(monkeypatch) -> None:
@@ -176,7 +176,7 @@ def test_doubao_online_inference_uses_chat_path(monkeypatch) -> None:
     assert client.last_usage == {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5}
 
 
-def test_xingjianya_online_inference_uses_openai_compatible_chat_path(monkeypatch) -> None:
+def test_newapi_online_inference_uses_openai_compatible_chat_path(monkeypatch) -> None:
     calls: list[dict[str, object]] = []
 
     def fake_post(url: str, *, headers: dict[str, str], json: dict[str, object], timeout: float) -> httpx.Response:
@@ -192,17 +192,17 @@ def test_xingjianya_online_inference_uses_openai_compatible_chat_path(monkeypatc
         )
 
     monkeypatch.setattr(httpx, "post", fake_post)
-    client = XingJianYaLLMClient(
+    client = NewAPILLMClient(
         api_key="sk-test",
         model="deepseek-v4-pro",
-        base_url="https://api.xinjianya.top/v1",
+        base_url="https://api.6i2.com/v1",
         timeout_seconds=123,
     )
 
     content = client.chat([{"role": "user", "content": "你好"}])
 
     assert content == "ok"
-    assert calls[0]["url"] == "https://api.xinjianya.top/v1/chat/completions"
+    assert calls[0]["url"] == "https://api.6i2.com/v1/chat/completions"
     assert calls[0]["headers"]["Authorization"] == "Bearer sk-test"
     assert calls[0]["json"] == {
         "model": "deepseek-v4-pro",
