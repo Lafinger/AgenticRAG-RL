@@ -1356,7 +1356,7 @@ flowchart LR
 **需要**：
 
 - Unsloth 环境
-- 基座模型：默认 `Qwen/Qwen3-4B-Instruct-2507`
+- 基座模型：默认 `unsloth/Qwen3-4B-Instruct-2507`
 - 项目脚本数据文件：`data/novel_eval/sft_zh_unsloth/train.jsonl`
 - Studio 训练文件：`data/novel_eval/sft_zh_unsloth/train_studio.jsonl`
 - Studio 验证文件：`data/novel_eval/sft_zh_unsloth/eval.jsonl`
@@ -1427,13 +1427,10 @@ uv run --no-sync python .\scripts\train_sft_unsloth_trace.py `
   --config .\training\unsloth_sft.yaml `
   --data-path .\data\novel_eval\sft_zh_unsloth\train_studio.jsonl `
   --eval-data-path .\data\novel_eval\sft_zh_unsloth\eval.jsonl `
-  --output-dir .\training\outputs\unsloth_sft_qwen3_4b_lora_trace `
-  --per-device-train-batch-size 2 `
-  --gradient-accumulation-steps 4 `
-  --learning-rate 1.0e-4 `
-  --eval-steps 105 `
-  --max-grad-norm 1.0
+  --output-dir .\training\outputs\unsloth_sft_qwen3_4b_lora_trace
 ```
+
+batch、梯度累积、学习率、eval 间隔和 grad norm 裁剪统一由 `training\unsloth_sft.yaml` 管理；命令行参数只用于临时覆盖。
 
 训练后按 Gradient Norm 最高的 step 反查样本：
 
@@ -1634,7 +1631,7 @@ data\novel_eval\test.jsonl
 New-Item -ItemType Directory -Force .\results\sft_compare
 
 uv run --no-sync python .\scripts\eval_hf_model.py `
-  --model Qwen/Qwen3-4B-Instruct-2507 `
+  --model unsloth/Qwen3-4B-Instruct-2507 `
   --data .\data\novel_eval\test.jsonl `
   --output .\results\sft_compare\base_predictions.jsonl `
   --template qwen3_nothink `
@@ -1662,7 +1659,7 @@ uv run --no-sync python .\scripts\eval_hf_model.py `
 
 ```powershell
 uv run --no-sync python .\scripts\eval_hf_model.py `
-  --model Qwen/Qwen3-4B-Instruct-2507 `
+  --model unsloth/Qwen3-4B-Instruct-2507 `
   --adapter .\training\outputs\unsloth_sft_qwen3_4b_lora `
   --data .\data\novel_eval\test.jsonl `
   --output .\results\sft_compare\sft_lora_predictions.jsonl `
@@ -1779,17 +1776,17 @@ uv run python .\scripts\split_unsloth_studio_data.py --input .\data\novel_eval\s
 uv run python .\scripts\calc_sample_lengths.py --config .\training\unsloth_sft.yaml --limits 1024 2048 4096
 uv run --no-sync python .\scripts\train_sft_unsloth.py --config .\training\unsloth_sft.yaml --output-dir .\training\outputs\unsloth_sft_qwen3_4b_lora
 # 如需精确追溯 Gradient Norm 突刺，使用 docs\训练追溯.md 的可追溯入口替代上一条训练命令
-uv run --no-sync python .\scripts\train_sft_unsloth_trace.py --config .\training\unsloth_sft.yaml --data-path .\data\novel_eval\sft_zh_unsloth\train_studio.jsonl --eval-data-path .\data\novel_eval\sft_zh_unsloth\eval.jsonl --output-dir .\training\outputs\unsloth_sft_qwen3_4b_lora_trace --per-device-train-batch-size 2 --gradient-accumulation-steps 4 --learning-rate 1.0e-4 --eval-steps 105 --max-grad-norm 1.0
+uv run --no-sync python .\scripts\train_sft_unsloth_trace.py --config .\training\unsloth_sft.yaml --data-path .\data\novel_eval\sft_zh_unsloth\train_studio.jsonl --eval-data-path .\data\novel_eval\sft_zh_unsloth\eval.jsonl --output-dir .\training\outputs\unsloth_sft_qwen3_4b_lora_trace
 uv run python .\scripts\inspect_sft_trace.py --trace .\training\outputs\unsloth_sft_qwen3_4b_lora_trace\step_sample_trace.jsonl --top-grad-norm 5
 # 如果使用 trace 训练输出作为冷启动 adapter，下面 export 的 --adapter-path 改为 .\training\outputs\unsloth_sft_qwen3_4b_lora_trace
 uv run --no-sync python .\scripts\export_unsloth_lora.py --config .\training\unsloth_sft.yaml --adapter-path .\training\outputs\unsloth_sft_qwen3_4b_lora --export-dir .\models\Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
 New-Item -ItemType Directory -Force .\results\sft_compare
-uv run --no-sync python .\scripts\eval_hf_model.py --model Qwen/Qwen3-4B-Instruct-2507 --data .\data\novel_eval\test.jsonl --output .\results\sft_compare\base_predictions.jsonl --template qwen3_nothink --max-samples 50 --max-new-tokens 512 --temperature 0
+uv run --no-sync python .\scripts\eval_hf_model.py --model unsloth/Qwen3-4B-Instruct-2507 --data .\data\novel_eval\test.jsonl --output .\results\sft_compare\base_predictions.jsonl --template qwen3_nothink --max-samples 50 --max-new-tokens 512 --temperature 0
 uv run --no-sync python .\scripts\eval_hf_model.py --model .\models\Qwen3-4B-Instruct-2507-Unsloth-SFT-merged --data .\data\novel_eval\test.jsonl --output .\results\sft_compare\sft_predictions.jsonl --template qwen3_nothink --max-samples 50 --max-new-tokens 512 --temperature 0
 uv run python .\scripts\compare_predictions.py --base .\results\sft_compare\base_predictions.jsonl --sft .\results\sft_compare\sft_predictions.jsonl --output .\results\sft_compare\summary.json
 ```
 
-如果只想测 LoRA adapter 而不合并模型，把 SFT 预测命令替换为 `--model Qwen/Qwen3-4B-Instruct-2507 --adapter .\training\outputs\unsloth_sft_qwen3_4b_lora`。
+如果只想测 LoRA adapter 而不合并模型，把 SFT 预测命令替换为 `--model unsloth/Qwen3-4B-Instruct-2507 --adapter .\training\outputs\unsloth_sft_qwen3_4b_lora`。
 
 ## 环境边界
 

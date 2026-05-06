@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-steps", type=int)
     parser.add_argument("--logging-steps", type=int)
     parser.add_argument("--eval-steps", type=int)
-    parser.add_argument("--max-grad-norm", type=float, default=1.0)
+    parser.add_argument("--max-grad-norm", type=float)
     parser.add_argument("--optim", choices=["adamw_8bit", "adamw_torch"], default="adamw_8bit")
     parser.add_argument("--no-shuffle", action="store_true", help="Disable random sampling for deterministic line-range debugging.")
     return parser.parse_args()
@@ -61,6 +61,31 @@ def load_config(path: str | Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f"Config must be a mapping: {path}")
     return payload
+
+
+def apply_cli_config_overrides(config: dict[str, Any], args: argparse.Namespace) -> None:
+    if args.model_name_or_path:
+        config["model_name_or_path"] = args.model_name_or_path
+    if args.data_path:
+        config["data_path"] = args.data_path
+    if args.num_train_epochs is not None:
+        config["num_train_epochs"] = args.num_train_epochs
+    if args.per_device_train_batch_size is not None:
+        config["per_device_train_batch_size"] = args.per_device_train_batch_size
+    if args.gradient_accumulation_steps is not None:
+        config["gradient_accumulation_steps"] = args.gradient_accumulation_steps
+    if args.learning_rate is not None:
+        config["learning_rate"] = args.learning_rate
+    if args.warmup_steps is not None:
+        config["warmup_steps"] = args.warmup_steps
+    if args.save_steps is not None:
+        config["save_steps"] = args.save_steps
+    if args.logging_steps is not None:
+        config["logging_steps"] = args.logging_steps
+    if args.eval_steps is not None:
+        config["eval_steps"] = args.eval_steps
+    if args.max_grad_norm is not None:
+        config["max_grad_norm"] = args.max_grad_norm
 
 
 def project_path(value: str | Path) -> Path:
@@ -180,24 +205,7 @@ def main() -> None:
 
     args = parse_args()
     config = load_config(args.config)
-    if args.model_name_or_path:
-        config["model_name_or_path"] = args.model_name_or_path
-    if args.data_path:
-        config["data_path"] = args.data_path
-    if args.num_train_epochs is not None:
-        config["num_train_epochs"] = args.num_train_epochs
-    if args.per_device_train_batch_size is not None:
-        config["per_device_train_batch_size"] = args.per_device_train_batch_size
-    if args.gradient_accumulation_steps is not None:
-        config["gradient_accumulation_steps"] = args.gradient_accumulation_steps
-    if args.learning_rate is not None:
-        config["learning_rate"] = args.learning_rate
-    if args.warmup_steps is not None:
-        config["warmup_steps"] = args.warmup_steps
-    if args.save_steps is not None:
-        config["save_steps"] = args.save_steps
-    if args.logging_steps is not None:
-        config["logging_steps"] = args.logging_steps
+    apply_cli_config_overrides(config, args)
 
     model_name = str(config["model_name_or_path"])
     max_seq_length = int(config.get("max_seq_length", 2048))
@@ -332,6 +340,7 @@ def main() -> None:
     logging_steps = int(config.get("logging_steps", 5))
     save_steps = int(config.get("save_steps", 45))
     warmup_steps = int(config.get("warmup_steps", 0) or 0)
+    max_grad_norm = float(config.get("max_grad_norm") if config.get("max_grad_norm") is not None else 1.0)
 
     dataset = TraceDataset()
     micro_batches_per_epoch = math.ceil(len(dataset) / batch_size)
@@ -350,7 +359,8 @@ def main() -> None:
     )
 
     eval_samples: list[TraceSample] = []
-    eval_steps = args.eval_steps
+    configured_eval_steps = config.get("eval_steps")
+    eval_steps = int(configured_eval_steps) if configured_eval_steps is not None else None
     if args.eval_data_path:
         eval_records = load_records(project_path(args.eval_data_path))
         eval_samples = build_samples(eval_records, tokenizer)
@@ -397,7 +407,8 @@ def main() -> None:
         "warmup_steps": warmup_steps,
         "seed": seed,
         "shuffle": not args.no_shuffle,
-        "max_grad_norm": args.max_grad_norm,
+        "eval_steps": eval_steps,
+        "max_grad_norm": max_grad_norm,
         "optim": args.optim,
         "report_to": report_to,
         "swanlab_project": swanlab_project if is_swanlab_enabled(report_to) else None,
@@ -461,7 +472,7 @@ def main() -> None:
             if not should_step and not is_epoch_end:
                 continue
 
-            grad_norm = torch.nn.utils.clip_grad_norm_(trainable_params, args.max_grad_norm)
+            grad_norm = torch.nn.utils.clip_grad_norm_(trainable_params, max_grad_norm)
             optimizer.step()
             scheduler.step()
             optimizer.zero_grad(set_to_none=True)

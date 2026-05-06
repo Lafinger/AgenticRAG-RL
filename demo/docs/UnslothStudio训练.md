@@ -65,7 +65,7 @@ overlap_count: 0
 
 | Studio 字段 | 推荐填写 |
 | --- | --- |
-| Hugging Face Model | `Qwen/Qwen3-4B-Instruct-2507` |
+| Hugging Face Model | `unsloth/Qwen3-4B-Instruct-2507` |
 | 如果只显示 Unsloth 模型 | `unsloth/qwen3-4b-instruct-2507` |
 | Method | `QLoRA (4-bit)` |
 | Hugging Face Token | 只有拉取私有模型或受限模型时才需要 |
@@ -281,7 +281,7 @@ checkpoint-*\trainer_state.json
 Set-Location E:\AI\AgenticRAG-RL\demo
 
 uv run --no-sync python .\scripts\eval_hf_model.py `
-  --model Qwen/Qwen3-4B-Instruct-2507 `
+  --model unsloth/Qwen3-4B-Instruct-2507 `
   --data .\data\novel_eval\test.jsonl `
   --output .\results\sft_compare\base_predictions.jsonl `
   --template qwen3_nothink `
@@ -290,7 +290,7 @@ uv run --no-sync python .\scripts\eval_hf_model.py `
   --temperature 0
 
 uv run --no-sync python .\scripts\eval_hf_model.py `
-  --model Qwen/Qwen3-4B-Instruct-2507 `
+  --model unsloth/Qwen3-4B-Instruct-2507 `
   --adapter <Studio输出adapter目录> `
   --data .\data\novel_eval\test.jsonl `
   --output .\results\sft_compare\studio_sft_predictions.jsonl `
