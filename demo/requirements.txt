@@ -15,6 +15,4 @@ requests>=2.32
 scikit-learn>=1.5
 sentence-transformers>=5.4
 swanlab>=0.7.12
-tos>=2.8
 uvicorn>=0.30
-volcengine-python-sdk[ark]>=5.0

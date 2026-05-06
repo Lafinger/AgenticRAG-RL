@@ -13,27 +13,15 @@ from agentic_rag_rl.io import load_chunks, load_jsonl, write_jsonl_record
 from agentic_rag_rl.llm_client import (
     DEFAULT_LLM_PROVIDER,
     LLM_PROVIDER_CHOICES,
-    create_batch_job_client,
     create_llm_client,
-    get_doubao_batch_job_config,
-    get_doubao_use_batch_inference,
     resolve_llm_base_url,
     resolve_judge_model,
     resolve_thinking_model,
-    split_doubao_model_version,
 )
-from agentic_rag_rl.retrieval import HybridRetriever
 from agentic_rag_rl.synthesis import (
-    _group_seeds_by_chunk,
-    _iter_multihop_candidate_chains,
-    build_multihop_merge_messages,
-    build_stepwise_example_from_merge,
-    evaluate_multihop_example,
     iter_synthesize_multihop_examples_by_candidate_groups,
     iter_synthesize_multihop_examples,
     multihop_chain_key,
-    parse_multihop_merge_content,
-    rank_multihop_examples,
     seed_record_key,
 )
 
@@ -55,14 +43,6 @@ def _append_record(path: Path, record: dict) -> None:
     with path.open("a", encoding="utf-8", newline="") as handle:
         write_jsonl_record(handle, record)
         handle.flush()
-
-
-def _candidate_groups(candidate_chains: list[list[dict]], group_size: int) -> list[list[list[dict]]]:
-    return [candidate_chains[index : index + group_size] for index in range(0, len(candidate_chains), group_size)]
-
-
-def _batch_candidate_limit(remaining_count: int, candidate_multiplier: int, batch_max_candidates: int | None = None) -> int:
-    return batch_max_candidates or remaining_count * candidate_multiplier
 
 
 def _configure_logging(level: str) -> None:
@@ -87,23 +67,6 @@ def main() -> None:
     parser.add_argument("--base-url")
     parser.add_argument("--api-key")
     parser.add_argument("--timeout-seconds", type=float, help="Online LLM request timeout for LLM merge.")
-    parser.add_argument(
-        "--use-batch-inference",
-        action="store_true",
-        help="Use Doubao Batch Inference Job API for LLM merge.",
-    )
-    parser.add_argument("--batch-foundation-model", help="Foundation model name for Batch Job, e.g. doubao-seed-2-0-pro.")
-    parser.add_argument("--batch-model-version", help="Foundation model version for Batch Job, e.g. 260215.")
-    parser.add_argument("--batch-custom-model-id", help="Custom model ID for Batch Job. Overrides foundation model.")
-    parser.add_argument("--batch-tos-bucket", help="TOS bucket for Batch Job input and output.")
-    parser.add_argument("--batch-input-prefix", help="TOS input object key prefix for Batch Job JSONL files.")
-    parser.add_argument("--batch-output-prefix", help="TOS output object key prefix for Batch Job results.")
-    parser.add_argument("--batch-project-name", help="Volcengine project name for Batch Job.")
-    parser.add_argument("--batch-completion-window", help="Batch Job completion window, e.g. 1d.")
-    parser.add_argument("--batch-poll-interval", type=float, default=60.0, help="Seconds between Batch Job status polls.")
-    parser.add_argument("--batch-wait-timeout", type=float, help="Maximum seconds to wait for Batch Job completion.")
-    parser.add_argument("--batch-work-dir", default=str(ROOT / "data" / "batch_jobs" / "multihop_merge"), help="Local Batch Job work dir.")
-    parser.add_argument("--batch-max-candidates", type=int, help="Maximum candidate chains submitted to one Batch Job.")
     parser.add_argument("--quality-gate", default="llm", choices=["rules", "llm"], help="Quality gate before appending examples.")
     parser.add_argument("--candidate-multiplier", type=int, help="Candidate chains per output slot; use -1 for online unlimited replenishment.")
     parser.add_argument("--disable-llm-merge", action="store_true")
@@ -123,18 +86,13 @@ def main() -> None:
 
     _configure_logging(args.log_level)
     load_env_file(args.env_file)
-    batch_inference_enabled = get_doubao_use_batch_inference(args.use_batch_inference)
-    if batch_inference_enabled and args.llm_provider != "doubao":
-        parser.error("--use-batch-inference only supports --llm-provider doubao.")
     merge_model = resolve_thinking_model(args.llm_provider, args.merge_model)
     judge_model = resolve_judge_model(args.llm_provider, args.judge_model) if args.judge_model else merge_model
     rank_model = resolve_judge_model(args.llm_provider, args.rank_model) if args.rank_model else judge_model
     base_url = resolve_llm_base_url(args.llm_provider, args.base_url)
     candidate_multiplier = args.candidate_multiplier if args.candidate_multiplier is not None else (5 if args.quality_gate == "llm" else 10)
-    if batch_inference_enabled and candidate_multiplier == -1:
-        parser.error("--use-batch-inference does not support --candidate-multiplier -1.")
     logging.info(
-        "domain_multihop_synthesis.start seeds=%s corpus=%s output=%s target_count=%s llm_merge=%s merge_model=%s quality_gate=%s judge_model=%s rank_model=%s candidate_multiplier=%s max_concurrency=%s batch_inference=%s",
+        "domain_multihop_synthesis.start seeds=%s corpus=%s output=%s target_count=%s llm_merge=%s merge_model=%s quality_gate=%s judge_model=%s rank_model=%s candidate_multiplier=%s max_concurrency=%s",
         args.seeds,
         args.corpus,
         args.output,
@@ -146,7 +104,6 @@ def main() -> None:
         rank_model,
         candidate_multiplier,
         args.max_concurrency,
-        batch_inference_enabled,
     )
     seeds = load_jsonl(args.seeds)
     chunks = load_chunks(args.corpus)
@@ -220,191 +177,6 @@ def main() -> None:
             base_url=base_url,
             timeout_seconds=args.timeout_seconds,
         )
-
-    if batch_inference_enabled and not args.disable_llm_merge:
-        stats = {"extension_attempt_count": 0}
-        seen_chain_keys = set(existing_chain_keys)
-        candidate_limit = _batch_candidate_limit(remaining_count, candidate_multiplier, args.batch_max_candidates)
-        candidate_chains = []
-        candidate_iter = _iter_multihop_candidate_chains(
-            seeds,
-            _group_seeds_by_chunk(seeds),
-            HybridRetriever(chunks),
-            seen_chain_keys,
-            stats,
-        )
-        for chain in candidate_iter:
-            candidate_chains.append(chain)
-            if len(candidate_chains) >= candidate_limit:
-                break
-        batch_model = merge_model
-        default_batch_name, default_batch_version = split_doubao_model_version(batch_model)
-        batch_config = get_doubao_batch_job_config(
-            foundation_model_name=args.batch_foundation_model or default_batch_name,
-            foundation_model_version=args.batch_model_version or default_batch_version,
-            custom_model_id=args.batch_custom_model_id,
-            tos_bucket=args.batch_tos_bucket,
-            input_key_prefix=args.batch_input_prefix,
-            output_key_prefix=args.batch_output_prefix,
-            project_name=args.batch_project_name,
-            completion_window=args.batch_completion_window,
-        )
-        batch_client = create_batch_job_client(batch_config)
-        chain_by_id = {multihop_chain_key(chain): chain for chain in candidate_chains}
-        requests = [
-            {
-                "custom_id": custom_id,
-                "messages": build_multihop_merge_messages(chain),
-                "temperature": 0.2,
-            }
-            for custom_id, chain in chain_by_id.items()
-        ]
-        results = batch_client.run_chat_batch(
-            requests,
-            local_dir=args.batch_work_dir,
-            job_name="agentic-rag-multihop-merge",
-            model=batch_model,
-            poll_interval_seconds=args.batch_poll_interval,
-            wait_timeout_seconds=args.batch_wait_timeout,
-        )
-        generated_count = 0
-        failed_count = 0
-        seen_questions = set(existing_questions)
-        groups = _candidate_groups(candidate_chains, candidate_multiplier)
-        mode = "w" if args.overwrite else "a"
-        with output_path.open(mode, encoding="utf-8", newline="") as handle:
-            for group_index, group in enumerate(groups[:remaining_count], start=1):
-                if not group:
-                    break
-                accepted_examples = []
-                accepted_scores = []
-                group_seen_questions = set()
-                group_chain_keys = [multihop_chain_key(chain) for chain in group]
-                for chain in group:
-                    chain_key = multihop_chain_key(chain)
-                    try:
-                        result = results.get(chain_key)
-                        if result is None:
-                            raise RuntimeError("Batch job result missing for chain.")
-                        merged = parse_multihop_merge_content(result.content)
-                        example = build_stepwise_example_from_merge(chain, merged)
-                    except Exception as exc:
-                        failed_count += 1
-                        record_failed_chain(chain, exc)
-                        logging.exception("domain_multihop_synthesis.batch_merge_failed chain_key=%s", chain_key)
-                        continue
-                    final_question = str(example.get("final_question", "")).strip()
-                    if final_question in seen_questions or final_question in group_seen_questions:
-                        record_rejected_example(
-                            {
-                                "chain_key": chain_key,
-                                "stage": "duplicate",
-                                "problem_codes": ["DUPLICATE_FINAL_QUESTION"],
-                                "final_question": example.get("final_question", ""),
-                                "final_answer": example.get("final_answer", ""),
-                                "hops": chain,
-                                "detail": f"group_index={group_index}",
-                            }
-                        )
-                        continue
-                    group_seen_questions.add(final_question)
-                    problem_codes, score, reject_stage = evaluate_multihop_example(
-                        example,
-                        quality_gate=args.quality_gate,
-                        valid_chunk_ids=valid_chunk_ids,
-                        seed_keys=seed_keys,
-                        judge_llm_client=judge_llm_client,
-                        chunks_by_id=chunks_by_id,
-                    )
-                    if problem_codes:
-                        record_rejected_example(
-                            {
-                                "chain_key": chain_key,
-                                "stage": reject_stage,
-                                "problem_codes": problem_codes,
-                                "final_question": example.get("final_question", ""),
-                                "final_answer": example.get("final_answer", ""),
-                                "hops": chain,
-                                "detail": f"group_index={group_index}",
-                                "score": score,
-                            }
-                        )
-                        continue
-                    accepted_examples.append(example)
-                    accepted_scores.append(score)
-                if not accepted_examples:
-                    record_rejected_example(
-                        {
-                            "chain_key": f"group-{group_index}",
-                            "stage": "group",
-                            "problem_codes": ["NO_PASSING_CANDIDATE"],
-                            "final_question": "",
-                            "final_answer": "",
-                            "hops": [],
-                            "detail": f"group_index={group_index};candidate_count={len(group)}",
-                            "candidate_chain_keys": group_chain_keys,
-                        }
-                    )
-                    continue
-                winner_index, rank_reason, _rank_fallback = rank_multihop_examples(
-                    accepted_examples,
-                    accepted_scores,
-                    rank_llm_client,
-                    chunks_by_id,
-                )
-                example = accepted_examples[winner_index]
-                winner_chain_key = multihop_chain_key(example.get("hops", []))
-                for index, rejected_example in enumerate(accepted_examples):
-                    if index == winner_index:
-                        continue
-                    record_rejected_example(
-                        {
-                            "chain_key": multihop_chain_key(rejected_example.get("hops", [])),
-                            "stage": "rank",
-                            "problem_codes": ["NOT_BEST_CANDIDATE"],
-                            "final_question": rejected_example.get("final_question", ""),
-                            "final_answer": rejected_example.get("final_answer", ""),
-                            "hops": rejected_example.get("hops", []),
-                            "detail": f"group_index={group_index};winner_chain_key={winner_chain_key};rank_reason={rank_reason}",
-                            "score": accepted_scores[index],
-                        }
-                    )
-                seen_questions.add(str(example["final_question"]).strip())
-                write_jsonl_record(handle, example)
-                handle.flush()
-                generated_count += 1
-                _append_record(
-                    checkpoint_output_path,
-                    {
-                        "chain_key": multihop_chain_key(example.get("hops", [])),
-                        "status": "ok",
-                        "final_question": example.get("final_question"),
-                    },
-                )
-                logging.info(
-                    "domain_multihop_synthesis.batch_appended generated_count=%s total_count=%s failed_count=%s rejected_count=%s",
-                    generated_count,
-                    len(existing_examples) + generated_count,
-                    failed_count,
-                    rejected_count,
-                )
-        total_count = len(existing_examples) + generated_count
-        logging.info(
-            "domain_multihop_synthesis.done output=%s multihop_count=%s rejected_count=%s remaining_count=%s",
-            args.output,
-            total_count,
-            rejected_count,
-            max(args.target_count - total_count, 0),
-        )
-        print(f"multihop_count={total_count}")
-        print(f"rejected_count={rejected_count}")
-        print(f"remaining_count={max(args.target_count - total_count, 0)}")
-        if failed_count:
-            print(f"failed_count={failed_count}")
-            print(f"failed_output={failed_output_path}")
-        if rejected_count:
-            print(f"rejected_output={rejected_output_path}")
-        return
 
     merge_llm_client = None
     if not args.disable_llm_merge:
