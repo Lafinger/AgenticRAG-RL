@@ -10,6 +10,9 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from training.monitoring import create_jsonl_metrics_callback, normalize_report_to
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,6 +23,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir")
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-steps", type=int)
+    parser.add_argument("--report-to", help="Comma-separated Trainer integrations, for example: tensorboard.")
+    parser.add_argument("--logging-dir", help="TensorBoard event output directory.")
+    parser.add_argument("--metrics-output", help="JSONL metrics output path for the local dashboard.")
+    parser.add_argument("--disable-jsonl-metrics", action="store_true")
     return parser.parse_args()
 
 
@@ -110,8 +117,24 @@ def main() -> None:
     records = load_jsonl(project_path(config["data_path"]), max_samples=args.max_samples)
     dataset = Dataset.from_list(render_messages(records, tokenizer))
 
+    output_dir = project_path(config["output_dir"])
+    report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["tensorboard"]))
+    logging_dir = (
+        project_path(args.logging_dir)
+        if args.logging_dir
+        else project_path(config["logging_dir"])
+        if config.get("logging_dir")
+        else str(Path(output_dir) / "tensorboard")
+    )
+    metrics_output = (
+        project_path(args.metrics_output)
+        if args.metrics_output
+        else project_path(config["metrics_output"])
+        if config.get("metrics_output")
+        else str(Path(output_dir) / "metrics.jsonl")
+    )
     training_config: dict[str, Any] = {
-        "output_dir": project_path(config["output_dir"]),
+        "output_dir": output_dir,
         "per_device_train_batch_size": int(config.get("per_device_train_batch_size", 2)),
         "gradient_accumulation_steps": int(config.get("gradient_accumulation_steps", 8)),
         "learning_rate": float(config.get("learning_rate", 1e-4)),
@@ -119,7 +142,8 @@ def main() -> None:
         "logging_steps": int(config.get("logging_steps", 5)),
         "save_steps": int(config.get("save_steps", 45)),
         "seed": int(config.get("seed", 3407)),
-        "report_to": [],
+        "report_to": report_to,
+        "logging_dir": logging_dir,
         "max_seq_length": max_seq_length,
         "dataset_text_field": "text",
         "packing": bool(config.get("packing", False)),
@@ -141,8 +165,10 @@ def main() -> None:
         train_dataset=dataset,
         args=training_args,
     )
+    if not args.disable_jsonl_metrics:
+        trainer.add_callback(create_jsonl_metrics_callback(metrics_output))
     trainer.train()
-    trainer.save_model(project_path(config["output_dir"]))
+    trainer.save_model(output_dir)
 
 
 if __name__ == "__main__":

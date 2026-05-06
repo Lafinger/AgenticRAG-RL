@@ -11,6 +11,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from training.monitoring import create_jsonl_metrics_callback, normalize_report_to
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train GRPO/RL with Unsloth + TRL.")
@@ -19,6 +21,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train-file")
     parser.add_argument("--output-dir")
     parser.add_argument("--max-samples", type=int)
+    parser.add_argument("--report-to", help="Comma-separated Trainer integrations, for example: tensorboard.")
+    parser.add_argument("--logging-dir", help="TensorBoard event output directory.")
+    parser.add_argument("--metrics-output", help="JSONL metrics output path for the local dashboard.")
+    parser.add_argument("--disable-jsonl-metrics", action="store_true")
     return parser.parse_args()
 
 
@@ -95,8 +101,24 @@ def main() -> None:
     if args.max_samples is not None:
         dataset = dataset.select(range(min(args.max_samples, len(dataset))))
 
+    output_dir = project_path(config["output_dir"])
+    report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["tensorboard"]))
+    logging_dir = (
+        project_path(args.logging_dir)
+        if args.logging_dir
+        else project_path(config["logging_dir"])
+        if config.get("logging_dir")
+        else str(Path(output_dir) / "tensorboard")
+    )
+    metrics_output = (
+        project_path(args.metrics_output)
+        if args.metrics_output
+        else project_path(config["metrics_output"])
+        if config.get("metrics_output")
+        else str(Path(output_dir) / "metrics.jsonl")
+    )
     grpo_args = GRPOConfig(
-        output_dir=project_path(config["output_dir"]),
+        output_dir=output_dir,
         per_device_train_batch_size=int(config.get("per_device_train_batch_size", 1)),
         gradient_accumulation_steps=int(config.get("gradient_accumulation_steps", 8)),
         learning_rate=float(config.get("learning_rate", 5e-6)),
@@ -106,7 +128,8 @@ def main() -> None:
         num_generations=int(config.get("num_generations", 4)),
         temperature=float(config.get("temperature", 0.7)),
         seed=int(config.get("seed", 3407)),
-        report_to=[],
+        report_to=report_to,
+        logging_dir=logging_dir,
     )
     trainer = GRPOTrainer(
         model=model,
@@ -115,8 +138,10 @@ def main() -> None:
         args=grpo_args,
         train_dataset=dataset,
     )
+    if not args.disable_jsonl_metrics:
+        trainer.add_callback(create_jsonl_metrics_callback(metrics_output))
     trainer.train()
-    trainer.save_model(project_path(config["output_dir"]))
+    trainer.save_model(output_dir)
 
 
 if __name__ == "__main__":

@@ -24,3 +24,7 @@ logging_steps: 5
 save_steps: 45
 seed: 3407
 packing: false
+report_to:
+  - tensorboard
+logging_dir: ./training/runs/unsloth_sft_qwen3_4b_lora
+metrics_output: ./training/outputs/unsloth_sft_qwen3_4b_lora/metrics.jsonl

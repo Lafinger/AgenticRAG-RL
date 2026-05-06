@@ -43,62 +43,12 @@ Eval dataset:  E:\AI\AgenticRAG-RL\demo\data\novel_eval\sft_zh_unsloth\eval.json
 ```powershell
 Set-Location E:\AI\AgenticRAG-RL\demo
 
-@'
-import json
-from pathlib import Path
-
-input_path = Path("data/novel_eval/sft_zh_unsloth/train.jsonl")
-train_output = Path("data/novel_eval/sft_zh_unsloth/train_studio.jsonl")
-eval_output = Path("data/novel_eval/sft_zh_unsloth/eval.jsonl")
-manifest_path = Path("data/novel_eval/sft_zh_unsloth/manifest.json")
-eval_count = 200
-
-with input_path.open("r", encoding="utf-8") as handle:
-    records = [json.loads(line) for line in handle if line.strip()]
-
-if not records:
-    raise SystemExit(f"No records found: {input_path}")
-if len(records) <= eval_count:
-    raise SystemExit(f"Need more than {eval_count} records, got {len(records)}")
-
-step = max(len(records) // eval_count, 1)
-eval_indices = []
-for index in range(0, len(records), step):
-    eval_indices.append(index)
-    if len(eval_indices) >= eval_count:
-        break
-
-eval_index_set = set(eval_indices)
-train_records = [record for index, record in enumerate(records) if index not in eval_index_set]
-eval_records = [records[index] for index in eval_indices]
-
-with train_output.open("w", encoding="utf-8", newline="") as handle:
-    for record in train_records:
-        handle.write(json.dumps(record, ensure_ascii=False))
-        handle.write("\r\n")
-
-with eval_output.open("w", encoding="utf-8", newline="") as handle:
-    for record in eval_records:
-        handle.write(json.dumps(record, ensure_ascii=False))
-        handle.write("\r\n")
-
-manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
-manifest.update({
-    "studio_train_output": str(train_output),
-    "studio_eval_output": str(eval_output),
-    "studio_split_source": str(input_path),
-    "studio_train_count": len(train_records),
-    "studio_eval_count": len(eval_records),
-    "studio_eval_stride": step,
-    "studio_eval_disjoint_from_train": True,
-})
-manifest_payload = json.dumps(manifest, ensure_ascii=False, indent=2)
-with manifest_path.open("w", encoding="utf-8", newline="") as handle:
-    handle.write(manifest_payload.replace("\n", "\r\n"))
-    handle.write("\r\n")
-
-print(json.dumps({"source": str(input_path), "source_count": len(records), "train_output": str(train_output), "train_count": len(train_records), "eval_output": str(eval_output), "eval_count": len(eval_records), "eval_stride": step}, ensure_ascii=False))
-'@ | uv run python -
+uv run python .\scripts\split_unsloth_studio_data.py `
+  --input .\data\novel_eval\sft_zh_unsloth\train.jsonl `
+  --train-output .\data\novel_eval\sft_zh_unsloth\train_studio.jsonl `
+  --eval-output .\data\novel_eval\sft_zh_unsloth\eval.jsonl `
+  --manifest .\data\novel_eval\sft_zh_unsloth\manifest.json `
+  --eval-count 200
 ```
 
 当前切分结果：
