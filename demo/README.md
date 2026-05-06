@@ -33,6 +33,49 @@ demo/
 └── training/
 ```
 
+## 文档与文件索引
+
+README 是主流程入口；更细的设计、安装、成本和测评说明放在 `docs/` 下。建议先看本文件跑通链路，再按需要进入专题文档。
+
+### 文档索引
+
+| 文档 | 主要用途 |
+| --- | --- |
+| `docs/工程架构.md` | 总览数据链路、训练链路、本机和远端职责 |
+| `docs/环境安装.md` | Windows 11 + uv + CUDA Torch + Unsloth Core 安装与验证 |
+| `docs/索引构建.md` | 解释 FAISS、BM25、KG、chunk store、RRF 和 rerank 的设计取舍 |
+| `docs/训练命令.md` | Unsloth SFT LoRA、LoRA 合并、GRPO/RL 的命令模板 |
+| `docs/训练测评.md` | Base 和 SFT LoRA 训练后模型的生成评测对比方法 |
+| `docs/训练样本长度计算.md` | 统计 SFT 样本 token 长度，辅助设置 `max_seq_length` |
+| `docs/计算资源推算.md` | 估算 SFT、GRPO、rollout、retrieval server 的显存和算力边界 |
+| `docs/数据构造价格推算.md` | 估算 KG、seed QA、多跳合成、LLM Judge 的 API token 与费用 |
+
+### 关键产物索引
+
+| 产物 | 来源 | 后续用途 |
+| --- | --- | --- |
+| `data/novel/corpus.jsonl` | Step 1 文本解析与切块 | 检索索引、QA 合成、Oracle trace、评测共同源数据 |
+| `data/novel/indexes/` | Step 2 索引构建 | 正式 retrieval server 加载 FAISS/BM25/KG/chunk store |
+| `data/novel_eval/seeds*.jsonl` | Step 3/5 seed QA 生成与清洗 | 多跳 QA 合成的单跳事实单元 |
+| `data/novel_eval/qa_pairs*.jsonl` | Step 4/5 多跳 QA 合成、清洗、划分 | SFT、GRPO、评测的核心 QA 数据 |
+| `data/novel_eval/traces_oracle_zh.jsonl` | Step 6 Oracle trace 构造 | SFT 学习工具调用轨迹 |
+| `data/novel_eval/sft_zh_unsloth/train.jsonl` | Step 8 Unsloth 数据导出 | SFT LoRA 冷启动训练输入 |
+| `data/novel_eval/grpo_agentic_*.parquet` | Step 9 GRPO 数据构造 | GRPO/RL 训练输入与 reward ground truth |
+| `training/outputs/unsloth_sft_qwen3_4b_lora` | Step 12 SFT LoRA 训练 | LoRA adapter，供合并或 adapter 方式测评 |
+| `models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged` | Step 12 LoRA 合并 | GRPO 初始模型、SFT 后生成评测模型 |
+| `results/` | Step 11/14 评测 | Agentic/Pipeline/SFT 对比和 LLM Judge 报告 |
+
+### 关键脚本索引
+
+| 分组 | 脚本 | 用途 |
+| --- | --- | --- |
+| 数据解析 | `scripts/parse_text_corpus.py` | 把 `data/original_data/*.txt` 转为 `corpus.jsonl` |
+| 索引和检索 | `scripts/build_index.py`、`training/tools/retrieval_server.py` | 构建离线索引并启动检索服务 |
+| QA 构造 | `scripts/gen_seed_qa.py`、`scripts/clean_seed_qa.py`、`scripts/domain_multihop_synthesis.py`、`scripts/split_train_test.py`、`scripts/gen_enhanced_aliases.py` | 生成、清洗、合成、划分和增强 QA |
+| SFT/GRPO 数据 | `scripts/build_oracle_traces.py`、`scripts/trace_to_sft.py`、`scripts/convert_sft_to_unsloth.py`、`scripts/prepare_agentic_grpo_data.py` | 构造 Oracle traces、SFT JSONL 和 GRPO parquet |
+| 训练 | `scripts/train_sft_unsloth.py`、`scripts/export_unsloth_lora.py`、`scripts/train_grpo_unsloth.py` | SFT LoRA、LoRA 合并、GRPO/RL 训练入口 |
+| 评测 | `scripts/eval_agentic.py`、`scripts/run_cloud_eval.py`、`scripts/eval_hf_model.py`、`scripts/compare_predictions.py`、`scripts/run_llm_judge.py` | 本机 smoke、模型生成对比和 LLM-as-Judge |
+
 ## 整体流程图
 
 ```mermaid
@@ -48,7 +91,7 @@ flowchart TD
     F --> J["Step 9: 构造 GRPO parquet"]
     C --> K["Step 10: 启动 retrieval server"]
     E --> L["Step 11: Pipeline / Agentic smoke eval"]
-    I --> M["Step 12: SFT 训练与合并"]
+    I --> M["Step 12: SFT LoRA 冷启动训练"]
     J --> N["Step 13: Stage1 / Stage2 / Stage3 GRPO"]
     K --> N
     N --> O["Step 14: Judge / 诊断评测"]
@@ -56,21 +99,25 @@ flowchart TD
 
 ## Step 0: 使用 uv 准备本地环境
 
-**目标**：创建可复现的本地 Python 环境，后续所有本机命令都通过 `uv run python ...` 执行。
+**目标**：创建可复现的本地 Python 环境，后续本机数据处理、检索、评测命令默认通过 `uv run python ...` 执行。
 
 **详细说明**：
 
 - 该步骤先进入 `demo` 工程根目录，保证后续相对路径都从同一个目录解析。
-- `uv venv .venv --python 3.12` 会在当前目录创建 `.venv`，并绑定 Python 3.12 解释器。
-- `uv pip install -r .\requirements.txt` 会把本机数据处理、检索、评测所需依赖安装进 `.venv`。
-- 后续命令使用 `uv run python ...`，由 `uv` 自动选择 `.venv`，减少手动激活环境导致的路径错误。
+- `pyproject.toml` 当前要求 `Python >=3.13`，建议直接用 Python 3.13 创建 `.venv`。
+- 本机数据处理、检索和评测依赖来自 `requirements.txt`，用 `uv pip install -r .\requirements.txt` 安装。
+- 如果当前 `.venv` 已手动安装 Unsloth、TRL、datasets 等训练栈，后续同步项目时使用 `uv sync --inexact`，避免删除这些额外包。
+- Unsloth 训练栈不内置在项目依赖中，Windows CUDA Torch 和 Unsloth Core 安装请按 `docs/环境安装.md` 单独完成。
+- 运行 Unsloth 相关训练脚本时，推荐使用 `uv run --no-sync python ...`，避免 `uv run` 自动同步环境时影响手动安装的训练栈。
 
 ```mermaid
 flowchart LR
     A["requirements.txt"] --> B["uv pip install"]
-    C["Python 3.12"] --> D[".venv"]
+    C["Python 3.13"] --> D[".venv"]
     B --> D
     D --> E["uv run python"]
+    F["Unsloth 手动安装"] --> G["uv run --no-sync python"]
+    D --> G
 ```
 
 **需要**：
@@ -78,21 +125,28 @@ flowchart LR
 - Windows 11
 - PowerShell
 - 已安装 `uv`
-- Python 3.12
-- 当前工作目录为 `C:\Workspace\AI\Learning\AgenticRAG-RL\demo`
+- Python 3.13
+- 当前工作目录为 `E:\AI\AgenticRAG-RL\demo`
 
 **怎么做**：
 
 ```powershell
-Set-Location C:\Workspace\AI\Learning\AgenticRAG-RL\demo
-uv venv .venv --python 3.12
+Set-Location E:\AI\AgenticRAG-RL\demo
+uv venv .venv --python 3.13
 uv pip install -r .\requirements.txt
+```
+
+如果已经安装了 Unsloth 训练栈，并且只想同步项目元信息而保留额外包：
+
+```powershell
+uv sync --inexact
 ```
 
 **能拿到的结果**：
 
 - `.venv/` 本地虚拟环境
-- 可通过 `uv run python ...` 调用的项目依赖
+- 可通过 `uv run python ...` 调用的数据处理、检索和评测依赖
+- 可通过 `uv run --no-sync python ...` 调用已手动安装的 Unsloth 训练栈
 - 不需要手动执行 `.\.venv\Scripts\Activate.ps1`
 
 **数据结构与字段用途**：
@@ -205,6 +259,7 @@ uv run python .\scripts\parse_text_corpus.py `
 - KG 三元组抽取会打印 `kg_extraction.progress completed=.../... failed=...`，长时间运行时可据此判断是否仍在推进。
 - KG 抽取会把每个 chunk 的状态逐条追加到 `triples_cache.jsonl`：成功写 `status=ok`，失败写 `status=failed`。重新执行同一命令时只跳过 `ok` 的 chunk，失败和未完成 chunk 会重新请求豆包；最终缓存会按 chunk 顺序重写。
 - CrossEncoder reranker 不预构建索引，运行检索服务时通过 `--reranker-model` 加载，对 FAISS/BM25/KG 候选进行精排。
+- 当前 `hybrid_search` 主要融合 `keyword_search + semantic/dense_search`；`graph_search` 是独立工具。KG 稳定后可再把 graph candidates 纳入 hybrid RRF 融合。
 
 ```mermaid
 flowchart LR
@@ -216,7 +271,7 @@ flowchart LR
     F --> G["Knowledge Graph"]
     D --> H["RRF + rerank"]
     E --> H
-    G --> H
+    G --> I["graph_search"]
 ```
 
 **需要**：
@@ -463,6 +518,8 @@ index_save.progress stage=done output_dir=...
 | `knowledge_graph.json` | NetworkX node-link JSON | 实体关系图 | `graph_search` |
 | `entity_embeddings.pkl` | 实体名、实体行号和实体向量 | query 到图实体的语义匹配 | `graph_search` |
 | `triples_cache.jsonl` | 每行一条 `chunk_id/status/triples` checkpoint | 避免重复调用 LLM 抽取三元组；失败 chunk 下次自动重试 | 重建 KG |
+
+检索工具边界要分清：`keyword_search` 走 BM25，`semantic_search`/`dense_search` 走 FAISS，`graph_search` 走 KG，`hybrid_search` 当前是关键词和语义候选的融合重排工具，不等同于三路索引自动融合。
 
 ## Step 3: 生成小说域 seed QA
 
@@ -1384,17 +1441,18 @@ uv run python .\scripts\eval_agentic.py `
 | `results[].retrieved_chunk_ids` | 实际召回 chunk | reward / hop-aware 诊断 |
 | `results[].evidence` | 检索证据详情 | 人工审查、faithfulness 分析 |
 
-## Step 12: SFT 训练与 checkpoint 合并
+## Step 12: SFT LoRA 冷启动训练
 
-**目标**：用 Oracle traces 让模型先学会 Hermes 工具调用格式、检索步骤和 `<answer>` 答案协议。
+**目标**：在 GRPO/RL 前先做 SFT LoRA 冷启动，让基座模型学会中文小说 Agent 的工具调用轨迹、ReAct 搜索步骤和 `<answer>...</answer>` 最终答案协议。
 
 **详细说明**：
 
-- SFT 阶段使用 Step 8 导出的 ShareGPT 数据，让基座模型先模仿理想工具调用轨迹。
-- 训练时 `qwen3_nothink` 模板负责把多轮消息转成模型可学习的 token 序列。
-- LoRA 训练只更新少量适配器权重，降低显存和训练成本。
-- export 阶段会把 LoRA adapter 合并回基座模型，生成后续 GRPO 使用的 merged model。
-- 本机主要验证数据格式；完整 SFT 建议在更大显存环境中执行。
+- SFT 使用 Step 8 导出的 Unsloth JSONL，即 `data/novel_eval/sft_zh_unsloth/train.jsonl`。
+- 训练样本来自 Oracle traces，模型先模仿理想检索路径，而不是直接进入高噪声 RL。
+- `qwen3_nothink` 模板负责把多轮消息渲染成 Qwen3 可学习的 chat token 序列。
+- LoRA 只训练 adapter 权重，默认输出到 `training/outputs/unsloth_sft_qwen3_4b_lora`。
+- 合并阶段把 LoRA adapter 写回基座模型，生成后续 GRPO 默认使用的 merged model。
+- 当前 repo 不内置 Unsloth；训练前先按 `docs/环境安装.md` 装好 CUDA Torch、Unsloth、TRL、datasets、PEFT 等训练栈。
 
 ```mermaid
 flowchart LR
@@ -1408,19 +1466,47 @@ flowchart LR
 **需要**：
 
 - Unsloth 环境
-- 基座模型：默认 `Qwen3-4B`
-- 数据目录：`data/novel_eval/sft_zh_unsloth/`
+- 基座模型：默认 `Qwen/Qwen3-4B-Instruct-2507`
+- 数据文件：`data/novel_eval/sft_zh_unsloth/train.jsonl`
 - 配置：`training/unsloth_sft.yaml`
-- 本机 16GB 显存只建议跑低参 smoke；完整训练建议远端 GPU
+- 本机 16GB 显存只建议低参或 QLoRA smoke；完整训练建议 24GB 以上 GPU 或远端 GPU
 
 **怎么做**：
 
-```powershell
-# 在已准备好的 Unsloth 环境中执行，命令示例按实际安装路径调整
-uv run python .\scripts\train_sft_unsloth.py `
-  --config .\training\unsloth_sft.yaml
+先确认 Unsloth 训练栈可用：
 
-uv run python .\scripts\export_unsloth_lora.py `
+```powershell
+uv run --no-sync python -c "import torch; print(torch.__version__, torch.cuda.is_available()); from unsloth import FastLanguageModel; print('unsloth ok')"
+```
+
+如果 Oracle traces 或 SFT 中间目录刚更新，先重新导出 Unsloth 数据：
+
+```powershell
+uv run python .\scripts\convert_sft_to_unsloth.py `
+  --input-dir .\data\novel_eval\sft `
+  --output-dir .\data\novel_eval\sft_zh_unsloth
+```
+
+训练前统计样本 token 长度，判断 `max_seq_length` 是否合理：
+
+```powershell
+uv run python .\scripts\calc_sample_lengths.py `
+  --config .\training\unsloth_sft.yaml `
+  --limits 1024 2048 4096
+```
+
+执行 SFT LoRA 冷启动训练：
+
+```powershell
+uv run --no-sync python .\scripts\train_sft_unsloth.py `
+  --config .\training\unsloth_sft.yaml `
+  --output-dir .\training\outputs\unsloth_sft_qwen3_4b_lora
+```
+
+训练完成后导出 merged model：
+
+```powershell
+uv run --no-sync python .\scripts\export_unsloth_lora.py `
   --config .\training\unsloth_sft.yaml `
   --adapter-path .\training\outputs\unsloth_sft_qwen3_4b_lora `
   --export-dir .\models\Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
@@ -1439,6 +1525,7 @@ uv run python .\scripts\export_unsloth_lora.py `
 | `training/unsloth_sft.yaml` | model/dataset/template/output_dir | SFT 训练参数 | Unsloth |
 | `training/outputs/unsloth_sft_qwen3_4b_lora` | LoRA adapter | 学到工具调用格式的增量权重 | export |
 | `models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged` | 合并后的 HF 模型目录 | GRPO 初始模型 | GRPO / RL |
+| `results/sft_compare/summary.json` | Base/SFT 指标对比 | 判断冷启动是否提升协议遵循和答案指标 | Step 14 |
 
 ## Step 13: Unsloth GRPO / RL 训练
 
@@ -1584,11 +1671,103 @@ uv run python .\scripts\run_llm_judge.py `
 
 批量模式会把每条待评测样本写成一条 Batch Job 请求。任务完成后脚本会把原始请求和响应备份到 `data/batch_jobs/llm_judge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，再解析 Judge JSON，并写入 `--output` 指定的 judged JSON 和对应 `*_judged.checkpoint.jsonl`；已有 `status=ok` 的样本仍会被跳过。最终报告和诊断应读取 `--output` 指定的 judged JSON，不直接读取 Batch Job 原始 `results.jsonl`。
 
+### SFT LoRA 训练前后测评
+
+`eval_agentic.py` 和 `run_cloud_eval.py` 主要验证数据、检索、证据字段和规则型 pipeline 是否闭环；它们不加载 SFT 后的 Qwen 模型，不能单独代表训练前后模型能力对比。SFT LoRA 对比应使用 `eval_hf_model.py` 让 base model 和 SFT model 在同一测试集上生成答案，再用 `compare_predictions.py` 汇总。
+
+固定测试集，优先使用 held-out 数据：
+
+```text
+data\novel_eval\test.jsonl
+```
+
+生成训练前 Base 模型预测：
+
+```powershell
+New-Item -ItemType Directory -Force .\results\sft_compare
+
+uv run --no-sync python .\scripts\eval_hf_model.py `
+  --model Qwen/Qwen3-4B-Instruct-2507 `
+  --data .\data\novel_eval\test.jsonl `
+  --output .\results\sft_compare\base_predictions.jsonl `
+  --template qwen3_nothink `
+  --max-samples 50 `
+  --max-new-tokens 512 `
+  --temperature 0
+```
+
+如果本地已经保存 base 模型，也可以把 `--model` 换成 `.\models\Qwen3-4B-Instruct-2507-Base`，便于复现实验路径。
+
+生成 SFT merged model 预测：
+
+```powershell
+uv run --no-sync python .\scripts\eval_hf_model.py `
+  --model .\models\Qwen3-4B-Instruct-2507-Unsloth-SFT-merged `
+  --data .\data\novel_eval\test.jsonl `
+  --output .\results\sft_compare\sft_predictions.jsonl `
+  --template qwen3_nothink `
+  --max-samples 50 `
+  --max-new-tokens 512 `
+  --temperature 0
+```
+
+如果不导出 merged model，也可以直接测 base + adapter：
+
+```powershell
+uv run --no-sync python .\scripts\eval_hf_model.py `
+  --model Qwen/Qwen3-4B-Instruct-2507 `
+  --adapter .\training\outputs\unsloth_sft_qwen3_4b_lora `
+  --data .\data\novel_eval\test.jsonl `
+  --output .\results\sft_compare\sft_lora_predictions.jsonl `
+  --template qwen3_nothink `
+  --max-samples 50 `
+  --max-new-tokens 512 `
+  --temperature 0
+```
+
+计算统一指标：
+
+```powershell
+uv run python .\scripts\compare_predictions.py `
+  --base .\results\sft_compare\base_predictions.jsonl `
+  --sft .\results\sft_compare\sft_predictions.jsonl `
+  --output .\results\sft_compare\summary.json
+```
+
+重点看这些指标：
+
+| 指标 | 含义 |
+| --- | --- |
+| `avg_em` | 标准答案或别名的 exact match |
+| `avg_f1` | 标准答案或别名的 token F1 |
+| `answer_tag_rate` | 输出是否稳定包含 `<answer>...</answer>` |
+| `tool_call_rate` | 是否生成 `<tool_call>...</tool_call>` |
+| `valid_tool_call_rate` | `<tool_call>` 内 JSON 是否可解析 |
+| `avg_generation_chars` | 平均生成长度，辅助发现异常长输出 |
+
+可选再对 base 和 SFT 的 `_as_eval.json` 跑 LLM-as-Judge：
+
+```powershell
+uv run python .\scripts\run_llm_judge.py `
+  .\results\sft_compare\base_predictions_as_eval.json `
+  --output .\results\sft_compare\base_judged.json `
+  --max-concurrency 5
+
+uv run python .\scripts\run_llm_judge.py `
+  .\results\sft_compare\sft_predictions_as_eval.json `
+  --output .\results\sft_compare\sft_judged.json `
+  --max-concurrency 5
+```
+
 **能拿到的结果**：
 
 - `results/agentic_eval.json`
 - `results/pipeline_eval.json`
 - `results/agentic_eval_judged.json`，或 `--output` 指定的其他 judged JSON
+- `results/sft_compare/base_predictions.jsonl`
+- `results/sft_compare/sft_predictions.jsonl`
+- `results/sft_compare/summary.json`
+- `results/sft_compare/base_judged.json` 和 `sft_judged.json`，仅在执行可选 Judge 时产生
 - `results/agentic_eval_judged.checkpoint.jsonl`，文件名前缀随 `--output` 变化
 - `data/batch_jobs/llm_judge/requests.jsonl`、`results.jsonl`、`errors.jsonl`，仅使用 Doubao 批量推理任务时产生，属于 Batch Job 原始备份 / 可追溯文件
 - 指标包括 `EM/F1/hop_recall/tool_calls/evidence`
@@ -1601,18 +1780,22 @@ uv run python .\scripts\run_llm_judge.py `
 | `agentic_eval.json.summary` | Agentic 整体指标 | 对比 SFT / GRPO checkpoint |
 | `agentic_eval.json.results[]` | 单样本预测、证据和指标 | 错误分析 |
 | `pipeline_eval.json.summary` | 非 agentic pipeline 基线指标 | 对照实验 |
+| `sft_compare/summary.json.summary.base` | Base 模型生成指标 | SFT 训练前基线 |
+| `sft_compare/summary.json.summary.sft` | SFT 模型生成指标 | SFT LoRA 冷启动效果 |
+| `sft_compare/summary.json.summary.delta` | SFT 相对 Base 的指标变化 | 判断协议遵循和答案指标是否提升 |
 | `EM/F1` | 答案匹配指标 | correctness 趋势 |
 | `hop_recall` | 证据召回指标 | grounding 趋势 |
 | `tool_calls` | 工具调用次数 | 搜索行为诊断 |
 | `evidence` | 召回证据文本 | faithfulness / Judge |
+
 ## 一键本机 smoke 顺序
 
-如果只想验证本机闭环，按下面顺序执行即可：
+如果只想验证本机数据闭环，按下面顺序执行即可。该顺序不包含完整 SFT/GRPO 训练，只验证 corpus、索引、QA、SFT 数据、GRPO 数据和规则型 agentic eval 是否连通。
 
 执行到 `gen_seed_qa.py` 前，需要先复制环境变量示例并填写敏感信息：
 
 ```powershell
-Set-Location C:\Workspace\AI\Learning\AgenticRAG-RL\demo
+Set-Location E:\AI\AgenticRAG-RL\demo
 Copy-Item .\.env.example .\.env
 ```
 
@@ -1634,9 +1817,35 @@ uv run python .\scripts\eval_agentic.py --data .\data\novel_eval\qa_pairs.jsonl 
 
 切换到金庸多文档 corpus 后，旧的 `seeds.jsonl`、`qa_pairs.jsonl`、oracle traces、SFT/GRPO 数据都不再和新 `chunk_id` 对齐，需要按上面的顺序重新生成。
 
+### 训练冷启动与测评顺序
+
+SFT LoRA 是 GRPO 前的冷启动阶段，建议在数据闭环 smoke 通过后单独执行。训练前先按 `docs/环境安装.md` 确认 Unsloth 环境：
+
+```powershell
+uv run --no-sync python -c "import torch; print(torch.__version__, torch.cuda.is_available()); from unsloth import FastLanguageModel; print('unsloth ok')"
+```
+
+然后执行 SFT 数据刷新、长度统计、LoRA 训练、合并和训练前后测评：
+
+```powershell
+uv run python .\scripts\convert_sft_to_unsloth.py --input-dir .\data\novel_eval\sft --output-dir .\data\novel_eval\sft_zh_unsloth
+uv run python .\scripts\calc_sample_lengths.py --config .\training\unsloth_sft.yaml --limits 1024 2048 4096
+uv run --no-sync python .\scripts\train_sft_unsloth.py --config .\training\unsloth_sft.yaml --output-dir .\training\outputs\unsloth_sft_qwen3_4b_lora
+uv run --no-sync python .\scripts\export_unsloth_lora.py --config .\training\unsloth_sft.yaml --adapter-path .\training\outputs\unsloth_sft_qwen3_4b_lora --export-dir .\models\Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
+New-Item -ItemType Directory -Force .\results\sft_compare
+uv run --no-sync python .\scripts\eval_hf_model.py --model Qwen/Qwen3-4B-Instruct-2507 --data .\data\novel_eval\test.jsonl --output .\results\sft_compare\base_predictions.jsonl --template qwen3_nothink --max-samples 50 --max-new-tokens 512 --temperature 0
+uv run --no-sync python .\scripts\eval_hf_model.py --model .\models\Qwen3-4B-Instruct-2507-Unsloth-SFT-merged --data .\data\novel_eval\test.jsonl --output .\results\sft_compare\sft_predictions.jsonl --template qwen3_nothink --max-samples 50 --max-new-tokens 512 --temperature 0
+uv run python .\scripts\compare_predictions.py --base .\results\sft_compare\base_predictions.jsonl --sft .\results\sft_compare\sft_predictions.jsonl --output .\results\sft_compare\summary.json
+```
+
+如果只想测 LoRA adapter 而不合并模型，把 SFT 预测命令替换为 `--model Qwen/Qwen3-4B-Instruct-2507 --adapter .\training\outputs\unsloth_sft_qwen3_4b_lora`。
+
 ## 环境边界
 
 - Windows 11 本机：数据处理、SFT 数据转换、CPU retrieval server、smoke evaluation。
-- RTX 4070 Ti SUPER 16GB：适合低参模型或 1-2 条样本 rollout smoke，不适合完整 GRPO。
+- 当前 repo 不内置 Unsloth 依赖；Windows CUDA Torch、Unsloth Core、TRL、datasets、PEFT 等训练栈需要单独安装。
+- 单卡 16GB：适合数据流程、小模型或 QLoRA smoke；当前默认 `Qwen3-4B + LoRA rank 64 + max_seq_length 4096` 容易 OOM。
+- 单卡 24GB：更适合 4B LoRA SFT；GRPO 仍建议缩小 batch、response length 或只做 smoke。
 - 外部 GPU 环境：完整 Unsloth SFT、Unsloth GRPO/RL、长样本 rollout 和 Judge。
+- 数据构造成本主要来自按 chunk 调用在线 LLM 的 KG 抽取和 seed QA 生成；正式全量构造前建议先小样本抽查质量，并参考 `docs/数据构造价格推算.md` 预留预算。
 
