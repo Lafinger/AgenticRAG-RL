@@ -14,7 +14,13 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from training.monitoring import create_summary_writer, is_tensorboard_enabled, normalize_report_to, write_tensorboard_scalars
+from training.monitoring import (
+    SwanLabScalarLogger,
+    configure_swanlab_environment,
+    is_swanlab_enabled,
+    normalize_report_to,
+    require_swanlab,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,8 +32,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir")
     parser.add_argument("--trace-output")
     parser.add_argument("--metrics-output")
-    parser.add_argument("--report-to", help="Comma-separated integrations for the custom loop, for example: tensorboard.")
-    parser.add_argument("--tensorboard-log-dir", help="TensorBoard event output directory.")
+    parser.add_argument("--report-to", help="Comma-separated integrations for the custom loop, for example: swanlab.")
+    parser.add_argument("--swanlab-project", help="SwanLab project name.")
+    parser.add_argument("--swanlab-workspace", help="SwanLab workspace name.")
+    parser.add_argument("--swanlab-mode", help="SwanLab mode, for example: cloud.")
+    parser.add_argument("--swanlab-logdir", help="SwanLab local log directory.")
+    parser.add_argument("--swanlab-experiment-name", help="SwanLab experiment name.")
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-steps", type=int)
     parser.add_argument("--num-train-epochs", type=float)
@@ -188,16 +198,6 @@ def main() -> None:
     if args.logging_steps is not None:
         config["logging_steps"] = args.logging_steps
 
-    (
-        torch,
-        DataLoader,
-        TorchDataset,
-        FastLanguageModel,
-        RandomSampler,
-        SequentialSampler,
-        get_linear_schedule_with_warmup,
-    ) = require_training_stack()
-
     model_name = str(config["model_name_or_path"])
     max_seq_length = int(config.get("max_seq_length", 2048))
     if args.output_dir:
@@ -209,14 +209,35 @@ def main() -> None:
     trace_output = project_path(args.trace_output) if args.trace_output else output_dir / "step_sample_trace.jsonl"
     metrics_output = project_path(args.metrics_output) if args.metrics_output else output_dir / "trace_metrics.jsonl"
     state_output = output_dir / "trace_training_state.json"
-    report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["tensorboard"]))
-    tensorboard_log_dir = (
-        project_path(args.tensorboard_log_dir)
-        if args.tensorboard_log_dir
-        else project_path(config["logging_dir"])
-        if config.get("logging_dir")
-        else output_dir / "tensorboard"
+    report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["swanlab"]))
+    swanlab_project = args.swanlab_project or config.get("swanlab_project") or "agentic-rag-rl"
+    swanlab_workspace = args.swanlab_workspace or config.get("swanlab_workspace")
+    swanlab_mode = args.swanlab_mode or config.get("swanlab_mode") or "cloud"
+    swanlab_logdir = project_path(args.swanlab_logdir or config.get("swanlab_logdir") or "./training/swanlab")
+    swanlab_experiment_name = (
+        args.swanlab_experiment_name
+        or config.get("swanlab_experiment_name")
+        or output_dir.name
     )
+    if is_swanlab_enabled(report_to):
+        configure_swanlab_environment(
+            project=swanlab_project,
+            workspace=swanlab_workspace,
+            mode=swanlab_mode,
+            logdir=swanlab_logdir,
+            experiment_name=swanlab_experiment_name,
+        )
+        require_swanlab(report_to)
+
+    (
+        torch,
+        DataLoader,
+        TorchDataset,
+        FastLanguageModel,
+        RandomSampler,
+        SequentialSampler,
+        get_linear_schedule_with_warmup,
+    ) = require_training_stack()
     for stale_path in (trace_output, metrics_output):
         if stale_path.exists():
             stale_path.unlink()
@@ -378,10 +399,25 @@ def main() -> None:
         "max_grad_norm": args.max_grad_norm,
         "optim": args.optim,
         "report_to": report_to,
-        "tensorboard_log_dir": str(tensorboard_log_dir) if is_tensorboard_enabled(report_to) else None,
+        "swanlab_project": swanlab_project if is_swanlab_enabled(report_to) else None,
+        "swanlab_workspace": swanlab_workspace if is_swanlab_enabled(report_to) else None,
+        "swanlab_mode": swanlab_mode if is_swanlab_enabled(report_to) else None,
+        "swanlab_logdir": str(swanlab_logdir) if is_swanlab_enabled(report_to) else None,
+        "swanlab_experiment_name": swanlab_experiment_name if is_swanlab_enabled(report_to) else None,
     }
     write_json(output_dir / "trace_run_config.json", run_config)
-    tb_writer = create_summary_writer(tensorboard_log_dir) if is_tensorboard_enabled(report_to) else None
+    swanlab_logger = (
+        SwanLabScalarLogger(
+            project=swanlab_project,
+            workspace=swanlab_workspace,
+            experiment_name=swanlab_experiment_name,
+            mode=swanlab_mode,
+            logdir=swanlab_logdir,
+            config=run_config,
+        )
+        if is_swanlab_enabled(report_to)
+        else None
+    )
 
     global_step = 0
     completed_micro_batches = 0
@@ -460,8 +496,8 @@ def main() -> None:
                     "sample_ids": trace_payload["sample_ids"],
                 },
             )
-            if tb_writer is not None:
-                write_tensorboard_scalars(tb_writer, trace_payload, global_step)
+            if swanlab_logger is not None:
+                swanlab_logger.log(trace_payload, global_step)
 
             if global_step % logging_steps == 0 or global_step == 1:
                 print(
@@ -506,8 +542,8 @@ def main() -> None:
 
     model.save_pretrained(str(output_dir))
     tokenizer.save_pretrained(str(output_dir))
-    if tb_writer is not None:
-        tb_writer.close()
+    if swanlab_logger is not None:
+        swanlab_logger.finish()
     print(json.dumps({"status": "done", "output_dir": str(output_dir), "trace_output": str(trace_output)}, ensure_ascii=False))
 
 

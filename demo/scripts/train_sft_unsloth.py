@@ -12,7 +12,13 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from training.monitoring import create_jsonl_metrics_callback, normalize_report_to
+from training.monitoring import (
+    configure_swanlab_environment,
+    create_jsonl_metrics_callback,
+    is_swanlab_enabled,
+    normalize_report_to,
+    require_swanlab,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,8 +29,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir")
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-steps", type=int)
-    parser.add_argument("--report-to", help="Comma-separated Trainer integrations, for example: tensorboard.")
-    parser.add_argument("--logging-dir", help="TensorBoard event output directory.")
+    parser.add_argument("--report-to", help="Comma-separated Trainer integrations, for example: swanlab.")
+    parser.add_argument("--swanlab-project", help="SwanLab project name.")
+    parser.add_argument("--swanlab-workspace", help="SwanLab workspace name.")
+    parser.add_argument("--swanlab-mode", help="SwanLab mode, for example: cloud.")
+    parser.add_argument("--swanlab-logdir", help="SwanLab local log directory.")
+    parser.add_argument("--swanlab-experiment-name", help="SwanLab experiment name.")
     parser.add_argument("--metrics-output", help="JSONL metrics output path for the local dashboard.")
     parser.add_argument("--disable-jsonl-metrics", action="store_true")
     return parser.parse_args()
@@ -94,10 +104,38 @@ def main() -> None:
     if args.output_dir:
         config["output_dir"] = args.output_dir
 
-    Dataset, SFTConfig, SFTTrainer, FastLanguageModel = require_unsloth_stack()
-
     model_name = str(config["model_name_or_path"])
     max_seq_length = int(config.get("max_seq_length", 2048))
+    output_dir = project_path(config["output_dir"])
+    report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["swanlab"]))
+    metrics_output = (
+        project_path(args.metrics_output)
+        if args.metrics_output
+        else project_path(config["metrics_output"])
+        if config.get("metrics_output")
+        else str(Path(output_dir) / "metrics.jsonl")
+    )
+    swanlab_project = args.swanlab_project or config.get("swanlab_project") or "agentic-rag-rl"
+    swanlab_workspace = args.swanlab_workspace or config.get("swanlab_workspace")
+    swanlab_mode = args.swanlab_mode or config.get("swanlab_mode") or "cloud"
+    swanlab_logdir = project_path(args.swanlab_logdir or config.get("swanlab_logdir") or "./training/swanlab")
+    swanlab_experiment_name = (
+        args.swanlab_experiment_name
+        or config.get("swanlab_experiment_name")
+        or Path(output_dir).name
+    )
+    if is_swanlab_enabled(report_to):
+        configure_swanlab_environment(
+            project=swanlab_project,
+            workspace=swanlab_workspace,
+            mode=swanlab_mode,
+            logdir=swanlab_logdir,
+            experiment_name=swanlab_experiment_name,
+        )
+        require_swanlab(report_to)
+
+    Dataset, SFTConfig, SFTTrainer, FastLanguageModel = require_unsloth_stack()
+
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=model_name,
         max_seq_length=max_seq_length,
@@ -117,22 +155,6 @@ def main() -> None:
     records = load_jsonl(project_path(config["data_path"]), max_samples=args.max_samples)
     dataset = Dataset.from_list(render_messages(records, tokenizer))
 
-    output_dir = project_path(config["output_dir"])
-    report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["tensorboard"]))
-    logging_dir = (
-        project_path(args.logging_dir)
-        if args.logging_dir
-        else project_path(config["logging_dir"])
-        if config.get("logging_dir")
-        else str(Path(output_dir) / "tensorboard")
-    )
-    metrics_output = (
-        project_path(args.metrics_output)
-        if args.metrics_output
-        else project_path(config["metrics_output"])
-        if config.get("metrics_output")
-        else str(Path(output_dir) / "metrics.jsonl")
-    )
     training_config: dict[str, Any] = {
         "output_dir": output_dir,
         "per_device_train_batch_size": int(config.get("per_device_train_batch_size", 2)),
@@ -143,12 +165,13 @@ def main() -> None:
         "save_steps": int(config.get("save_steps", 45)),
         "seed": int(config.get("seed", 3407)),
         "report_to": report_to,
-        "logging_dir": logging_dir,
         "max_seq_length": max_seq_length,
         "dataset_text_field": "text",
         "packing": bool(config.get("packing", False)),
         "dataset_num_proc": None,
     }
+    if is_swanlab_enabled(report_to):
+        training_config["run_name"] = swanlab_experiment_name
     if args.max_steps is not None:
         training_config["max_steps"] = args.max_steps
     elif config.get("max_steps") is not None:

@@ -13,6 +13,8 @@ num_generations: 4
 reward_version: v6a
 seed: 3407
 report_to:
-  - tensorboard
-logging_dir: ./training/runs/unsloth_grpo_qwen3_4b
+  - swanlab
+swanlab_project: agentic-rag-rl
+swanlab_mode: cloud
+swanlab_logdir: ./training/swanlab
 metrics_output: ./training/outputs/unsloth_grpo_qwen3_4b/metrics.jsonl
