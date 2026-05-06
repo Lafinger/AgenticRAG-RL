@@ -1,8 +1,30 @@
 {
+
   "format": "sharegpt_messages_jsonl",
+
   "source": "data\\novel_eval\\sft\\sharegpt.jsonl",
+
   "output": "data\\novel_eval\\sft_zh_unsloth\\train.jsonl",
+
   "count": 3000,
+
   "required_field": "messages",
-  "trainer": "unsloth"
+
+  "trainer": "unsloth",
+
+  "studio_train_output": "data\\novel_eval\\sft_zh_unsloth\\train_studio.jsonl",
+
+  "studio_eval_output": "data\\novel_eval\\sft_zh_unsloth\\eval.json",
+
+  "studio_split_source": "data\\novel_eval\\sft_zh_unsloth\\train.jsonl",
+
+  "studio_train_count": 2800,
+
+  "studio_eval_count": 200,
+
+  "studio_eval_stride": 15,
+
+  "studio_eval_disjoint_from_train": true
+
 }
+
