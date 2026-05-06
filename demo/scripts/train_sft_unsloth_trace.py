@@ -19,6 +19,7 @@ from training.monitoring import (
     configure_swanlab_environment,
     is_swanlab_enabled,
     normalize_report_to,
+    normalize_swanlab_mode,
     require_swanlab,
 )
 
@@ -212,7 +213,7 @@ def main() -> None:
     report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["swanlab"]))
     swanlab_project = args.swanlab_project or config.get("swanlab_project") or "agentic-rag-rl"
     swanlab_workspace = args.swanlab_workspace or config.get("swanlab_workspace")
-    swanlab_mode = args.swanlab_mode or config.get("swanlab_mode") or "cloud"
+    swanlab_mode = normalize_swanlab_mode(args.swanlab_mode or config.get("swanlab_mode") or "cloud") or "cloud"
     swanlab_logdir = project_path(args.swanlab_logdir or config.get("swanlab_logdir") or "./training/swanlab")
     swanlab_experiment_name = (
         args.swanlab_experiment_name

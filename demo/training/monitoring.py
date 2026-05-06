@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Any
 
 
+SWANLAB_MODES = ("cloud", "local", "offline", "disabled")
+
+
 def append_jsonl(path: str | Path, payload: dict[str, Any]) -> None:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -34,6 +37,20 @@ def is_swanlab_enabled(report_to: Any) -> bool:
     return any(item.lower() in {"swanlab", "all"} for item in normalize_report_to(report_to))
 
 
+def normalize_swanlab_mode(mode: Any) -> str | None:
+    if mode is None:
+        return None
+    normalized = str(mode).strip().lower()
+    if not normalized:
+        return None
+    if normalized not in SWANLAB_MODES:
+        raise SystemExit(
+            "SwanLab mode 只能是 cloud、local、offline 或 disabled，"
+            f"当前值：{mode!r}。"
+        )
+    return normalized
+
+
 def configure_swanlab_environment(
     *,
     project: str | None = None,
@@ -48,7 +65,9 @@ def configure_swanlab_environment(
     if workspace:
         os.environ["SWANLAB_WORKSPACE"] = workspace
     if mode:
-        os.environ["SWANLAB_MODE"] = mode
+        normalized_mode = normalize_swanlab_mode(mode)
+        if normalized_mode:
+            os.environ["SWANLAB_MODE"] = normalized_mode
     if logdir:
         os.environ["SWANLAB_LOG_DIR"] = str(logdir)
     if experiment_name:
@@ -133,6 +152,7 @@ class SwanLabScalarLogger:
     _run: Any = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
+        mode = normalize_swanlab_mode(self.mode) or "cloud"
         try:
             self._swanlab = importlib.import_module("swanlab")
         except ImportError as exc:
@@ -142,7 +162,7 @@ class SwanLabScalarLogger:
             project=self.project,
             workspace=self.workspace,
             experiment_name=self.experiment_name,
-            mode=self.mode,
+            mode=mode,
             logdir=str(self.logdir),
             config=self.config,
         )

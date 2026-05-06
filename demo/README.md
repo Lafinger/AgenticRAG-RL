@@ -1401,6 +1401,17 @@ uv run --no-sync python .\scripts\train_sft_unsloth.py `
 
 训练默认向 SwanLab 云端项目 `agentic-rag-rl` 上报 loss、learning rate、grad norm 等标量指标，同时继续写本地 `metrics.jsonl` 供项目 dashboard 使用。
 
+如果只用本地 SwanLab，保留 `report_to: [swanlab]`，在训练命令中覆盖模式和日志目录：
+
+```powershell
+uv run --no-sync python .\scripts\train_sft_unsloth.py `
+  --config .\training\unsloth_sft.yaml `
+  --swanlab-mode local `
+  --swanlab-logdir .\training\swanlab
+
+uv run swanlab watch -l .\training\swanlab
+```
+
 另开 PowerShell 查看项目 dashboard：
 
 ```powershell

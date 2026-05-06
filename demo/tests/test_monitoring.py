@@ -15,6 +15,7 @@ from training import monitoring
 from training.monitoring import (
     SwanLabScalarLogger,
     configure_swanlab_environment,
+    normalize_swanlab_mode,
     require_swanlab,
 )
 
@@ -39,6 +40,26 @@ def test_configure_swanlab_environment_sets_expected_env(monkeypatch: pytest.Mon
     assert monitoring.os.environ["SWANLAB_EXP_NAME"] == "sft-test"
 
 
+def test_configure_swanlab_environment_supports_local_mode(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    for key in ("SWANLAB_MODE", "SWANLAB_LOG_DIR"):
+        monkeypatch.delenv(key, raising=False)
+
+    configure_swanlab_environment(
+        mode="LOCAL",
+        logdir=tmp_path / "swanlab",
+    )
+
+    assert monitoring.os.environ["SWANLAB_MODE"] == "local"
+    assert monitoring.os.environ["SWANLAB_LOG_DIR"] == str(tmp_path / "swanlab")
+
+
+def test_normalize_swanlab_mode_rejects_unknown_mode() -> None:
+    assert normalize_swanlab_mode(" cloud ") == "cloud"
+    assert normalize_swanlab_mode(None) is None
+    with pytest.raises(SystemExit, match="SwanLab mode 只能是"):
+        normalize_swanlab_mode("wrong")
+
+
 def test_swanlab_scalar_logger_init_log_and_finish(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     calls: dict[str, Any] = {"logs": [], "finished": 0}
 
@@ -59,7 +80,7 @@ def test_swanlab_scalar_logger_init_log_and_finish(monkeypatch: pytest.MonkeyPat
         project="agentic-rag-rl",
         workspace="team-a",
         experiment_name="trace-test",
-        mode="cloud",
+        mode="LOCAL",
         logdir=tmp_path / "swanlab",
         config={"seed": 3407},
     )
@@ -84,7 +105,7 @@ def test_swanlab_scalar_logger_init_log_and_finish(monkeypatch: pytest.MonkeyPat
         "project": "agentic-rag-rl",
         "workspace": "team-a",
         "experiment_name": "trace-test",
-        "mode": "cloud",
+        "mode": "local",
         "logdir": str(tmp_path / "swanlab"),
         "config": {"seed": 3407},
     }
