@@ -111,6 +111,85 @@ def test_max_turns_without_answer_is_marked_unfinished() -> None:
     assert retriever.calls == [("keyword_search", "继续找", 1), ("keyword_search", "继续找", 1)]
 
 
+def test_multiple_tool_calls_uses_first_valid_action_and_records_diagnostics() -> None:
+    module = load_agentic_eval_module()
+    retriever = FakeRetriever()
+    text = (
+        '<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>\n'
+        '<tool_call>{"name":"keyword_search","arguments":{"query":"第二跳"}}</tool_call>'
+    )
+
+    result = module.run_agentic_loop("问题", retriever, lambda messages: text, max_turns=1, top_k=2)
+
+    assert retriever.calls == [("keyword_search", "第一跳", 2)]
+    assert result["status"] == "max_turns_exceeded"
+    assert result["raw_turns"][0]["multi_action_present"] is True
+    assert result["raw_turns"][0]["normalized_action"] == (
+        '<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>'
+    )
+
+
+def test_starts_with_closing_tool_tag_is_recorded_but_valid_action_can_run() -> None:
+    module = load_agentic_eval_module()
+    retriever = FakeRetriever()
+    text = '</tool_call>\n<tool_call>{"name":"keyword_search","arguments":{"query":"可解析查询"}}</tool_call>'
+
+    result = module.run_agentic_loop("问题", retriever, lambda messages: text, max_turns=1)
+
+    assert retriever.calls == [("keyword_search", "可解析查询", 3)]
+    assert result["raw_turns"][0]["starts_with_closing_tool"] is True
+    assert result["raw_turns"][0]["malformed_tool_fragment_present"] is True
+
+
+def test_normalized_history_mode_writes_normalized_action_to_next_turn_history() -> None:
+    module = load_agentic_eval_module()
+    retriever = FakeRetriever()
+    seen_histories: list[list[dict[str, str]]] = []
+    outputs = iter(
+        [
+            '</tool_call>\n<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>\n'
+            '<tool_call>{"name":"keyword_search","arguments":{"query":"第二跳"}}</tool_call>',
+            "<answer>侯赢</answer>",
+        ]
+    )
+
+    def generate(messages: list[dict[str, str]]) -> str:
+        seen_histories.append([dict(message) for message in messages])
+        return next(outputs)
+
+    result = module.run_agentic_loop("问题", retriever, generate, max_turns=2, action_history_mode="normalized")
+
+    assert result["prediction"] == "侯赢"
+    assert result["raw_turns"][0]["assistant"].startswith("</tool_call>")
+    assert result["raw_turns"][0]["history_assistant"] == (
+        '<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>'
+    )
+    assert result["raw_turns"][0]["truncated_to_first_action"] is True
+    assert seen_histories[1][2]["role"] == "assistant"
+    assert seen_histories[1][2]["content"] == result["raw_turns"][0]["history_assistant"]
+
+
+def test_raw_history_mode_keeps_original_action_in_next_turn_history() -> None:
+    module = load_agentic_eval_module()
+    retriever = FakeRetriever()
+    seen_histories: list[list[dict[str, str]]] = []
+    raw_tool_text = (
+        '<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>\n'
+        '<tool_call>{"name":"keyword_search","arguments":{"query":"第二跳"}}</tool_call>'
+    )
+    outputs = iter([raw_tool_text, "<answer>侯赢</answer>"])
+
+    def generate(messages: list[dict[str, str]]) -> str:
+        seen_histories.append([dict(message) for message in messages])
+        return next(outputs)
+
+    result = module.run_agentic_loop("问题", retriever, generate, max_turns=2, action_history_mode="raw")
+
+    assert result["prediction"] == "侯赢"
+    assert result["raw_turns"][0]["history_assistant"] == raw_tool_text
+    assert seen_histories[1][2]["content"] == raw_tool_text
+
+
 def test_evaluate_record_includes_hop_recall_and_gold_chunks() -> None:
     module = load_agentic_eval_module()
     record = {
@@ -135,6 +214,42 @@ def test_evaluate_record_includes_hop_recall_and_gold_chunks() -> None:
     assert result["f1"] == 1.0
     assert result["hop_recall"] == 0.5
     assert result["gold_chunks"] == ["chunk-a", "chunk-c"]
+
+
+def test_build_summary_includes_agent_loop_diagnostic_rates() -> None:
+    module = load_agentic_eval_module()
+    records = [
+        {
+            "em": 0.0,
+            "f1": 0.0,
+            "hop_recall": 0.5,
+            "status": "max_turns_exceeded",
+            "valid_tool_call_count": 2,
+            "raw_turns": [
+                {"malformed_tool_fragment_present": True, "multi_action_present": True, "starts_with_closing_tool": True},
+                {"malformed_tool_fragment_present": False, "multi_action_present": False, "starts_with_closing_tool": False},
+            ],
+        },
+        {
+            "em": 1.0,
+            "f1": 1.0,
+            "hop_recall": 1.0,
+            "status": "answered",
+            "valid_tool_call_count": 1,
+            "raw_turns": [
+                {"malformed_tool_fragment_present": False, "multi_action_present": False, "starts_with_closing_tool": False}
+            ],
+        },
+    ]
+
+    summary = module.build_summary(records)
+
+    assert summary["max_turns_exceeded_rate"] == 0.5
+    assert summary["avg_valid_tool_calls"] == 1.5
+    assert summary["avg_turns"] == 1.5
+    assert summary["malformed_tool_fragment_rate"] == 1 / 3
+    assert summary["multi_action_turn_rate"] == 1 / 3
+    assert summary["starts_with_closing_tool_rate"] == 1 / 3
 
 
 def test_write_eval_output_jsonl_writes_records_and_sidecar_summary(tmp_path: Path) -> None:

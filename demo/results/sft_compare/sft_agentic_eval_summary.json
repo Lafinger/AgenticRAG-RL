@@ -1,0 +1,8 @@
+{
+  "count": 50,
+  "avg_em": 0.0,
+  "avg_f1": 0.0,
+  "avg_hop_recall": 0.5166666666666666,
+  "answer_tag_rate": 0.0,
+  "valid_tool_call_rate": 0.98
+}

@@ -22,6 +22,10 @@ AGENT_SYSTEM_PROMPT = (
 )
 ANSWER_RE = re.compile(r"<answer>(.*?)</answer>", re.DOTALL | re.IGNORECASE)
 TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL | re.IGNORECASE)
+ACTION_RE = re.compile(r"<answer>.*?</answer>|<tool_call>.*?</tool_call>", re.DOTALL | re.IGNORECASE)
+TOOL_OPEN_RE = re.compile(r"<tool_call\b[^>]*>", re.IGNORECASE)
+TOOL_CLOSE_RE = re.compile(r"</tool_call>", re.IGNORECASE)
+TOOL_TAG_FRAGMENT_RE = re.compile(r"</?tool_call\b[^>]*>", re.IGNORECASE)
 
 
 def parse_args() -> argparse.Namespace:
@@ -42,6 +46,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device-map", default="auto")
     parser.add_argument("--dtype", choices=["auto", "float16", "bfloat16", "float32"], default="auto")
     parser.add_argument("--system-prompt", default=AGENT_SYSTEM_PROMPT)
+    parser.add_argument(
+        "--action-history-mode",
+        choices=["raw", "normalized"],
+        default="raw",
+        help="Use raw model output in chat history, or normalized first parsed action while preserving raw_turns.",
+    )
     parser.add_argument("--trust-remote-code", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
 
@@ -103,12 +113,7 @@ def extract_answer(text: str) -> str | None:
     return matches[-1].strip()
 
 
-def parse_tool_call(text: str) -> tuple[dict[str, Any] | None, str | None]:
-    matches = TOOL_CALL_RE.findall(text)
-    if not matches:
-        return None, "missing_tool_call"
-
-    raw_payload = matches[0].strip()
+def _parse_tool_payload(raw_payload: str) -> tuple[dict[str, Any] | None, str | None]:
     try:
         payload = json.loads(raw_payload)
     except json.JSONDecodeError as exc:
@@ -128,6 +133,76 @@ def parse_tool_call(text: str) -> tuple[dict[str, Any] | None, str | None]:
         return None, "tool_call_missing_query"
 
     return {"name": name.strip(), "arguments": {"query": query.strip()}}, None
+
+
+def format_tool_call(tool_call: dict[str, Any]) -> str:
+    return f"<tool_call>{json.dumps(tool_call, ensure_ascii=False, separators=(',', ':'))}</tool_call>"
+
+
+def analyze_turn_output(text: str) -> dict[str, Any]:
+    tool_payloads = TOOL_CALL_RE.findall(text)
+    invalid_tool_payload_present = False
+    for payload in tool_payloads:
+        tool_call, error = _parse_tool_payload(payload.strip())
+        if tool_call is None or error is not None:
+            invalid_tool_payload_present = True
+            break
+
+    tool_open_count = len(TOOL_OPEN_RE.findall(text))
+    tool_close_count = len(TOOL_CLOSE_RE.findall(text))
+    action_count = len(ACTION_RE.findall(text))
+    tool_fragment_present = TOOL_TAG_FRAGMENT_RE.search(text) is not None
+    starts_with_closing_tool = text.lstrip().lower().startswith("</tool_call>")
+    empty_tool_payload_present = any(not payload.strip() for payload in tool_payloads)
+    malformed_tool_fragment_present = tool_fragment_present and (
+        starts_with_closing_tool
+        or tool_open_count != tool_close_count
+        or empty_tool_payload_present
+        or invalid_tool_payload_present
+    )
+    return {
+        "tool_fragment_present": tool_fragment_present,
+        "malformed_tool_fragment_present": malformed_tool_fragment_present,
+        "multi_action_present": action_count > 1,
+        "starts_with_closing_tool": starts_with_closing_tool,
+        "action_count": action_count,
+        "tool_open_count": tool_open_count,
+        "tool_close_count": tool_close_count,
+    }
+
+
+def parse_first_action(text: str) -> tuple[dict[str, Any] | None, str | None]:
+    first_error: str | None = None
+    for match in ACTION_RE.finditer(text):
+        action_text = match.group(0)
+        answer = extract_answer(action_text)
+        if answer is not None:
+            return {"kind": "answer", "answer": answer, "normalized_text": f"<answer>{answer}</answer>"}, None
+
+        tool_match = TOOL_CALL_RE.fullmatch(action_text)
+        if tool_match is None:
+            continue
+        tool_call, error = _parse_tool_payload(tool_match.group(1).strip())
+        if tool_call is None:
+            if first_error is None:
+                first_error = error or "invalid_tool_call"
+            continue
+        return {"kind": "tool_call", "tool_call": tool_call, "normalized_text": format_tool_call(tool_call)}, None
+
+    if first_error:
+        return None, first_error
+    if TOOL_TAG_FRAGMENT_RE.search(text):
+        return None, "invalid_tool_call_fragment"
+    return None, "missing_tool_call"
+
+
+def parse_tool_call(text: str) -> tuple[dict[str, Any] | None, str | None]:
+    action, error = parse_first_action(text)
+    if action is None:
+        return None, error
+    if action["kind"] != "tool_call":
+        return None, "missing_tool_call"
+    return action["tool_call"], None
 
 
 def format_tool_response(results: list[Any]) -> str:
@@ -161,7 +236,10 @@ def run_agentic_loop(
     system_prompt: str = AGENT_SYSTEM_PROMPT,
     max_turns: int = 5,
     top_k: int = 3,
+    action_history_mode: str = "raw",
 ) -> dict[str, Any]:
+    if action_history_mode not in {"raw", "normalized"}:
+        raise ValueError("action_history_mode must be 'raw' or 'normalized'.")
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": question},
@@ -173,13 +251,25 @@ def run_agentic_loop(
 
     for turn_index in range(1, max_turns + 1):
         assistant_text = generate_turn(messages).strip()
-        messages.append({"role": "assistant", "content": assistant_text})
+        diagnostics = analyze_turn_output(assistant_text)
+        action, error = parse_first_action(assistant_text)
 
-        final_answer = extract_answer(assistant_text)
-        if final_answer is not None:
-            raw_turns.append({"turn": turn_index, "assistant": assistant_text, "status": "answered"})
+        if action is not None and action["kind"] == "answer":
+            history_assistant = action["normalized_text"] if action_history_mode == "normalized" else assistant_text
+            messages.append({"role": "assistant", "content": history_assistant})
+            raw_turns.append(
+                {
+                    "turn": turn_index,
+                    "assistant": assistant_text,
+                    "status": "answered",
+                    **diagnostics,
+                    "normalized_action": action["normalized_text"],
+                    "history_assistant": history_assistant,
+                    "truncated_to_first_action": history_assistant != assistant_text,
+                }
+            )
             return {
-                "prediction": final_answer,
+                "prediction": action["answer"],
                 "status": "answered",
                 "raw_turns": raw_turns,
                 "tool_calls": tool_calls,
@@ -188,9 +278,17 @@ def run_agentic_loop(
                 "evidence": evidence,
             }
 
-        tool_call, error = parse_tool_call(assistant_text)
-        if tool_call is None:
-            raw_turns.append({"turn": turn_index, "assistant": assistant_text, "status": "failed", "error": error})
+        if action is None:
+            messages.append({"role": "assistant", "content": assistant_text})
+            raw_turns.append(
+                {
+                    "turn": turn_index,
+                    "assistant": assistant_text,
+                    "status": "failed",
+                    "error": error,
+                    **diagnostics,
+                }
+            )
             return {
                 "prediction": "",
                 "status": error or "invalid_tool_call",
@@ -201,6 +299,9 @@ def run_agentic_loop(
                 "evidence": evidence,
             }
 
+        tool_call = action["tool_call"]
+        history_assistant = action["normalized_text"] if action_history_mode == "normalized" else assistant_text
+        messages.append({"role": "assistant", "content": history_assistant})
         name = tool_call["name"]
         query = tool_call["arguments"]["query"]
         call_record = {"turn": turn_index, "name": name, "arguments": {"query": query}, "valid": True}
@@ -210,7 +311,18 @@ def run_agentic_loop(
             call_record["valid"] = False
             call_record["error"] = str(exc)
             tool_calls.append(call_record)
-            raw_turns.append({"turn": turn_index, "assistant": assistant_text, "status": "failed", "error": str(exc)})
+            raw_turns.append(
+                {
+                    "turn": turn_index,
+                    "assistant": assistant_text,
+                    "status": "failed",
+                    "error": str(exc),
+                    **diagnostics,
+                    "normalized_action": action["normalized_text"],
+                    "history_assistant": history_assistant,
+                    "truncated_to_first_action": history_assistant != assistant_text,
+                }
+            )
             return {
                 "prediction": "",
                 "status": "tool_dispatch_failed",
@@ -236,6 +348,10 @@ def run_agentic_loop(
                 "status": "tool_called",
                 "tool_call": tool_call,
                 "retrieved_chunk_ids": call_record["retrieved_chunk_ids"],
+                **diagnostics,
+                "normalized_action": action["normalized_text"],
+                "history_assistant": history_assistant,
+                "truncated_to_first_action": history_assistant != assistant_text,
             }
         )
 
@@ -330,6 +446,8 @@ def evaluate_record(record: dict[str, Any], loop_result: dict[str, Any], metadat
 def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
     count = len(records)
     divisor = max(count, 1)
+    raw_turns = [turn for record in records for turn in record.get("raw_turns", [])]
+    turn_divisor = max(len(raw_turns), 1)
     return {
         "count": count,
         "avg_em": sum(record["em"] for record in records) / divisor,
@@ -337,6 +455,12 @@ def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "avg_hop_recall": sum(record["hop_recall"] for record in records) / divisor,
         "answer_tag_rate": sum(1 for record in records if record["status"] == "answered") / divisor,
         "valid_tool_call_rate": sum(1 for record in records if record["valid_tool_call_count"] > 0) / divisor,
+        "malformed_tool_fragment_rate": sum(1 for turn in raw_turns if turn.get("malformed_tool_fragment_present")) / turn_divisor,
+        "multi_action_turn_rate": sum(1 for turn in raw_turns if turn.get("multi_action_present")) / turn_divisor,
+        "starts_with_closing_tool_rate": sum(1 for turn in raw_turns if turn.get("starts_with_closing_tool")) / turn_divisor,
+        "max_turns_exceeded_rate": sum(1 for record in records if record["status"] == "max_turns_exceeded") / divisor,
+        "avg_valid_tool_calls": sum(record["valid_tool_call_count"] for record in records) / divisor,
+        "avg_turns": sum(len(record.get("raw_turns", [])) for record in records) / divisor,
     }
 
 
@@ -397,6 +521,7 @@ def main() -> None:
         "temperature": args.temperature,
         "top_p": args.top_p,
         "repetition_penalty": args.repetition_penalty,
+        "action_history_mode": args.action_history_mode,
     }
 
     results: list[dict[str, Any]] = []
@@ -408,6 +533,7 @@ def main() -> None:
             system_prompt=args.system_prompt,
             max_turns=args.max_turns,
             top_k=args.top_k,
+            action_history_mode=args.action_history_mode,
         )
         result = evaluate_record(example, loop_result, metadata)
         results.append(result)
