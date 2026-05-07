@@ -21,15 +21,28 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     grpo_rows = build_grpo_rows(examples)
 
     assert len(traces) == 2
+    assert len(sft_records) == 4
+    assert len(sharegpt_records) == 4
     assert traces[0]["messages"][0]["role"] == "system"
     assert traces[0]["tools"] == TOOL_SCHEMAS
     assert traces[0]["messages"][2]["content"].startswith("<think>")
     assert "\n<tool_call>\n" in traces[0]["messages"][2]["content"]
     assert traces[0]["messages"][3]["role"] == "tool"
     assert "<tool_response>" not in traces[0]["messages"][3]["content"]
-    assert sft_records[0]["messages"][3]["role"] == "tool"
-    assert sft_records[0]["tools"] == TOOL_SCHEMAS
-    assert sft_records[0]["messages"][-1]["content"].startswith("<answer>")
+    full_trace = sft_records[0]
+    finalization = sft_records[1]
+    assert full_trace["metadata"]["sample_type"] == "full_trace"
+    assert full_trace["messages"][3]["role"] == "tool"
+    assert full_trace["tools"] == TOOL_SCHEMAS
+    assert full_trace["messages"][-1]["content"].startswith("<answer>")
+    assert finalization["metadata"]["sample_type"] == "finalization_only"
+    assert finalization["messages"][0]["role"] == "system"
+    assert finalization["messages"][1]["role"] == "user"
+    assert finalization["messages"][-1]["role"] == "assistant"
+    assert finalization["messages"][-1]["content"].startswith("<answer>")
+    assert any(message["role"] == "tool" for message in finalization["messages"])
+    assert all(message["role"] != "assistant" or "<tool_call>" not in message["content"] for message in finalization["messages"])
+    assert finalization["tools"] == TOOL_SCHEMAS
     assert sharegpt_records[0]["messages"][0]["role"] == "system"
     assert sharegpt_records[0]["tools"] == TOOL_SCHEMAS
     assert grpo_rows[0]["agent_name"] == "tool_agent"

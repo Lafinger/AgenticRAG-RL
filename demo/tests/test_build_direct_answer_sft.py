@@ -81,6 +81,31 @@ def test_build_direct_answer_sft_writes_three_turn_messages_and_manifest(tmp_pat
     assert saved_manifest["train_eval_disjoint_by_question"] is True
 
 
+def test_build_direct_answer_sft_skips_main_finalization_samples(tmp_path: Path) -> None:
+    train_input = tmp_path / "train_cli.jsonl"
+    eval_input = tmp_path / "eval.jsonl"
+    train_output = tmp_path / "direct" / "train.jsonl"
+    eval_output = tmp_path / "direct" / "eval.jsonl"
+    manifest_path = tmp_path / "direct" / "manifest.json"
+    full_trace = make_source_record("谁救了段誉？", "古松")
+    full_trace["metadata"]["sample_type"] = "full_trace"
+    finalization_only = make_source_record("谁救了段誉？", "古松")
+    finalization_only["metadata"]["sample_type"] = "finalization_only"
+    write_jsonl(train_input, [full_trace, finalization_only])
+    write_jsonl(eval_input, [full_trace, finalization_only])
+
+    build_direct_answer_sft(
+        train_input=train_input,
+        eval_input=eval_input,
+        train_output=train_output,
+        eval_output=eval_output,
+        manifest_path=manifest_path,
+    )
+
+    assert len(read_jsonl(train_output)) == 1
+    assert len(read_jsonl(eval_output)) == 1
+
+
 def test_build_direct_answer_sft_rejects_heldout_test_file(tmp_path: Path) -> None:
     heldout_test = ROOT / "data" / "novel_eval" / "test.jsonl"
     eval_input = tmp_path / "eval.jsonl"

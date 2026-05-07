@@ -148,8 +148,8 @@ attention_mask = [
 核心规则是：
 
 ```python
-labels[i] = input_ids[i]   # 如果这个 token 属于 assistant 内容
-labels[i] = -100           # 如果这个 token 不属于 assistant 内容
+labels[i] = input_ids[i]   # 如果这个 token 属于 assistant 内容或该 assistant turn 的 <|im_end|>
+labels[i] = -100           # 如果这个 token 不属于 assistant 输出
 ```
 
 例如：
@@ -177,12 +177,12 @@ labels = [
     -100,
     -100, ...,      # assistant 起始模板 token，不算 loss
     123, 456, 789, # assistant 内容，算 loss
-    -100,          # <|im_end|> 不算 loss
+    151645,        # assistant 的 <|im_end|>，算 loss，学习一轮 action 后停止
     -100, ...,      # tool_response 是 user 内容，不算 loss
     -100,
     -100, ...,      # assistant 起始模板 token，不算 loss
     234, 567, 890, # assistant 答案内容，算 loss
-    -100
+    151645
 ]
 ```
 
@@ -228,9 +228,9 @@ labels           哪些位置要计算训练 loss
 ```text
 system              labels = -100
 user question       labels = -100
-assistant reply     labels = token_id
+assistant reply     labels = token_id，包括该 assistant turn 的 <|im_end|>
 tool response       labels = -100
-assistant answer    labels = token_id
+assistant answer    labels = token_id，包括该 assistant turn 的 <|im_end|>
 padding             labels = -100
 ```
 

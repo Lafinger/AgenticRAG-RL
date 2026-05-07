@@ -1136,7 +1136,7 @@ uv run python .\scripts\split_sft_train_eval.py `
 | `manifest.json` | 数据格式、来源和 CLI split 摘要 | 记录转换来源、样本数和训练器 | 数据审计 |
 | `training/unsloth_sft.yaml` | `dataset/template/model/output_dir` | SFT 训练配置 | Step 12 |
 
-当前默认切分为 `2800` 条 CLI 训练样本和 `200` 条 CLI 验证样本，二者不重叠。训练、eval loss、trace 追溯和 LoRA 合并命令统一见 `docs/训练&观测.md`。
+当前默认切分为 `5800` 条 CLI 训练样本和 `200` 条 CLI 验证样本，二者不重叠；验证集包含 `100` 条 `full_trace` 和 `100` 条 `finalization_only`。训练、eval loss、trace 追溯和 LoRA 合并命令统一见 `docs/训练&观测.md`。
 
 ## Step 9: 构造 GRPO parquet 数据
 

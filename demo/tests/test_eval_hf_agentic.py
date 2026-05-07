@@ -220,6 +220,22 @@ def test_agent_loop_writes_normalized_action_to_next_turn_history() -> None:
     assert seen_histories[1][3]["content"].startswith("[chunk-a]")
     assert "<tool_response>" not in seen_histories[1][3]["content"]
 
+
+def test_stop_on_action_criteria_stops_after_complete_action_tag() -> None:
+    module = load_agentic_eval_module()
+
+    class DecodeTokenizer:
+        def decode(self, ids: list[int], *, skip_special_tokens: bool = True) -> str:
+            del skip_special_tokens
+            return "".join(chr(token_id) for token_id in ids)
+
+    criteria = module.StopOnActionCriteria(DecodeTokenizer(), prompt_length=2)
+
+    assert criteria([[1, 2, *map(ord, "<tool_call>{}")]]) is False
+    assert criteria([[1, 2, *map(ord, "<tool_call>{}</tool_call>")]]) is True
+    assert criteria([[1, 2, *map(ord, "<answer>侯赢</answer>")]]) is True
+
+
 def test_evaluate_record_includes_hop_recall_and_gold_chunks() -> None:
     module = load_agentic_eval_module()
     record = {

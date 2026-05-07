@@ -100,8 +100,17 @@ def to_direct_answer_record(record: dict[str, Any], *, source_path: Path, system
     }
 
 
+def should_use_source_record(record: dict[str, Any]) -> bool:
+    metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+    return metadata.get("sample_type") != "finalization_only"
+
+
 def convert_records(records: list[dict[str, Any]], *, source_path: Path, system_prompt: str) -> list[dict[str, Any]]:
-    return [to_direct_answer_record(record, source_path=source_path, system_prompt=system_prompt) for record in records]
+    return [
+        to_direct_answer_record(record, source_path=source_path, system_prompt=system_prompt)
+        for record in records
+        if should_use_source_record(record)
+    ]
 
 
 def question_set(records: list[dict[str, Any]]) -> set[str]:

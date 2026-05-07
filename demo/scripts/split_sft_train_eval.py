@@ -77,8 +77,72 @@ def choose_eval_indices(record_count: int, eval_count: int) -> list[int]:
     return eval_indices
 
 
+def sample_type(record: dict[str, Any]) -> str:
+    metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+    value = metadata.get("sample_type")
+    return str(value).strip() if isinstance(value, str) and value.strip() else "default"
+
+
+def count_by_sample_type(records: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in records:
+        key = sample_type(record)
+        counts[key] = counts.get(key, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def allocate_eval_counts(groups: dict[str, list[int]], eval_count: int) -> dict[str, int]:
+    total = sum(len(indices) for indices in groups.values())
+    raw_allocations = {
+        key: eval_count * len(indices) / total
+        for key, indices in groups.items()
+    }
+    eligible_groups = {key: indices for key, indices in groups.items() if len(indices) > 1}
+    if eval_count < len(eligible_groups):
+        selected = sorted(eligible_groups, key=lambda key: len(eligible_groups[key]), reverse=True)[:eval_count]
+        return {key: 1 for key in selected}
+    allocations = {
+        key: min(max(1, int(value)), len(groups[key]) - 1)
+        for key, value in raw_allocations.items()
+        if key in eligible_groups
+    }
+    while sum(allocations.values()) < eval_count:
+        candidates = [
+            key
+            for key in allocations
+            if allocations[key] < len(groups[key]) - 1
+        ]
+        if not candidates:
+            break
+        best_key = max(candidates, key=lambda key: raw_allocations[key] - allocations[key])
+        allocations[best_key] += 1
+    while sum(allocations.values()) > eval_count:
+        candidates = [key for key, count in allocations.items() if count > 1]
+        if not candidates:
+            break
+        best_key = min(candidates, key=lambda key: raw_allocations[key] - allocations[key])
+        allocations[best_key] -= 1
+    return allocations
+
+
+def choose_stratified_eval_indices(records: list[dict[str, Any]], eval_count: int) -> list[int]:
+    groups: dict[str, list[int]] = {}
+    for index, record in enumerate(records):
+        groups.setdefault(sample_type(record), []).append(index)
+    if len(groups) <= 1:
+        return choose_eval_indices(len(records), eval_count)
+
+    allocations = allocate_eval_counts(groups, eval_count)
+    eval_indices: list[int] = []
+    for key in sorted(allocations):
+        group_indices = groups[key]
+        relative_indices = choose_eval_indices(len(group_indices), allocations[key])
+        eval_indices.extend(group_indices[index] for index in relative_indices)
+    return sorted(eval_indices)
+
+
 def split_records(records: list[dict[str, Any]], eval_count: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int]:
-    eval_indices = choose_eval_indices(len(records), eval_count)
+    eval_indices = choose_stratified_eval_indices(records, eval_count)
     eval_index_set = set(eval_indices)
     train_records = [record for index, record in enumerate(records) if index not in eval_index_set]
     eval_records = [records[index] for index in eval_indices]
@@ -111,6 +175,8 @@ def split_sft_train_eval(
             "split_eval_count": len(eval_records),
             "split_eval_stride": stride,
             "split_eval_disjoint_from_train": True,
+            "split_train_sample_type_counts": count_by_sample_type(train_records),
+            "split_eval_sample_type_counts": count_by_sample_type(eval_records),
         }
     )
     for key in list(manifest):
@@ -126,6 +192,8 @@ def split_sft_train_eval(
         "eval_output": str(eval_output),
         "eval_count": len(eval_records),
         "eval_stride": stride,
+        "train_sample_type_counts": count_by_sample_type(train_records),
+        "eval_sample_type_counts": count_by_sample_type(eval_records),
     }
 
 

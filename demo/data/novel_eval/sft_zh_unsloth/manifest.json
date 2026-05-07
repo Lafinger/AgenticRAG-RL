@@ -2,7 +2,7 @@
   "format": "sharegpt_messages_jsonl",
   "source": "data\\novel_eval\\sft\\sharegpt.jsonl",
   "output": "data\\novel_eval\\sft_zh_unsloth\\train.jsonl",
-  "count": 3000,
+  "count": 6000,
   "required_field": "messages",
   "trainer": "unsloth",
   "tool_schema": "qwen3",
@@ -10,8 +10,16 @@
   "split_train_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train_cli.jsonl",
   "split_eval_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\eval.jsonl",
   "split_source": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train.jsonl",
-  "split_train_count": 2800,
+  "split_train_count": 5800,
   "split_eval_count": 200,
-  "split_eval_stride": 15,
-  "split_eval_disjoint_from_train": true
+  "split_eval_stride": 30,
+  "split_eval_disjoint_from_train": true,
+  "split_train_sample_type_counts": {
+    "finalization_only": 2900,
+    "full_trace": 2900
+  },
+  "split_eval_sample_type_counts": {
+    "finalization_only": 100,
+    "full_trace": 100
+  }
 }

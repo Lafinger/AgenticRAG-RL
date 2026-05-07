@@ -123,6 +123,46 @@ def test_build_agentic_stop_sft_accepts_canonical_tool_role(tmp_path: Path) -> N
     assert "<tool_response>[chunk-a] 第一段证据</tool_response>" in rendered
 
 
+def test_build_agentic_stop_sft_skips_main_finalization_samples(tmp_path: Path) -> None:
+    train_input = tmp_path / "train_cli.jsonl"
+    eval_input = tmp_path / "eval.jsonl"
+    output_dir = tmp_path / "agentic_stop"
+    full_trace = make_source_record("谁救了段誉？", "古松")
+    full_trace["metadata"]["sample_type"] = "full_trace"
+    finalization_only = {
+        "messages": [
+            {"role": "system", "content": "系统提示"},
+            {"role": "user", "content": "谁救了段誉？"},
+            {"role": "tool", "content": "[chunk-a] 第一段证据"},
+            {"role": "assistant", "content": "<answer>古松</answer>"},
+        ],
+        "metadata": {
+            "final_question": "谁救了段誉？",
+            "final_answer": "古松",
+            "sample_type": "finalization_only",
+            "gold_chunks": ["chunk-a"],
+        },
+    }
+    write_jsonl(train_input, [full_trace, finalization_only])
+    write_jsonl(eval_input, [full_trace, finalization_only])
+
+    build_agentic_stop_sft(
+        train_input=train_input,
+        eval_input=eval_input,
+        train_output=output_dir / "train.jsonl",
+        eval_output=output_dir / "eval.jsonl",
+        manifest_path=output_dir / "manifest.json",
+    )
+
+    manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert len(read_jsonl(output_dir / "train.jsonl")) == 2
+    assert len(read_jsonl(output_dir / "eval.jsonl")) == 2
+    assert manifest["train_source_count"] == 2
+    assert manifest["train_source_used_count"] == 1
+    assert manifest["sample_types"]["full_trace"]["train_count"] == 1
+    assert manifest["sample_types"]["finalization_only"]["train_count"] == 1
+
+
 def test_build_agentic_stop_sft_rejects_heldout_test_file(tmp_path: Path) -> None:
     heldout_test = ROOT / "data" / "novel_eval" / "test.jsonl"
     eval_input = tmp_path / "eval.jsonl"

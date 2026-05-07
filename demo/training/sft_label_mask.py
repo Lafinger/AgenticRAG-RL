@@ -32,8 +32,9 @@ def find_assistant_spans(rendered_text: str) -> list[tuple[int, int]]:
         if content_end < 0:
             raise ValueError("Rendered chat contains an assistant turn without <|im_end|>.")
 
-        if content_end > content_start:
-            spans.append((content_start, content_end))
+        span_end = content_end + len(IM_END_MARKER)
+        if span_end > content_start:
+            spans.append((content_start, span_end))
         cursor = content_end + len(IM_END_MARKER)
     return spans
 

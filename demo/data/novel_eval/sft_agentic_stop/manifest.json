@@ -6,18 +6,20 @@
   "eval_input": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\eval.jsonl",
   "train_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_agentic_stop\\train.jsonl",
   "eval_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_agentic_stop\\eval.jsonl",
-  "train_source_count": 2800,
+  "train_source_count": 5800,
   "eval_source_count": 200,
-  "train_count": 5600,
-  "eval_count": 400,
+  "train_source_used_count": 2900,
+  "eval_source_used_count": 100,
+  "train_count": 5800,
+  "eval_count": 200,
   "sample_types": {
     "full_trace": {
-      "train_count": 2800,
-      "eval_count": 200
+      "train_count": 2900,
+      "eval_count": 100
     },
     "finalization_only": {
-      "train_count": 2800,
-      "eval_count": 200
+      "train_count": 2900,
+      "eval_count": 100
     }
   },
   "heldout_test_excluded": true,

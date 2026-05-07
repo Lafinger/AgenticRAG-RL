@@ -1,0 +1,16 @@
+{
+  "count": 50,
+  "avg_em": 0.16,
+  "avg_f1": 0.17,
+  "avg_hop_recall": 0.63,
+  "answer_tag_rate": 0.3,
+  "valid_tool_call_rate": 1.0,
+  "malformed_tool_fragment_rate": 0.647887323943662,
+  "multi_action_turn_rate": 0.5,
+  "starts_with_closing_tool_rate": 0.0,
+  "max_turns_exceeded_rate": 0.0,
+  "avg_valid_tool_calls": 1.84,
+  "avg_turns": 2.84,
+  "results_file": "results\\sft_compare\\sft_agentic_eval.jsonl",
+  "format": "jsonl_records"
+}

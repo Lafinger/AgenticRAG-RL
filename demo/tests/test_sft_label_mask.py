@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from training.sft_label_mask import IGNORE_INDEX, find_assistant_spans, tokenize_chat_with_assistant_labels
+from training.sft_label_mask import IGNORE_INDEX, IM_END_MARKER, find_assistant_spans, tokenize_chat_with_assistant_labels
 
 
 class FakeTokenizer:
@@ -81,6 +81,8 @@ def test_assistant_only_labels_mask_non_assistant_turns() -> None:
             assert label == sample.input_ids[index]
         else:
             assert label == IGNORE_INDEX
+    supervised_text = "".join(chr(label) for label in sample.labels if label != IGNORE_INDEX)
+    assert supervised_text.count(IM_END_MARKER) == 2
 
 
 def test_multiple_assistant_turns_are_supervised() -> None:
@@ -96,6 +98,7 @@ def test_multiple_assistant_turns_are_supervised() -> None:
 
     assert "第一次回答" in supervised_text
     assert "第二次回答" in supervised_text
+    assert supervised_text.count(IM_END_MARKER) == 2
     assert "<tool_response>证据</tool_response>" not in supervised_text
 
 
@@ -116,6 +119,7 @@ def test_tools_rendering_masks_tool_role_response() -> None:
     assert tokenizer.last_tools == tools
     assert "<tool_call>" in supervised_text
     assert "<answer>答案</answer>" in supervised_text
+    assert supervised_text.count(IM_END_MARKER) == 2
     assert "[chunk-a] 证据" not in supervised_text
     assert "<tool_response>" not in supervised_text
 

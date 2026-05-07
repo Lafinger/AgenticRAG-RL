@@ -20,6 +20,7 @@ AGENT_SYSTEM_PROMPT = SYSTEM_PROMPT_ZH
 ANSWER_RE = re.compile(r"<answer>(.*?)</answer>", re.DOTALL | re.IGNORECASE)
 TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL | re.IGNORECASE)
 ACTION_RE = re.compile(r"<answer>.*?</answer>|<tool_call>.*?</tool_call>", re.DOTALL | re.IGNORECASE)
+ACTION_END_RE = re.compile(r"</(?:answer|tool_call)>", re.IGNORECASE)
 TOOL_OPEN_RE = re.compile(r"<tool_call\b[^>]*>", re.IGNORECASE)
 TOOL_CLOSE_RE = re.compile(r"</tool_call>", re.IGNORECASE)
 TOOL_TAG_FRAGMENT_RE = re.compile(r"</?tool_call\b[^>]*>", re.IGNORECASE)
@@ -274,6 +275,20 @@ def unique_append(target: list[str], values: list[str]) -> None:
             seen.add(value)
 
 
+class StopOnActionCriteria:
+    def __init__(self, tokenizer: Any, prompt_length: int) -> None:
+        self.tokenizer = tokenizer
+        self.prompt_length = prompt_length
+
+    def __call__(self, input_ids: Any, scores: Any = None, **kwargs: Any) -> bool:
+        del scores, kwargs
+        generated_ids = input_ids[0][self.prompt_length :]
+        if hasattr(generated_ids, "tolist"):
+            generated_ids = generated_ids.tolist()
+        generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        return ACTION_END_RE.search(generated_text) is not None
+
+
 def best_scores(prediction: str, gold: str, aliases: list[str]) -> tuple[float, float]:
     candidates = [gold, *aliases]
     return (
@@ -419,6 +434,7 @@ def run_agentic_loop(
 
 def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespace) -> Callable[[list[dict[str, str]]], str]:
     import torch
+    from transformers import StoppingCriteriaList
 
     def generate_turn(messages: list[dict[str, str]]) -> str:
         if hasattr(tokenizer, "apply_chat_template") and tokenizer.chat_template:
@@ -445,6 +461,7 @@ def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespa
             "max_new_tokens": args.per_turn_max_new_tokens,
             "pad_token_id": tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id,
             "repetition_penalty": args.repetition_penalty,
+            "stopping_criteria": StoppingCriteriaList([StopOnActionCriteria(tokenizer, int(input_ids.shape[-1]))]),
         }
         if args.temperature <= 0:
             generation_kwargs["do_sample"] = False

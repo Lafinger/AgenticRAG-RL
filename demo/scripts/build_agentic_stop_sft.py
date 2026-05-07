@@ -220,6 +220,9 @@ def build_finalization_record(record: dict[str, Any], index: int, source_path: P
 def build_records(records: list[dict[str, Any]], source_path: Path) -> list[dict[str, Any]]:
     output: list[dict[str, Any]] = []
     for index, record in enumerate(records, start=1):
+        metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+        if metadata.get("sample_type") == "finalization_only":
+            continue
         output.append(build_full_trace_record(record, index, source_path))
         output.append(build_finalization_record(record, index, source_path))
     return output
@@ -233,6 +236,16 @@ def question_set(records: list[dict[str, Any]]) -> set[str]:
         if isinstance(question, str):
             questions.add(question)
     return questions
+
+
+def output_sample_type_counts(records: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in records:
+        metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+        sample_type = metadata.get("sample_type")
+        if isinstance(sample_type, str) and sample_type:
+            counts[sample_type] = counts.get(sample_type, 0) + 1
+    return counts
 
 
 def build_agentic_stop_sft(
@@ -255,6 +268,8 @@ def build_agentic_stop_sft(
     write_jsonl(eval_records, eval_output)
     train_questions = question_set(train_records)
     eval_questions = question_set(eval_records)
+    train_sample_type_counts = output_sample_type_counts(train_records)
+    eval_sample_type_counts = output_sample_type_counts(eval_records)
     manifest = {
         "format": "sharegpt_messages_jsonl",
         "sft_task": "agentic_stop",
@@ -265,11 +280,19 @@ def build_agentic_stop_sft(
         "eval_output": str(resolve_project_path(eval_output)),
         "train_source_count": len(source_train),
         "eval_source_count": len(source_eval),
+        "train_source_used_count": train_sample_type_counts.get("full_trace", 0),
+        "eval_source_used_count": eval_sample_type_counts.get("full_trace", 0),
         "train_count": len(train_records),
         "eval_count": len(eval_records),
         "sample_types": {
-            "full_trace": {"train_count": len(source_train), "eval_count": len(source_eval)},
-            "finalization_only": {"train_count": len(source_train), "eval_count": len(source_eval)},
+            "full_trace": {
+                "train_count": train_sample_type_counts.get("full_trace", 0),
+                "eval_count": eval_sample_type_counts.get("full_trace", 0),
+            },
+            "finalization_only": {
+                "train_count": train_sample_type_counts.get("finalization_only", 0),
+                "eval_count": eval_sample_type_counts.get("finalization_only", 0),
+            },
         },
         "heldout_test_excluded": True,
         "train_eval_disjoint_by_question": train_questions.isdisjoint(eval_questions),

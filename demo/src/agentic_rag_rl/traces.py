@@ -104,12 +104,52 @@ def _normalize_message(message: dict[str, Any]) -> dict[str, Any]:
     return {"role": role, "content": content}
 
 
+def _metadata_with_sample_type(metadata: dict[str, Any], sample_type: str) -> dict[str, Any]:
+    return {**metadata, "sample_type": sample_type}
+
+
+def _build_finalization_record(messages: list[dict[str, Any]], tools: list[dict[str, Any]], metadata: dict[str, Any]) -> dict[str, Any]:
+    if len(messages) < 3:
+        raise ValueError("SFT trace is too short to build finalization sample.")
+    system_message = messages[0]
+    user_message = messages[1]
+    tool_messages = [message for message in messages if message["role"] == "tool"]
+    final_answer = str(metadata.get("final_answer", "")).strip()
+    if not final_answer:
+        raise ValueError("SFT trace metadata is missing final_answer.")
+    finalization_messages = [
+        {"role": "system", "content": system_message["content"]},
+        {"role": "user", "content": user_message["content"]},
+        *tool_messages,
+        {"role": "assistant", "content": f"<answer>{final_answer}</answer>"},
+    ]
+    return {
+        "messages": finalization_messages,
+        "tools": tools,
+        "metadata": {
+            **_metadata_with_sample_type(metadata, "finalization_only"),
+            "tool_response_count": len(tool_messages),
+        },
+    }
+
+
 def convert_traces_to_sft_records(traces: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for trace in traces:
         messages = [_normalize_message(message) for message in trace["messages"]]
         tools = trace.get("tools") if isinstance(trace.get("tools"), list) else TOOL_SCHEMAS
-        records.append({"messages": messages, "tools": tools, "metadata": trace["metadata"]})
+        metadata = dict(trace["metadata"])
+        records.append(
+            {
+                "messages": messages,
+                "tools": tools,
+                "metadata": {
+                    **_metadata_with_sample_type(metadata, "full_trace"),
+                    "tool_turn_count": sum(1 for message in messages if message["role"] == "assistant" and "<tool_call>" in message["content"]),
+                },
+            }
+        )
+        records.append(_build_finalization_record(messages, tools, metadata))
     return records
 
 
