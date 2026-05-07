@@ -106,12 +106,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device-map", default="auto")
     parser.add_argument("--dtype", choices=["auto", "float16", "bfloat16", "float32"], default="auto")
     parser.add_argument("--system-prompt", default=AGENT_SYSTEM_PROMPT)
-    parser.add_argument(
-        "--action-history-mode",
-        choices=["raw", "normalized"],
-        default="raw",
-        help="Use raw model output in chat history, or normalized first parsed action while preserving raw_turns.",
-    )
     parser.add_argument("--trust-remote-code", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
 
@@ -296,10 +290,7 @@ def run_agentic_loop(
     system_prompt: str = AGENT_SYSTEM_PROMPT,
     max_turns: int = 5,
     top_k: int = 3,
-    action_history_mode: str = "raw",
 ) -> dict[str, Any]:
-    if action_history_mode not in {"raw", "normalized"}:
-        raise ValueError("action_history_mode must be 'raw' or 'normalized'.")
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": question},
@@ -315,7 +306,7 @@ def run_agentic_loop(
         action, error = parse_first_action(assistant_text)
 
         if action is not None and action["kind"] == "answer":
-            history_assistant = action["normalized_text"] if action_history_mode == "normalized" else assistant_text
+            history_assistant = action["normalized_text"]
             messages.append({"role": "assistant", "content": history_assistant})
             raw_turns.append(
                 {
@@ -360,7 +351,7 @@ def run_agentic_loop(
             }
 
         tool_call = action["tool_call"]
-        history_assistant = action["normalized_text"] if action_history_mode == "normalized" else assistant_text
+        history_assistant = action["normalized_text"]
         messages.append({"role": "assistant", "content": history_assistant})
         name = tool_call["name"]
         query = tool_call["arguments"]["query"]
@@ -572,7 +563,6 @@ def main() -> None:
         "temperature": args.temperature,
         "top_p": args.top_p,
         "repetition_penalty": args.repetition_penalty,
-        "action_history_mode": args.action_history_mode,
     }
 
     results: list[dict[str, Any]] = []
@@ -584,7 +574,6 @@ def main() -> None:
             system_prompt=args.system_prompt,
             max_turns=args.max_turns,
             top_k=args.top_k,
-            action_history_mode=args.action_history_mode,
         )
         result = evaluate_record(example, loop_result, metadata)
         results.append(result)

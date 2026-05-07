@@ -1,0 +1,16 @@
+{
+  "count": 5,
+  "avg_em": 0.0,
+  "avg_f1": 0.0,
+  "avg_hop_recall": 0.5,
+  "answer_tag_rate": 0.4,
+  "valid_tool_call_rate": 1.0,
+  "malformed_tool_fragment_rate": 0.6666666666666666,
+  "multi_action_turn_rate": 0.4666666666666667,
+  "starts_with_closing_tool_rate": 0.0,
+  "max_turns_exceeded_rate": 0.0,
+  "avg_valid_tool_calls": 2.0,
+  "avg_turns": 3.0,
+  "results_file": "results\\sft_compare\\sft_agentic_smoke.jsonl",
+  "format": "jsonl_records"
+}

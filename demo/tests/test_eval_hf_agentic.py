@@ -190,7 +190,7 @@ def test_starts_with_closing_tool_tag_is_recorded_but_valid_action_can_run() -> 
     assert result["raw_turns"][0]["malformed_tool_fragment_present"] is True
 
 
-def test_normalized_history_mode_writes_normalized_action_to_next_turn_history() -> None:
+def test_agent_loop_writes_normalized_action_to_next_turn_history() -> None:
     module = load_agentic_eval_module()
     retriever = FakeRetriever()
     seen_histories: list[list[dict[str, str]]] = []
@@ -206,7 +206,7 @@ def test_normalized_history_mode_writes_normalized_action_to_next_turn_history()
         seen_histories.append([dict(message) for message in messages])
         return next(outputs)
 
-    result = module.run_agentic_loop("问题", retriever, generate, max_turns=2, action_history_mode="normalized")
+    result = module.run_agentic_loop("问题", retriever, generate, max_turns=2)
 
     assert result["prediction"] == "侯赢"
     assert result["raw_turns"][0]["assistant"].startswith("</tool_call>")
@@ -219,29 +219,6 @@ def test_normalized_history_mode_writes_normalized_action_to_next_turn_history()
     assert seen_histories[1][3]["role"] == "tool"
     assert seen_histories[1][3]["content"].startswith("[chunk-a]")
     assert "<tool_response>" not in seen_histories[1][3]["content"]
-
-
-def test_raw_history_mode_keeps_original_action_in_next_turn_history() -> None:
-    module = load_agentic_eval_module()
-    retriever = FakeRetriever()
-    seen_histories: list[list[dict[str, str]]] = []
-    raw_tool_text = (
-        '<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>\n'
-        '<tool_call>{"name":"keyword_search","arguments":{"query":"第二跳"}}</tool_call>'
-    )
-    outputs = iter([raw_tool_text, "<answer>侯赢</answer>"])
-
-    def generate(messages: list[dict[str, str]]) -> str:
-        seen_histories.append([dict(message) for message in messages])
-        return next(outputs)
-
-    result = module.run_agentic_loop("问题", retriever, generate, max_turns=2, action_history_mode="raw")
-
-    assert result["prediction"] == "侯赢"
-    assert result["raw_turns"][0]["history_assistant"] == raw_tool_text
-    assert seen_histories[1][2]["content"] == raw_tool_text
-    assert seen_histories[1][3]["role"] == "tool"
-
 
 def test_evaluate_record_includes_hop_recall_and_gold_chunks() -> None:
     module = load_agentic_eval_module()
