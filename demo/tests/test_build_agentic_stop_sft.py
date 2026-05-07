@@ -51,7 +51,7 @@ def make_source_record(question: str, answer: str) -> dict:
 
 
 def test_build_agentic_stop_sft_writes_normalized_trace_and_finalization_samples(tmp_path: Path) -> None:
-    train_input = tmp_path / "train_studio.jsonl"
+    train_input = tmp_path / "train_cli.jsonl"
     eval_input = tmp_path / "eval.jsonl"
     output_dir = tmp_path / "agentic_stop"
     write_jsonl(train_input, [make_source_record("谁救了段誉？", "古松")])
@@ -95,6 +95,32 @@ def test_build_agentic_stop_sft_writes_normalized_trace_and_finalization_samples
     assert saved_manifest["eval_count"] == 2
     assert saved_manifest["sample_types"]["full_trace"]["train_count"] == 1
     assert saved_manifest["sample_types"]["finalization_only"]["train_count"] == 1
+
+
+def test_build_agentic_stop_sft_accepts_canonical_tool_role(tmp_path: Path) -> None:
+    train_input = tmp_path / "train_cli.jsonl"
+    eval_input = tmp_path / "eval.jsonl"
+    output_dir = tmp_path / "agentic_stop"
+    source = make_source_record("谁救了段誉？", "古松")
+    for message in source["messages"]:
+        if message["role"] == "user" and str(message["content"]).startswith("<tool_response>"):
+            message["role"] = "tool"
+            message["content"] = str(message["content"]).removeprefix("<tool_response>").removesuffix("</tool_response>")
+    write_jsonl(train_input, [source])
+    write_jsonl(eval_input, [make_source_record("谁去了冰火岛？", "张翠山")])
+
+    build_agentic_stop_sft(
+        train_input=train_input,
+        eval_input=eval_input,
+        train_output=output_dir / "train.jsonl",
+        eval_output=output_dir / "eval.jsonl",
+        manifest_path=output_dir / "manifest.json",
+    )
+
+    train_records = read_jsonl(output_dir / "train.jsonl")
+    rendered = json.dumps(train_records, ensure_ascii=False)
+    assert "\"role\": \"tool\"" not in rendered
+    assert "<tool_response>[chunk-a] 第一段证据</tool_response>" in rendered
 
 
 def test_build_agentic_stop_sft_rejects_heldout_test_file(tmp_path: Path) -> None:

@@ -88,6 +88,13 @@ def normalize_tool_call(content: str) -> str:
     return f"<tool_call>{json.dumps(normalized, ensure_ascii=False, separators=(',', ':'))}</tool_call>"
 
 
+def normalize_tool_response(content: str) -> str:
+    stripped = content.strip()
+    if stripped.startswith("<tool_response>"):
+        return content
+    return f"<tool_response>{content}</tool_response>"
+
+
 def extract_answer(content: str, metadata: dict[str, Any]) -> str:
     matches = ANSWER_RE.findall(content)
     if matches:
@@ -159,7 +166,7 @@ def build_full_trace_record(record: dict[str, Any], index: int, source_path: Pat
         elif role == "user":
             normalized_messages.append({"role": "user", "content": content})
         elif role == "tool":
-            normalized_messages.append({"role": "user", "content": content})
+            normalized_messages.append({"role": "user", "content": normalize_tool_response(content)})
         elif role == "assistant":
             if ANSWER_RE.search(content):
                 answer = extract_answer(content, metadata)
@@ -186,13 +193,16 @@ def build_finalization_record(record: dict[str, Any], index: int, source_path: P
     if not isinstance(messages, list):
         raise ValueError(f"Record {index} is missing messages.")
     metadata = base_metadata(record, index, source_path, "finalization_only")
-    tool_responses = [
-        str(message["content"])
-        for message in messages
-        if message.get("role") in {"user", "tool"}
-        and isinstance(message.get("content"), str)
-        and str(message["content"]).lstrip().startswith("<tool_response>")
-    ]
+    tool_responses: list[str] = []
+    for message in messages:
+        content = message.get("content")
+        if not isinstance(content, str):
+            continue
+        role = message.get("role")
+        if role == "tool":
+            tool_responses.append(normalize_tool_response(content))
+        elif role == "user" and content.lstrip().startswith("<tool_response>"):
+            tool_responses.append(content)
     if not tool_responses:
         raise ValueError(f"Record {index} is missing tool_response context.")
     final_answer = str(metadata["final_answer"])
@@ -227,7 +237,7 @@ def question_set(records: list[dict[str, Any]]) -> set[str]:
 
 def build_agentic_stop_sft(
     *,
-    train_input: str | Path = DEFAULT_INPUT_DIR / "train_studio.jsonl",
+    train_input: str | Path = DEFAULT_INPUT_DIR / "train_cli.jsonl",
     eval_input: str | Path = DEFAULT_INPUT_DIR / "eval.jsonl",
     train_output: str | Path = DEFAULT_OUTPUT_DIR / "train.jsonl",
     eval_output: str | Path = DEFAULT_OUTPUT_DIR / "eval.jsonl",
@@ -274,7 +284,7 @@ def build_agentic_stop_sft(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build agentic-stop SFT calibration data.")
-    parser.add_argument("--train-input", default=str(DEFAULT_INPUT_DIR / "train_studio.jsonl"))
+    parser.add_argument("--train-input", default=str(DEFAULT_INPUT_DIR / "train_cli.jsonl"))
     parser.add_argument("--eval-input", default=str(DEFAULT_INPUT_DIR / "eval.jsonl"))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     return parser.parse_args()

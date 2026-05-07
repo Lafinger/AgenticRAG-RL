@@ -16,7 +16,7 @@ DIRECT_ANSWER_SYSTEM_PROMPT = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build direct-answer SFT train/eval JSONL files from SFT metadata.")
-    parser.add_argument("--train-input", default="./data/novel_eval/sft_zh_unsloth/train_studio.jsonl")
+    parser.add_argument("--train-input", default="./data/novel_eval/sft_zh_unsloth/train_cli.jsonl")
     parser.add_argument("--eval-input", default="./data/novel_eval/sft_zh_unsloth/eval.jsonl")
     parser.add_argument("--train-output", default="./data/novel_eval/sft_direct_answer/train.jsonl")
     parser.add_argument("--eval-output", default="./data/novel_eval/sft_direct_answer/eval.jsonl")

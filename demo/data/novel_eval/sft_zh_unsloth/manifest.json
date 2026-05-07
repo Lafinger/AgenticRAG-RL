@@ -6,5 +6,12 @@
   "required_field": "messages",
   "trainer": "unsloth",
   "tool_schema": "qwen3",
-  "tool_role_preserved": true
+  "tool_role_preserved": true,
+  "split_train_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train_cli.jsonl",
+  "split_eval_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\eval.jsonl",
+  "split_source": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train.jsonl",
+  "split_train_count": 2800,
+  "split_eval_count": 200,
+  "split_eval_stride": 15,
+  "split_eval_disjoint_from_train": true
 }

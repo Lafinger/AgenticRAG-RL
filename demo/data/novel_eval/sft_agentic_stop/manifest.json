@@ -2,7 +2,7 @@
   "format": "sharegpt_messages_jsonl",
   "sft_task": "agentic_stop",
   "system_prompt": "你是一个中文小说阅读问答 Agent。你可以通过检索工具逐步查找证据。每一轮只能输出一个 <tool_call>{\"name\":\"keyword_search\",\"arguments\":{\"query\":\"...\"}}</tool_call> 或最终 <answer>...</answer>。不要在同一轮同时输出工具调用和最终答案。",
-  "train_input": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train_studio.jsonl",
+  "train_input": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train_cli.jsonl",
   "eval_input": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\eval.jsonl",
   "train_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_agentic_stop\\train.jsonl",
   "eval_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_agentic_stop\\eval.jsonl",

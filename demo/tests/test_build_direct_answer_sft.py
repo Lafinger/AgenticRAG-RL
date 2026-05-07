@@ -43,7 +43,7 @@ def make_source_record(question: str, answer: str) -> dict:
 
 
 def test_build_direct_answer_sft_writes_three_turn_messages_and_manifest(tmp_path: Path) -> None:
-    train_input = tmp_path / "train_studio.jsonl"
+    train_input = tmp_path / "train_cli.jsonl"
     eval_input = tmp_path / "eval.jsonl"
     train_output = tmp_path / "direct" / "train.jsonl"
     eval_output = tmp_path / "direct" / "eval.jsonl"
