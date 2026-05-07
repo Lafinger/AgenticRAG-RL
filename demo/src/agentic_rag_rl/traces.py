@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import json
+import re
 from typing import Any, Iterable
 
 from .io import chunk_map
-from .protocols import SYSTEM_PROMPT_EN, SYSTEM_PROMPT_ZH, format_tool_response, make_tool_call
+from .protocols import SYSTEM_PROMPT_EN, SYSTEM_PROMPT_ZH, TOOL_SCHEMAS, format_tool_response, make_tool_call
 from .types import Chunk, MultiHopExample
+
+
+TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL)
+THINK_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL)
+TOOL_RESPONSE_RE = re.compile(r"\s*<tool_response>\s*(.*?)\s*</tool_response>\s*", re.DOTALL)
 
 
 def _trace_system_prompt(use_zh: bool) -> str:
@@ -41,7 +48,7 @@ def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk]
             messages.append(
                 {
                     "role": "assistant",
-                    "content": f"<think>{hop.question}</think>{make_tool_call('keyword_search', hop.question)}",
+                    "content": f"<think>{hop.question}</think>\n{make_tool_call('keyword_search', hop.question)}",
                 }
             )
             messages.append({"role": "tool", "content": format_tool_response(records)})
@@ -50,6 +57,7 @@ def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk]
         traces.append(
             {
                 "messages": messages,
+                "tools": TOOL_SCHEMAS,
                 "metadata": {
                     "final_question": example.final_question,
                     "final_answer": example.final_answer,
@@ -64,18 +72,53 @@ def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk]
     return traces
 
 
+def _strip_tool_response_tags(content: str) -> str:
+    matched = TOOL_RESPONSE_RE.fullmatch(content)
+    return matched.group(1).strip() if matched else content
+
+
+def _normalize_assistant_content(content: str) -> str:
+    tool_match = TOOL_CALL_RE.search(content)
+    if tool_match is None:
+        return content
+
+    think_match = THINK_RE.search(content)
+    think = think_match.group(1).strip() if think_match else ""
+    raw_payload = tool_match.group(1).strip()
+    try:
+        payload = json.loads(raw_payload)
+    except json.JSONDecodeError:
+        payload_text = raw_payload
+    else:
+        payload_text = json.dumps(payload, ensure_ascii=False)
+    return f"<think>{think}</think>\n<tool_call>\n{payload_text}\n</tool_call>"
+
+
+def _normalize_message(message: dict[str, Any]) -> dict[str, Any]:
+    role = message["role"]
+    content = str(message.get("content", ""))
+    if role == "assistant":
+        content = _normalize_assistant_content(content)
+    elif role == "tool":
+        content = _strip_tool_response_tags(content)
+    return {"role": role, "content": content}
+
+
 def convert_traces_to_sft_records(traces: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for trace in traces:
-        messages: list[dict[str, Any]] = []
-        for message in trace["messages"]:
-            if message["role"] == "tool":
-                messages.append({"role": "user", "content": message["content"]})
-            else:
-                messages.append(message)
-        records.append({"messages": messages, "metadata": trace["metadata"]})
+        messages = [_normalize_message(message) for message in trace["messages"]]
+        tools = trace.get("tools") if isinstance(trace.get("tools"), list) else TOOL_SCHEMAS
+        records.append({"messages": messages, "tools": tools, "metadata": trace["metadata"]})
     return records
 
 
 def convert_traces_to_sharegpt(records: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [{"messages": record["messages"], "metadata": record["metadata"]} for record in records]
+    return [
+        {
+            "messages": record["messages"],
+            "tools": record.get("tools", TOOL_SCHEMAS),
+            "metadata": record["metadata"],
+        }
+        for record in records
+    ]

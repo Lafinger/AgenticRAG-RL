@@ -12,20 +12,80 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from agentic_rag_rl.evaluation import exact_match, hop_recall, token_f1
 from agentic_rag_rl.io import load_chunks, load_jsonl
+from agentic_rag_rl.protocols import SYSTEM_PROMPT_ZH, TOOL_SCHEMAS
 from agentic_rag_rl.retrieval import HybridRetriever
 
 
-AGENT_SYSTEM_PROMPT = (
-    "你是一个中文小说阅读问答 Agent。你可以通过检索工具逐步查找证据。"
-    "每一轮只能输出一个 <tool_call>{\"name\":\"keyword_search\",\"arguments\":{\"query\":\"...\"}}</tool_call> "
-    "或最终 <answer>...</answer>。不要在同一轮同时输出工具调用和最终答案。"
-)
+AGENT_SYSTEM_PROMPT = SYSTEM_PROMPT_ZH
 ANSWER_RE = re.compile(r"<answer>(.*?)</answer>", re.DOTALL | re.IGNORECASE)
 TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL | re.IGNORECASE)
 ACTION_RE = re.compile(r"<answer>.*?</answer>|<tool_call>.*?</tool_call>", re.DOTALL | re.IGNORECASE)
 TOOL_OPEN_RE = re.compile(r"<tool_call\b[^>]*>", re.IGNORECASE)
 TOOL_CLOSE_RE = re.compile(r"</tool_call>", re.IGNORECASE)
 TOOL_TAG_FRAGMENT_RE = re.compile(r"</?tool_call\b[^>]*>", re.IGNORECASE)
+
+
+def _template_kwargs(template_name: str) -> dict[str, Any]:
+    if template_name in {"qwen3_nothink", "qwen3_no_think", "qwen3-notthink"}:
+        return {"enable_thinking": False}
+    return {}
+
+
+def render_qwen3_tools_system_prompt(system_prompt: str, tools: list[dict[str, Any]] = TOOL_SCHEMAS) -> str:
+    if "# Tools" in system_prompt:
+        return system_prompt
+    tools_json = json.dumps(tools, ensure_ascii=False, indent=2)
+    return (
+        f"{system_prompt}\n\n"
+        "# Tools\n\n"
+        "You may call one or more functions to assist with the user query.\n\n"
+        "You are provided with function signatures within <tools></tools> XML tags:\n"
+        f"<tools>\n{tools_json}\n</tools>\n\n"
+        "For each function call, return a json object with function name and arguments within <tool_call></tool_call> "
+        "XML tags:\n"
+        "<tool_call>\n"
+        "{\"name\": <function-name>, \"arguments\": <args-json-object>}\n"
+        "</tool_call>"
+    )
+
+
+def _manual_tool_response_content(content: str) -> str:
+    stripped = content.strip()
+    if stripped.startswith("<tool_response>") and stripped.endswith("</tool_response>"):
+        return stripped
+    return f"<tool_response>\n{content}\n</tool_response>"
+
+
+def build_manual_tool_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
+    rendered: list[dict[str, str]] = []
+    system_seen = False
+    for message in messages:
+        role = message["role"]
+        content = message["content"]
+        if role == "system":
+            rendered.append({"role": "system", "content": render_qwen3_tools_system_prompt(content)})
+            system_seen = True
+        elif role == "tool":
+            rendered.append({"role": "user", "content": _manual_tool_response_content(content)})
+        else:
+            rendered.append({"role": role, "content": content})
+    if not system_seen:
+        rendered.insert(0, {"role": "system", "content": render_qwen3_tools_system_prompt(AGENT_SYSTEM_PROMPT)})
+    return rendered
+
+
+def apply_chat_template_for_generation(tokenizer: Any, messages: list[dict[str, str]], template_name: str) -> Any:
+    common_kwargs = {
+        "tokenize": True,
+        "add_generation_prompt": True,
+        "return_tensors": "pt",
+        "return_dict": True,
+        **_template_kwargs(template_name),
+    }
+    try:
+        return tokenizer.apply_chat_template(messages, tools=TOOL_SCHEMAS, **common_kwargs)
+    except Exception:
+        return tokenizer.apply_chat_template(build_manual_tool_messages(messages), **common_kwargs)
 
 
 def parse_args() -> argparse.Namespace:
@@ -136,7 +196,7 @@ def _parse_tool_payload(raw_payload: str) -> tuple[dict[str, Any] | None, str | 
 
 
 def format_tool_call(tool_call: dict[str, Any]) -> str:
-    return f"<tool_call>{json.dumps(tool_call, ensure_ascii=False, separators=(',', ':'))}</tool_call>"
+    return f"<tool_call>\n{json.dumps(tool_call, ensure_ascii=False, separators=(',', ':'))}\n</tool_call>"
 
 
 def analyze_turn_output(text: str) -> dict[str, Any]:
@@ -209,7 +269,7 @@ def format_tool_response(results: list[Any]) -> str:
     blocks = []
     for result in results:
         blocks.append(f"[{result.chunk_id}] {result.title}\n{result.text}")
-    return "<tool_response>" + "\n\n".join(blocks) + "</tool_response>"
+    return "\n\n".join(blocks)
 
 
 def unique_append(target: list[str], values: list[str]) -> None:
@@ -340,7 +400,7 @@ def run_agentic_loop(
         unique_append(retrieved_chunk_ids, call_record["retrieved_chunk_ids"])
 
         tool_response = format_tool_response(results)
-        messages.append({"role": "user", "content": tool_response})
+        messages.append({"role": "tool", "content": tool_response})
         raw_turns.append(
             {
                 "turn": turn_index,
@@ -371,23 +431,14 @@ def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespa
 
     def generate_turn(messages: list[dict[str, str]]) -> str:
         if hasattr(tokenizer, "apply_chat_template") and tokenizer.chat_template:
-            template_kwargs: dict[str, Any] = {}
-            if args.template in {"qwen3_nothink", "qwen3_no_think", "qwen3-notthink"}:
-                template_kwargs["enable_thinking"] = False
-            model_inputs = tokenizer.apply_chat_template(
-                messages,
-                tokenize=True,
-                add_generation_prompt=True,
-                return_tensors="pt",
-                return_dict=True,
-                **template_kwargs,
-            )
+            model_inputs = apply_chat_template_for_generation(tokenizer, messages, args.template)
             if hasattr(model_inputs, "keys"):
                 model_inputs = dict(model_inputs)
             else:
                 model_inputs = {"input_ids": model_inputs}
         else:
-            rendered = "\n".join(f"{message['role']}: {message['content']}" for message in messages) + "\nassistant: "
+            manual_messages = build_manual_tool_messages(messages)
+            rendered = "\n".join(f"{message['role']}: {message['content']}" for message in manual_messages) + "\nassistant: "
             model_inputs = dict(tokenizer(rendered, return_tensors="pt"))
 
         device = model_input_device(model)

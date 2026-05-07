@@ -48,7 +48,8 @@ def render_text(tokenizer: Any, record: dict[str, Any], line_no: int) -> str:
     messages = record.get("messages")
     if not isinstance(messages, list):
         raise ValueError(f"Line {line_no} is missing messages.")
-    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+    tools = record.get("tools") if isinstance(record.get("tools"), list) else None
+    return tokenizer.apply_chat_template(messages, tools=tools, tokenize=False, add_generation_prompt=False)
 
 
 def main() -> None:

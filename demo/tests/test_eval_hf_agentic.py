@@ -49,6 +49,55 @@ class FakeRetriever:
         return [FakeResult("chunk-a"), FakeResult("chunk-b")]
 
 
+class FakeTemplateTokenizer:
+    chat_template = "fake-template"
+
+    def __init__(self, *, fail_tools: bool = False) -> None:
+        self.fail_tools = fail_tools
+        self.calls: list[dict[str, Any]] = []
+
+    def apply_chat_template(self, messages: list[dict[str, str]], **kwargs: Any) -> dict[str, Any]:
+        self.calls.append({"messages": [dict(message) for message in messages], "kwargs": dict(kwargs)})
+        if self.fail_tools and "tools" in kwargs:
+            raise TypeError("tools are not supported by this fake template")
+        return {"messages": messages, "tools": kwargs.get("tools"), "kwargs": kwargs}
+
+
+def test_apply_chat_template_for_generation_passes_qwen3_tools() -> None:
+    module = load_agentic_eval_module()
+    tokenizer = FakeTemplateTokenizer()
+    messages = [
+        {"role": "system", "content": module.AGENT_SYSTEM_PROMPT},
+        {"role": "user", "content": "问题"},
+        {"role": "tool", "content": "[chunk-a] 证据"},
+    ]
+
+    rendered = module.apply_chat_template_for_generation(tokenizer, messages, "qwen3_nothink")
+
+    assert rendered["tools"] == module.TOOL_SCHEMAS
+    assert tokenizer.calls[0]["messages"][2]["role"] == "tool"
+    assert tokenizer.calls[0]["kwargs"]["enable_thinking"] is False
+
+
+def test_apply_chat_template_for_generation_falls_back_to_manual_tools_prompt() -> None:
+    module = load_agentic_eval_module()
+    tokenizer = FakeTemplateTokenizer(fail_tools=True)
+    messages = [
+        {"role": "system", "content": module.AGENT_SYSTEM_PROMPT},
+        {"role": "user", "content": "问题"},
+        {"role": "assistant", "content": '<tool_call>{"name":"keyword_search","arguments":{"query":"问题"}}</tool_call>'},
+        {"role": "tool", "content": "[chunk-a] 证据"},
+    ]
+
+    rendered = module.apply_chat_template_for_generation(tokenizer, messages, "qwen3_nothink")
+    fallback_messages = tokenizer.calls[1]["messages"]
+
+    assert rendered["tools"] is None
+    assert "# Tools" in fallback_messages[0]["content"]
+    assert fallback_messages[3]["role"] == "user"
+    assert fallback_messages[3]["content"] == "<tool_response>\n[chunk-a] 证据\n</tool_response>"
+
+
 def test_valid_tool_call_invokes_retriever_and_answer_finishes_loop() -> None:
     module = load_agentic_eval_module()
     outputs = iter(
@@ -125,7 +174,7 @@ def test_multiple_tool_calls_uses_first_valid_action_and_records_diagnostics() -
     assert result["status"] == "max_turns_exceeded"
     assert result["raw_turns"][0]["multi_action_present"] is True
     assert result["raw_turns"][0]["normalized_action"] == (
-        '<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>'
+        '<tool_call>\n{"name":"keyword_search","arguments":{"query":"第一跳"}}\n</tool_call>'
     )
 
 
@@ -162,11 +211,14 @@ def test_normalized_history_mode_writes_normalized_action_to_next_turn_history()
     assert result["prediction"] == "侯赢"
     assert result["raw_turns"][0]["assistant"].startswith("</tool_call>")
     assert result["raw_turns"][0]["history_assistant"] == (
-        '<tool_call>{"name":"keyword_search","arguments":{"query":"第一跳"}}</tool_call>'
+        '<tool_call>\n{"name":"keyword_search","arguments":{"query":"第一跳"}}\n</tool_call>'
     )
     assert result["raw_turns"][0]["truncated_to_first_action"] is True
     assert seen_histories[1][2]["role"] == "assistant"
     assert seen_histories[1][2]["content"] == result["raw_turns"][0]["history_assistant"]
+    assert seen_histories[1][3]["role"] == "tool"
+    assert seen_histories[1][3]["content"].startswith("[chunk-a]")
+    assert "<tool_response>" not in seen_histories[1][3]["content"]
 
 
 def test_raw_history_mode_keeps_original_action_in_next_turn_history() -> None:
@@ -188,6 +240,7 @@ def test_raw_history_mode_keeps_original_action_in_next_turn_history() -> None:
     assert result["prediction"] == "侯赢"
     assert result["raw_turns"][0]["history_assistant"] == raw_tool_text
     assert seen_histories[1][2]["content"] == raw_tool_text
+    assert seen_histories[1][3]["role"] == "tool"
 
 
 def test_evaluate_record_includes_hop_recall_and_gold_chunks() -> None:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from .protocols import DEFAULT_AGENT_NAME, SYSTEM_PROMPT_ZH
+from .protocols import DEFAULT_AGENT_NAME, SYSTEM_PROMPT_ZH, TOOL_SCHEMAS
 from .types import MultiHopExample
 
 
@@ -15,6 +15,7 @@ def build_grpo_rows(examples: Iterable[MultiHopExample]) -> list[dict[str, Any]]
                     {"role": "system", "content": SYSTEM_PROMPT_ZH},
                     {"role": "user", "content": example.final_question},
                 ],
+                "tools": TOOL_SCHEMAS,
                 "agent_name": DEFAULT_AGENT_NAME,
                 "reward_model": {
                     "ground_truth": {

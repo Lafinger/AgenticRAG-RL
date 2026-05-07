@@ -95,7 +95,8 @@ def build_masked_dataset_records(
         messages = record.get("messages")
         if not isinstance(messages, list):
             raise ValueError(f"Record {index} is missing messages.")
-        sample = tokenize_chat_with_assistant_labels(tokenizer, messages, max_length=max_seq_length)
+        tools = record.get("tools") if isinstance(record.get("tools"), list) else None
+        sample = tokenize_chat_with_assistant_labels(tokenizer, messages, tools=tools, max_length=max_seq_length)
         rendered.append(
             {
                 "input_ids": sample.input_ids,

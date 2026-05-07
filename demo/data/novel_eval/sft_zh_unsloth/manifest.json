@@ -5,11 +5,6 @@
   "count": 3000,
   "required_field": "messages",
   "trainer": "unsloth",
-  "studio_train_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train_studio.jsonl",
-  "studio_eval_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\eval.jsonl",
-  "studio_split_source": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train.jsonl",
-  "studio_train_count": 2800,
-  "studio_eval_count": 200,
-  "studio_eval_stride": 15,
-  "studio_eval_disjoint_from_train": true
+  "tool_schema": "qwen3",
+  "tool_role_preserved": true
 }

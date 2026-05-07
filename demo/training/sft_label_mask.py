@@ -48,9 +48,15 @@ def tokenize_chat_with_assistant_labels(
     tokenizer: Any,
     messages: list[dict[str, Any]],
     *,
+    tools: list[dict[str, Any]] | None = None,
     max_length: int | None = None,
 ) -> MaskedChatSample:
-    rendered_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+    rendered_text = tokenizer.apply_chat_template(
+        messages,
+        tools=tools,
+        tokenize=False,
+        add_generation_prompt=False,
+    )
     assistant_spans = find_assistant_spans(rendered_text)
     if not assistant_spans:
         raise ValueError("Rendered chat has no assistant turn to supervise.")

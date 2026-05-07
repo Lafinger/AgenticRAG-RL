@@ -17,16 +17,29 @@ from training.sft_label_mask import IGNORE_INDEX, find_assistant_spans, tokenize
 class FakeTokenizer:
     pad_token_id = 0
 
+    def __init__(self) -> None:
+        self.last_tools: list[dict[str, Any]] | None = None
+
     def apply_chat_template(
         self,
         messages: list[dict[str, Any]],
         *,
+        tools: list[dict[str, Any]] | None = None,
         tokenize: bool = False,
         add_generation_prompt: bool = False,
     ) -> str:
         if tokenize or add_generation_prompt:
             raise AssertionError("This fake tokenizer only supports rendered training chats.")
-        return "".join(f"<|im_start|>{message['role']}\n{message['content']}<|im_end|>\n" for message in messages)
+        self.last_tools = tools
+        rendered = []
+        for message in messages:
+            role = message["role"]
+            content = message["content"]
+            if role == "tool":
+                role = "user"
+                content = f"<tool_response>\n{content}\n</tool_response>"
+            rendered.append(f"<|im_start|>{role}\n{content}<|im_end|>\n")
+        return "".join(rendered)
 
     def __call__(self, text: str, *, add_special_tokens: bool = False, return_offsets_mapping: bool = False) -> dict[str, Any]:
         if add_special_tokens:
@@ -84,6 +97,27 @@ def test_multiple_assistant_turns_are_supervised() -> None:
     assert "第一次回答" in supervised_text
     assert "第二次回答" in supervised_text
     assert "<tool_response>证据</tool_response>" not in supervised_text
+
+
+def test_tools_rendering_masks_tool_role_response() -> None:
+    tokenizer = FakeTokenizer()
+    tools = [{"type": "function", "function": {"name": "keyword_search", "parameters": {"type": "object"}}}]
+    messages = [
+        {"role": "system", "content": "系统提示"},
+        {"role": "user", "content": "问题"},
+        {"role": "assistant", "content": "<think>找证据</think>\n<tool_call>\n{}\n</tool_call>"},
+        {"role": "tool", "content": "[chunk-a] 证据"},
+        {"role": "assistant", "content": "<answer>答案</answer>"},
+    ]
+
+    sample = tokenize_chat_with_assistant_labels(tokenizer, messages, tools=tools)
+    supervised_text = "".join(chr(label) for label in sample.labels if label != IGNORE_INDEX)
+
+    assert tokenizer.last_tools == tools
+    assert "<tool_call>" in supervised_text
+    assert "<answer>答案</answer>" in supervised_text
+    assert "[chunk-a] 证据" not in supervised_text
+    assert "<tool_response>" not in supervised_text
 
 
 def test_truncation_without_assistant_label_raises_clear_error() -> None:

@@ -6,29 +6,43 @@
 
 ### Q1: messages、chat 文本、input_ids 是什么关系？
 
-答：原始 SFT 样本首先是 `messages` 结构：
+答：原始 SFT 样本首先是 tool-aware canonical ReAct 结构，包含 `messages` 和 `tools`：
 
 ```python
-[
-    {"role": "system", "content": "你是一个中文小说阅读问答 Agent..."},
-    {"role": "user", "content": "问题"},
-    {"role": "assistant", "content": "<tool_call>...</tool_call>"},
-    {"role": "user", "content": "<tool_response>检索证据...</tool_response>"},
-    {"role": "assistant", "content": "<answer>答案</answer>"}
-]
+{
+    "messages": [
+        {"role": "system", "content": "你是一个中文小说阅读问答 Agent..."},
+        {"role": "user", "content": "问题"},
+        {"role": "assistant", "content": "<think>找证据</think>\n<tool_call>\n{...}\n</tool_call>"},
+        {"role": "tool", "content": "[chunk_id] 检索证据..."},
+        {"role": "assistant", "content": "<answer>答案</answer>"}
+    ],
+    "tools": [
+        {"type": "function", "function": {"name": "keyword_search", "parameters": {"type": "object"}}}
+    ]
+}
 ```
 
-tokenizer 会先通过 chat template 把它渲染成模型实际看到的 chat 文本：
+tokenizer 会先通过 `apply_chat_template(messages, tools=tools)` 把它渲染成模型实际看到的 chat 文本。Qwen3 模板会在 system 后注入 `# Tools` / `<tools>`，并把 `tool` role 渲染为用户侧 `<tool_response>`：
 
 ```text
 <|im_start|>system
-你是一个中文小说阅读问答 Agent...<|im_end|>
+你是一个中文小说阅读问答 Agent...
+# Tools
+<tools>
+...
+</tools><|im_end|>
 <|im_start|>user
 问题<|im_end|>
 <|im_start|>assistant
-<tool_call>...</tool_call><|im_end|>
+<think>找证据</think>
+<tool_call>
+...
+</tool_call><|im_end|>
 <|im_start|>user
-<tool_response>检索证据...</tool_response><|im_end|>
+<tool_response>
+[chunk_id] 检索证据...
+</tool_response><|im_end|>
 <|im_start|>assistant
 <answer>答案</answer><|im_end|>
 ```
@@ -42,10 +56,30 @@ input_ids = [151644, ..., 151645, ...]
 所以严格关系是：
 
 ```text
-messages --chat template 渲染--> chat 文本 --tokenizer 编码--> input_ids
+messages + tools --Qwen3 chat template 渲染--> chat 文本 --tokenizer 编码--> input_ids
 ```
 
 训练时模型真正接收的是 `input_ids`，但 `input_ids` 承载的信息来自完整 chat 文本。
+
+### Q1.5: 为什么 JSONL 里要保留 `tool` role，而不是提前改成 user？
+
+答：Qwen3 tokenizer 的 tool template 已经知道如何处理 `tool` role。原始 JSONL 保留：
+
+```text
+role = tool
+content = 原始检索证据
+```
+
+渲染时模板会自动转换成：
+
+```text
+<|im_start|>user
+<tool_response>
+原始检索证据
+</tool_response><|im_end|>
+```
+
+这样 SFT、Agent loop 和后续 GRPO 都共享同一套 `tools` schema 和模板逻辑，不会出现训练时是手写 `<tool_response>`、推理时又是另一种格式的协议漂移。
 
 ### Q2: 151644 对应什么？
 
@@ -195,7 +229,7 @@ labels           哪些位置要计算训练 loss
 system              labels = -100
 user question       labels = -100
 assistant reply     labels = token_id
-user tool_response  labels = -100
+tool response       labels = -100
 assistant answer    labels = token_id
 padding             labels = -100
 ```

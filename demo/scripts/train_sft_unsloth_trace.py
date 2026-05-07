@@ -159,7 +159,8 @@ def build_samples(records: list[dict[str, Any]], tokenizer: Any, *, max_seq_leng
         messages = record.get("messages")
         if not isinstance(messages, list):
             raise ValueError(f"Record {index} is missing messages.")
-        masked = tokenize_chat_with_assistant_labels(tokenizer, messages, max_length=max_seq_length)
+        tools = record.get("tools") if isinstance(record.get("tools"), list) else None
+        masked = tokenize_chat_with_assistant_labels(tokenizer, messages, tools=tools, max_length=max_seq_length)
         metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
         sample_id = str(metadata.get("sample_id") or f"sft_{index:06d}")
         samples.append(

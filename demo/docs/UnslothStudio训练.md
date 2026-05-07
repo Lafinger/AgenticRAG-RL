@@ -7,6 +7,7 @@
 - `training\unsloth_sft.yaml` 是本工程 `scripts\train_sft_unsloth.py` 使用的自定义配置，不是 Unsloth Studio 配置文件，Studio 不能直接读取它是正常现象。
 - Studio 需要在 UI 中手动填写模型、数据集、LoRA、batch、学习率、epoch 等字段。
 - Studio 的训练集和验证集都必须是 SFT `messages` 格式，不能直接使用 `data\novel_eval\test.jsonl`。
+- 当前主 SFT 数据还包含 record 级 `tools` 字段和 `tool` role。项目脚本会用 Qwen3 `apply_chat_template(..., tools=tools)` 正确渲染；如果 Studio 无法识别 `tools` 字段或 `tool` role，应优先使用项目脚本训练，而不是把数据降级成普通 messages。
 - 当前已切分出互不重叠的 Studio 数据：
 
 ```text
@@ -25,9 +26,9 @@ Eval dataset:  E:\AI\AgenticRAG-RL\demo\data\novel_eval\sft_zh_unsloth\eval.json
 
 | 文件 | 格式 | 用途 |
 | --- | --- | --- |
-| `data\novel_eval\sft_zh_unsloth\train.jsonl` | JSONL，每行一条 `messages` 样本 | 全量 SFT 导出数据，项目脚本默认使用 |
-| `data\novel_eval\sft_zh_unsloth\train_studio.jsonl` | JSONL，每行一条 `messages` 样本 | Studio 训练集，已移除验证样本 |
-| `data\novel_eval\sft_zh_unsloth\eval.jsonl` | JSONL，每行一条 `messages` 样本 | Studio 验证集，与 `train_studio.jsonl` 不重叠 |
+| `data\novel_eval\sft_zh_unsloth\train.jsonl` | JSONL，每行一条 `messages/tools` 样本 | 全量 canonical ReAct SFT 导出数据，项目脚本默认使用 |
+| `data\novel_eval\sft_zh_unsloth\train_studio.jsonl` | JSONL，每行一条 `messages/tools` 样本 | Studio 训练集，已移除验证样本 |
+| `data\novel_eval\sft_zh_unsloth\eval.jsonl` | JSONL，每行一条 `messages/tools` 样本 | Studio 验证集，与 `train_studio.jsonl` 不重叠 |
 | `data\novel_eval\test.jsonl` | QA 评测格式，字段为 `final_question/final_answer/hops` | 训练完成后的最终测试集，不适合作为 Studio Eval dataset |
 
 验证集和测试集的区别：
@@ -77,6 +78,8 @@ overlap_count: 0
 | Train dataset | `E:\AI\AgenticRAG-RL\demo\data\novel_eval\sft_zh_unsloth\train_studio.jsonl` |
 | Eval dataset | `E:\AI\AgenticRAG-RL\demo\data\novel_eval\sft_zh_unsloth\eval.jsonl` |
 | Format | `Auto`、`messages` 或 `ShareGPT`，以 Studio 实际可选项为准 |
+
+导入后必须抽查一条样本：`tools` 字段不能被丢弃，`tool` role 不能被当成普通用户文本提前拼接。如果 Studio 当前版本不能保留这些字段，使用 `scripts\train_sft_unsloth.py` 或 `scripts\train_sft_unsloth_trace.py` 训练主 SFT 基线。
 
 不要把下面文件填到 Studio Eval dataset：
 
