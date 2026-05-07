@@ -22,6 +22,7 @@ from training.monitoring import (
     normalize_swanlab_mode,
     require_swanlab,
 )
+from training.sft_label_mask import tokenize_chat_with_assistant_labels
 
 
 def parse_args() -> argparse.Namespace:
@@ -129,34 +130,38 @@ def load_records(path: str | Path, max_samples: int | None = None) -> list[dict[
     return records
 
 
-def token_count(tokenizer: Any, text: str) -> int:
-    return len(tokenizer(text, add_special_tokens=False)["input_ids"])
-
-
 @dataclass
 class TraceSample:
     sample_id: str
     source_line: int
     text: str
+    input_ids: list[int]
+    attention_mask: list[int]
+    labels: list[int]
     token_length: int
+    supervised_token_count: int
     metadata: dict[str, Any]
 
 
-def build_samples(records: list[dict[str, Any]], tokenizer: Any) -> list[TraceSample]:
+def build_samples(records: list[dict[str, Any]], tokenizer: Any, *, max_seq_length: int) -> list[TraceSample]:
     samples: list[TraceSample] = []
     for index, record in enumerate(records, start=1):
         messages = record.get("messages")
         if not isinstance(messages, list):
             raise ValueError(f"Record {index} is missing messages.")
-        text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+        masked = tokenize_chat_with_assistant_labels(tokenizer, messages, max_length=max_seq_length)
         metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
         sample_id = str(metadata.get("sample_id") or f"sft_{index:06d}")
         samples.append(
             TraceSample(
                 sample_id=sample_id,
                 source_line=index,
-                text=text,
-                token_length=token_count(tokenizer, text),
+                text=masked.text,
+                input_ids=masked.input_ids,
+                attention_mask=masked.attention_mask,
+                labels=masked.labels,
+                token_length=masked.token_length,
+                supervised_token_count=masked.supervised_token_count,
                 metadata=metadata,
             )
         )
@@ -195,6 +200,41 @@ def create_optimizer(optim_name: str, params: list[Any], learning_rate: float) -
     import torch
 
     return torch.optim.AdamW(params, lr=learning_rate)
+
+
+def collate_trace_features(features: list[dict[str, Any]], tokenizer: Any, torch_module: Any) -> dict[str, Any]:
+    max_len = max(len(feature["input_ids"]) for feature in features)
+    input_ids = []
+    attention_mask = []
+    labels = []
+    for feature in features:
+        ids = list(feature["input_ids"])
+        mask = list(feature["attention_mask"])
+        feature_labels = list(feature["labels"])
+        pad_len = max_len - len(ids)
+        input_ids.append(ids + [tokenizer.pad_token_id] * pad_len)
+        attention_mask.append(mask + [0] * pad_len)
+        labels.append(feature_labels + [-100] * pad_len)
+
+    return {
+        "input_ids": torch_module.tensor(input_ids, dtype=torch_module.long),
+        "attention_mask": torch_module.tensor(attention_mask, dtype=torch_module.long),
+        "labels": torch_module.tensor(labels, dtype=torch_module.long),
+        "trace_items": [
+            {
+                "sample_id": feature["sample_id"],
+                "source_line": feature["source_line"],
+                "token_length": feature["token_length"],
+                "truncated": feature["truncated"],
+                "supervised_token_count": feature["supervised_token_count"],
+                "question": feature["question"],
+                "answer": feature["answer"],
+                "hop_count": feature["hop_count"],
+                "gold_chunks": feature["gold_chunks"],
+            }
+            for feature in features
+        ],
+    }
 
 
 def main() -> None:
@@ -272,7 +312,7 @@ def main() -> None:
     model.train()
 
     records = load_records(project_path(config["data_path"]), max_samples=args.max_samples)
-    samples = build_samples(records, tokenizer)
+    samples = build_samples(records, tokenizer, max_seq_length=max_seq_length)
 
     class TraceDataset(TorchDataset):  # type: ignore[misc, valid-type]
         def __len__(self) -> int:
@@ -280,20 +320,16 @@ def main() -> None:
 
         def __getitem__(self, index: int) -> dict[str, Any]:
             sample = samples[index]
-            encoded = tokenizer(
-                sample.text,
-                add_special_tokens=False,
-                truncation=True,
-                max_length=max_seq_length,
-            )
             metadata = sample.metadata
             return {
-                "input_ids": encoded["input_ids"],
-                "attention_mask": encoded.get("attention_mask", [1] * len(encoded["input_ids"])),
+                "input_ids": sample.input_ids,
+                "attention_mask": sample.attention_mask,
+                "labels": sample.labels,
                 "sample_id": sample.sample_id,
                 "source_line": sample.source_line,
                 "token_length": sample.token_length,
                 "truncated": sample.token_length > max_seq_length,
+                "supervised_token_count": sample.supervised_token_count,
                 "question": str(metadata.get("final_question", "")),
                 "answer": str(metadata.get("final_answer", "")),
                 "hop_count": metadata.get("hop_count"),
@@ -301,36 +337,7 @@ def main() -> None:
             }
 
     def collate(features: list[dict[str, Any]]) -> dict[str, Any]:
-        max_len = max(len(feature["input_ids"]) for feature in features)
-        input_ids = []
-        attention_mask = []
-        labels = []
-        for feature in features:
-            ids = list(feature["input_ids"])
-            mask = list(feature["attention_mask"])
-            pad_len = max_len - len(ids)
-            input_ids.append(ids + [tokenizer.pad_token_id] * pad_len)
-            attention_mask.append(mask + [0] * pad_len)
-            labels.append(ids + [-100] * pad_len)
-
-        return {
-            "input_ids": torch.tensor(input_ids, dtype=torch.long),
-            "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
-            "labels": torch.tensor(labels, dtype=torch.long),
-            "trace_items": [
-                {
-                    "sample_id": feature["sample_id"],
-                    "source_line": feature["source_line"],
-                    "token_length": feature["token_length"],
-                    "truncated": feature["truncated"],
-                    "question": feature["question"],
-                    "answer": feature["answer"],
-                    "hop_count": feature["hop_count"],
-                    "gold_chunks": feature["gold_chunks"],
-                }
-                for feature in features
-            ],
-        }
+        return collate_trace_features(features, tokenizer, torch)
 
     seed = int(config.get("seed", 3407))
     batch_size = int(config.get("per_device_train_batch_size", 2))
@@ -363,7 +370,7 @@ def main() -> None:
     eval_steps = int(configured_eval_steps) if configured_eval_steps is not None else None
     if args.eval_data_path:
         eval_records = load_records(project_path(args.eval_data_path))
-        eval_samples = build_samples(eval_records, tokenizer)
+        eval_samples = build_samples(eval_records, tokenizer, max_seq_length=max_seq_length)
         if eval_steps is None:
             eval_steps = logging_steps
 
@@ -374,16 +381,12 @@ def main() -> None:
         losses: list[float] = []
         with torch.no_grad():
             for sample in eval_samples:
-                encoded = tokenizer(
-                    sample.text,
-                    return_tensors="pt",
-                    add_special_tokens=False,
-                    truncation=True,
-                    max_length=max_seq_length,
-                )
                 device = first_model_device(model)
-                encoded = {key: value.to(device) for key, value in encoded.items()}
-                labels = encoded["input_ids"].clone()
+                encoded = {
+                    "input_ids": torch.tensor([sample.input_ids], dtype=torch.long, device=device),
+                    "attention_mask": torch.tensor([sample.attention_mask], dtype=torch.long, device=device),
+                }
+                labels = torch.tensor([sample.labels], dtype=torch.long, device=device)
                 outputs = model(**encoded, labels=labels)
                 losses.append(float(outputs.loss.detach().cpu()))
         model.train()

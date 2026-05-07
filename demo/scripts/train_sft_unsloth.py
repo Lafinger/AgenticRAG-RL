@@ -20,6 +20,7 @@ from training.monitoring import (
     normalize_swanlab_mode,
     require_swanlab,
 )
+from training.sft_label_mask import tokenize_chat_with_assistant_labels
 
 
 def parse_args() -> argparse.Namespace:
@@ -79,14 +80,25 @@ def load_jsonl(path: str | Path, max_samples: int | None = None) -> list[dict[st
     return records
 
 
-def render_messages(records: list[dict[str, Any]], tokenizer: Any) -> list[dict[str, str]]:
-    rendered: list[dict[str, str]] = []
+def build_masked_dataset_records(
+    records: list[dict[str, Any]],
+    tokenizer: Any,
+    *,
+    max_seq_length: int,
+) -> list[dict[str, Any]]:
+    rendered: list[dict[str, Any]] = []
     for index, record in enumerate(records, start=1):
         messages = record.get("messages")
         if not isinstance(messages, list):
             raise ValueError(f"Record {index} is missing messages.")
-        text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        rendered.append({"text": text})
+        sample = tokenize_chat_with_assistant_labels(tokenizer, messages, max_length=max_seq_length)
+        rendered.append(
+            {
+                "input_ids": sample.input_ids,
+                "attention_mask": sample.attention_mask,
+                "labels": sample.labels,
+            }
+        )
     return rendered
 
 
@@ -142,6 +154,8 @@ def main() -> None:
         max_seq_length=max_seq_length,
         load_in_4bit=bool(config.get("load_in_4bit", True)),
     )
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token = tokenizer.eos_token
     model = FastLanguageModel.get_peft_model(
         model,
         r=int(config.get("lora_rank", 64)),
@@ -154,7 +168,9 @@ def main() -> None:
     )
 
     records = load_jsonl(project_path(config["data_path"]), max_samples=args.max_samples)
-    dataset = Dataset.from_list(render_messages(records, tokenizer))
+    if bool(config.get("packing", False)):
+        raise ValueError("assistant-only label mask does not support packing; set packing: false.")
+    dataset = Dataset.from_list(build_masked_dataset_records(records, tokenizer, max_seq_length=max_seq_length))
 
     training_config: dict[str, Any] = {
         "output_dir": output_dir,
@@ -166,10 +182,12 @@ def main() -> None:
         "save_steps": int(config.get("save_steps", 45)),
         "seed": int(config.get("seed", 3407)),
         "report_to": report_to,
-        "max_seq_length": max_seq_length,
-        "dataset_text_field": "text",
-        "packing": bool(config.get("packing", False)),
+        "max_length": max_seq_length,
+        "max_grad_norm": float(config.get("max_grad_norm") if config.get("max_grad_norm") is not None else 1.0),
+        "packing": False,
         "dataset_num_proc": None,
+        "dataset_kwargs": {"skip_prepare_dataset": True},
+        "remove_unused_columns": False,
     }
     if is_swanlab_enabled(report_to):
         training_config["run_name"] = swanlab_experiment_name

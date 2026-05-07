@@ -13,6 +13,14 @@ DEFAULT_SYSTEM_PROMPT = (
     "你是一个中文小说阅读问答 Agent。你需要通过文本检索工具逐步搜索人物、地点、事件和关系证据，"
     "最后用 <answer>...</answer> 输出最终答案。"
 )
+DIRECT_ANSWER_SYSTEM_PROMPT = (
+    "你是中文小说问答评测模型。请直接回答用户问题，只输出 <answer>最终答案</answer>。"
+    "不要输出 <tool_call>、分析过程或任何额外文字。"
+)
+PROMPT_MODE_SYSTEM_PROMPTS = {
+    "agent": DEFAULT_SYSTEM_PROMPT,
+    "direct_answer": DIRECT_ANSWER_SYSTEM_PROMPT,
+}
 
 ANSWER_RE = re.compile(r"<answer>(.*?)</answer>", re.DOTALL | re.IGNORECASE)
 TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL | re.IGNORECASE)
@@ -81,15 +89,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", required=True, help="Prediction JSONL output path.")
     parser.add_argument("--eval-output", help="Optional eval JSON output for run_llm_judge.py.")
     parser.add_argument("--template", default="qwen3_nothink", help="Recorded in output metadata.")
+    parser.add_argument("--prompt-mode", choices=["agent", "direct_answer"], default="agent")
     parser.add_argument("--max-samples", type=int, default=50)
     parser.add_argument("--max-new-tokens", type=int, default=512)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top-p", type=float, default=0.8)
+    parser.add_argument("--repetition-penalty", type=float, default=1.0)
     parser.add_argument("--device-map", default="auto")
     parser.add_argument("--dtype", choices=["auto", "float16", "bfloat16", "float32"], default="auto")
-    parser.add_argument("--system-prompt", default=DEFAULT_SYSTEM_PROMPT)
+    parser.add_argument("--system-prompt")
     parser.add_argument("--trust-remote-code", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
+
+
+def resolve_system_prompt(args: argparse.Namespace) -> str:
+    if args.system_prompt:
+        return args.system_prompt
+    return PROMPT_MODE_SYSTEM_PROMPTS[args.prompt_mode]
 
 
 def torch_dtype(dtype_name: str) -> Any:
@@ -171,8 +187,9 @@ def best_scores(prediction: str, gold: str, aliases: list[str]) -> tuple[float, 
 
 
 def build_prompt(tokenizer: Any, args: argparse.Namespace, question: str) -> dict[str, Any]:
+    system_prompt = resolve_system_prompt(args)
     messages = [
-        {"role": "system", "content": args.system_prompt},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": question},
     ]
     if hasattr(tokenizer, "apply_chat_template") and tokenizer.chat_template:
@@ -191,7 +208,7 @@ def build_prompt(tokenizer: Any, args: argparse.Namespace, question: str) -> dic
             return dict(prompt_inputs)
         return {"input_ids": prompt_inputs}
 
-    fallback_prompt = f"{args.system_prompt}\n\n用户：{question}\n助手："
+    fallback_prompt = f"{system_prompt}\n\n用户：{question}\n助手："
     return dict(tokenizer(fallback_prompt, return_tensors="pt"))
 
 
@@ -211,6 +228,7 @@ def generate_one(model: Any, tokenizer: Any, args: argparse.Namespace, question:
         "attention_mask": attention_mask,
         "max_new_tokens": args.max_new_tokens,
         "pad_token_id": tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id,
+        "repetition_penalty": args.repetition_penalty,
     }
     if args.temperature <= 0:
         generation_kwargs["do_sample"] = False
@@ -257,10 +275,10 @@ def write_eval_payload(records: list[dict[str, Any]], summary: dict[str, Any], o
             }
         )
 
-    output_path.write_text(
-        json.dumps({"summary": summary, "results": results}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    rendered = json.dumps({"summary": summary, "results": results}, ensure_ascii=False, indent=2)
+    with output_path.open("w", encoding="utf-8", newline="") as handle:
+        handle.write(rendered.replace("\n", "\r\n"))
+        handle.write("\r\n")
 
 
 def main() -> None:
@@ -295,9 +313,12 @@ def main() -> None:
                 "model": args.model,
                 "adapter": args.adapter,
                 "template": args.template,
+                "prompt_mode": args.prompt_mode,
+                "system_prompt": resolve_system_prompt(args),
                 "max_new_tokens": args.max_new_tokens,
                 "temperature": args.temperature,
                 "top_p": args.top_p,
+                "repetition_penalty": args.repetition_penalty,
             },
         }
         records.append(record)
