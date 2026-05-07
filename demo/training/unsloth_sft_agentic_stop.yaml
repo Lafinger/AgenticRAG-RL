@@ -1,5 +1,6 @@
 model_name_or_path: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
 data_path: ./data/novel_eval/sft_agentic_stop/train.jsonl
+eval_data_path: ./data/novel_eval/sft_agentic_stop/eval.jsonl
 output_dir: ./training/outputs/unsloth_sft_qwen3_4b_agentic_stop_lora
 merged_export_dir: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-agentic-stop-merged
 max_seq_length: 4096

@@ -57,6 +57,40 @@ def test_train_mode_resume_and_overwrite_are_mutually_exclusive(monkeypatch: pyt
         standard.parse_args()
 
 
+def test_standard_trainer_accepts_eval_data_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    standard = load_script(STANDARD_SCRIPT, "train_sft_unsloth_eval_arg")
+
+    monkeypatch.setattr(sys, "argv", ["train_sft_unsloth.py", "--eval-data-path", "eval.jsonl"])
+
+    assert standard.parse_args().eval_data_path == "eval.jsonl"
+
+
+def test_standard_trainer_adds_eval_strategy_for_current_sft_config() -> None:
+    standard = load_script(STANDARD_SCRIPT, "train_sft_unsloth_eval_strategy_current")
+
+    class FakeSFTConfig:
+        def __init__(self, eval_strategy: str | None = None, eval_steps: int | None = None, do_eval: bool = False) -> None:
+            pass
+
+    training_config: dict[str, Any] = {}
+    standard.add_eval_training_args(training_config, {"eval_steps": 17}, FakeSFTConfig)
+
+    assert training_config == {"eval_strategy": "steps", "eval_steps": 17, "do_eval": True}
+
+
+def test_standard_trainer_adds_eval_strategy_for_legacy_sft_config() -> None:
+    standard = load_script(STANDARD_SCRIPT, "train_sft_unsloth_eval_strategy_legacy")
+
+    class FakeSFTConfig:
+        def __init__(self, evaluation_strategy: str | None = None, eval_steps: int | None = None) -> None:
+            pass
+
+    training_config: dict[str, Any] = {}
+    standard.add_eval_training_args(training_config, {"logging_steps": 9}, FakeSFTConfig)
+
+    assert training_config == {"evaluation_strategy": "steps", "eval_steps": 9}
+
+
 def test_trainer_resume_requires_complete_trainer_checkpoint(tmp_path: Path) -> None:
     output_dir = tmp_path / "outputs"
     checkpoint = output_dir / "checkpoint-9"

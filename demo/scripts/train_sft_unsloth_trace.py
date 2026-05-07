@@ -79,6 +79,8 @@ def apply_cli_config_overrides(config: dict[str, Any], args: argparse.Namespace)
         config["model_name_or_path"] = args.model_name_or_path
     if args.data_path:
         config["data_path"] = args.data_path
+    if args.eval_data_path:
+        config["eval_data_path"] = args.eval_data_path
     if args.num_train_epochs is not None:
         config["num_train_epochs"] = args.num_train_epochs
     if args.per_device_train_batch_size is not None:
@@ -490,8 +492,9 @@ def main() -> None:
     eval_samples: list[TraceSample] = []
     configured_eval_steps = config.get("eval_steps")
     eval_steps = int(configured_eval_steps) if configured_eval_steps is not None else None
-    if args.eval_data_path:
-        eval_records = load_records(project_path(args.eval_data_path))
+    eval_data_path = config.get("eval_data_path")
+    if eval_data_path:
+        eval_records = load_records(project_path(eval_data_path))
         eval_samples = build_samples(eval_records, tokenizer, max_seq_length=max_seq_length)
         if eval_steps is None:
             eval_steps = logging_steps
@@ -517,7 +520,7 @@ def main() -> None:
     run_config = {
         "model_name_or_path": model_name,
         "data_path": str(project_path(config["data_path"])),
-        "eval_data_path": str(project_path(args.eval_data_path)) if args.eval_data_path else None,
+        "eval_data_path": str(project_path(eval_data_path)) if eval_data_path else None,
         "output_dir": str(output_dir),
         "trace_output": str(trace_output),
         "metrics_output": str(metrics_output),

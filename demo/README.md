@@ -1079,7 +1079,8 @@ uv run python .\scripts\trace_to_sft.py `
 
 - `convert_sft_to_unsloth.py` 读取 `sharegpt.jsonl`，保留 `tool` role 和 record 级 `tools` 字段，转换成项目训练入口使用的 `train.jsonl`。
 - 脚本同时生成 `manifest.json`，记录来源、样本数、`tool_schema=qwen3` 和 `tool_role_preserved=true`。
-- `training/unsloth_sft.yaml` 直接引用 `data/novel_eval/sft_zh_unsloth/train.jsonl`；如果需要命令行 eval loss，则再从全量 `train.jsonl` 切出不重叠的 `train_cli.jsonl` 和 `eval.jsonl`。
+- `train.jsonl` 是全量 canonical SFT 导出；标准命令行训练默认使用从中切出的 `train_cli.jsonl` 和 `eval.jsonl`，二者不重叠。
+- `training/unsloth_sft.yaml` 直接引用 `data/novel_eval/sft_zh_unsloth/train_cli.jsonl` 和 `data/novel_eval/sft_zh_unsloth/eval.jsonl`，从头训练时会按 `eval_steps` 记录 eval loss。
 - `eval.jsonl` 是命令行训练、trace eval、direct-answer 和 agentic-stop 的通用验证集，不使用最终 held-out `test.jsonl`。
 - 这一步不训练模型，只负责把数据整理成训练框架能直接读取的目录结构。
 
@@ -1088,9 +1089,8 @@ flowchart LR
     A["sharegpt.jsonl"] --> B["convert_sft_to_unsloth.py"]
     B --> C["train.jsonl"]
     B --> D["manifest.json"]
-    C --> E["CLI SFT full train"]
     C --> F["train_cli.jsonl + eval.jsonl"]
-    F --> G["CLI train/eval"]
+    F --> G["CLI SFT train/eval"]
 ```
 
 **需要**：
@@ -1130,7 +1130,7 @@ uv run python .\scripts\split_sft_train_eval.py `
 
 | 产物 | 结构 / 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- | --- |
-| `train.jsonl` | 每行一个 `messages/tools` 样本 | 全量 canonical ReAct SFT 样本 | 项目脚本默认 train |
+| `train.jsonl` | 每行一个 `messages/tools` 样本 | 全量 canonical ReAct SFT 样本 | CLI split source |
 | `train_cli.jsonl` | 每行一个 `messages/tools` 样本 | 已移除验证样本的命令行训练集 | CLI train dataset |
 | `eval.jsonl` | 每行一个 `messages/tools` 样本 | 与 `train_cli.jsonl` 不重叠的命令行验证集 | CLI eval dataset |
 | `manifest.json` | 数据格式、来源和 CLI split 摘要 | 记录转换来源、样本数和训练器 | 数据审计 |
@@ -1336,8 +1336,8 @@ uv run python .\scripts\eval_agentic.py `
 
 **详细说明**：
 
-- 项目脚本默认使用 Step 8 导出的全量 Unsloth JSONL，即 `data/novel_eval/sft_zh_unsloth/train.jsonl`。
-- 如果需要命令行 eval loss，使用独立切分后的 `data/novel_eval/sft_zh_unsloth/train_cli.jsonl` 和 `data/novel_eval/sft_zh_unsloth/eval.jsonl`。
+- 项目脚本默认使用 Step 8 切分出的命令行训练集和验证集，即 `data/novel_eval/sft_zh_unsloth/train_cli.jsonl` 和 `data/novel_eval/sft_zh_unsloth/eval.jsonl`。
+- 标准 SFT 入口会读取 YAML 的 `eval_data_path`，从头训练命令不需要额外传参也会按 `eval_steps` 输出 eval loss。
 - 训练样本来自 Oracle traces，模型先模仿理想检索路径，而不是直接进入高噪声 RL。
 - 当前主 SFT 基线必须使用 canonical ReAct JSONL：record 级 `tools`、保留 `tool` role、Qwen3 `apply_chat_template(..., tools=tools)` 渲染和 assistant-only loss mask。
 - 当前训练入口默认只对 assistant 输出计算 loss，system/user/tool response 和 padding 都不参与 loss。

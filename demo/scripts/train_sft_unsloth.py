@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import sys
 from multiprocessing import freeze_support
@@ -29,6 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", default=str(ROOT / "training" / "unsloth_sft.yaml"))
     parser.add_argument("--model-name-or-path")
     parser.add_argument("--data-path")
+    parser.add_argument("--eval-data-path")
     parser.add_argument("--output-dir")
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-steps", type=int)
@@ -107,6 +109,26 @@ def build_masked_dataset_records(
     return rendered
 
 
+def sft_config_supports_argument(sft_config_class: Any, name: str) -> bool:
+    try:
+        return name in inspect.signature(sft_config_class.__init__).parameters
+    except (TypeError, ValueError):
+        return False
+
+
+def add_eval_training_args(training_config: dict[str, Any], config: dict[str, Any], sft_config_class: Any) -> None:
+    eval_steps = int(config.get("eval_steps") or config.get("logging_steps", 5))
+    strategy_key = (
+        "eval_strategy"
+        if sft_config_supports_argument(sft_config_class, "eval_strategy")
+        else "evaluation_strategy"
+    )
+    training_config[strategy_key] = "steps"
+    training_config["eval_steps"] = eval_steps
+    if sft_config_supports_argument(sft_config_class, "do_eval"):
+        training_config["do_eval"] = True
+
+
 def train_with_resume_mode(trainer: Any, resume_checkpoint: Path | None) -> Any:
     if resume_checkpoint is None:
         return trainer.train()
@@ -125,6 +147,8 @@ def main() -> None:
         config["model_name_or_path"] = args.model_name_or_path
     if args.data_path:
         config["data_path"] = args.data_path
+    if args.eval_data_path:
+        config["eval_data_path"] = args.eval_data_path
     if args.output_dir:
         config["output_dir"] = args.output_dir
 
@@ -191,6 +215,12 @@ def main() -> None:
     if bool(config.get("packing", False)):
         raise ValueError("assistant-only label mask does not support packing; set packing: false.")
     dataset = Dataset.from_list(build_masked_dataset_records(records, tokenizer, max_seq_length=max_seq_length))
+    eval_dataset = None
+    if config.get("eval_data_path"):
+        eval_records = load_jsonl(project_path(config["eval_data_path"]))
+        eval_dataset = Dataset.from_list(
+            build_masked_dataset_records(eval_records, tokenizer, max_seq_length=max_seq_length)
+        )
 
     training_config: dict[str, Any] = {
         "output_dir": output_dir,
@@ -220,14 +250,19 @@ def main() -> None:
         training_config["warmup_steps"] = int(config["warmup_steps"])
     elif config.get("warmup_ratio") is not None:
         training_config["warmup_ratio"] = float(config["warmup_ratio"])
+    if eval_dataset is not None:
+        add_eval_training_args(training_config, config, SFTConfig)
 
     training_args = SFTConfig(**training_config)
-    trainer = SFTTrainer(
-        model=model,
-        processing_class=tokenizer,
-        train_dataset=dataset,
-        args=training_args,
-    )
+    trainer_kwargs: dict[str, Any] = {
+        "model": model,
+        "processing_class": tokenizer,
+        "train_dataset": dataset,
+        "args": training_args,
+    }
+    if eval_dataset is not None:
+        trainer_kwargs["eval_dataset"] = eval_dataset
+    trainer = SFTTrainer(**trainer_kwargs)
     if not args.disable_jsonl_metrics:
         trainer.add_callback(create_jsonl_metrics_callback(metrics_output, reset=args.train_mode == "overwrite"))
     train_with_resume_mode(trainer, resume_checkpoint)

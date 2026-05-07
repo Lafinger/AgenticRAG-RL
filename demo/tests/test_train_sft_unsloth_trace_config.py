@@ -25,6 +25,7 @@ def make_args(**overrides: Any) -> SimpleNamespace:
     defaults = {
         "model_name_or_path": None,
         "data_path": None,
+        "eval_data_path": None,
         "num_train_epochs": None,
         "per_device_train_batch_size": None,
         "gradient_accumulation_steps": None,
@@ -50,6 +51,7 @@ def test_trace_sft_config_contains_yaml_managed_training_controls() -> None:
     assert config["learning_rate"] == 1.0e-4
     assert config["eval_steps"] == 105
     assert config["max_grad_norm"] == 1.0
+    assert config["eval_data_path"] == "./data/novel_eval/sft_zh_unsloth/eval.jsonl"
 
 
 def test_trace_sft_cli_still_overrides_yaml_training_controls() -> None:
@@ -62,6 +64,7 @@ def test_trace_sft_cli_still_overrides_yaml_training_controls() -> None:
             per_device_train_batch_size=1,
             gradient_accumulation_steps=2,
             learning_rate=5e-5,
+            eval_data_path="override_eval.jsonl",
             eval_steps=12,
             max_grad_norm=0.5,
         ),
@@ -70,5 +73,6 @@ def test_trace_sft_cli_still_overrides_yaml_training_controls() -> None:
     assert config["per_device_train_batch_size"] == 1
     assert config["gradient_accumulation_steps"] == 2
     assert config["learning_rate"] == 5e-5
+    assert config["eval_data_path"] == "override_eval.jsonl"
     assert config["eval_steps"] == 12
     assert config["max_grad_norm"] == 0.5

@@ -1,5 +1,6 @@
 model_name_or_path: unsloth/Qwen3-4B-Instruct-2507
-data_path: ./data/novel_eval/sft_zh_unsloth/train.jsonl
+data_path: ./data/novel_eval/sft_zh_unsloth/train_cli.jsonl
+eval_data_path: ./data/novel_eval/sft_zh_unsloth/eval.jsonl
 output_dir: ./training/outputs/unsloth_sft_qwen3_4b_lora
 merged_export_dir: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
 max_seq_length: 2048
