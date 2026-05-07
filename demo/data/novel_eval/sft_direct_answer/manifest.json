@@ -1,0 +1,15 @@
+{
+  "format": "sharegpt_messages_jsonl",
+  "task": "direct_answer_sft",
+  "system_prompt": "你是中文小说问答评测模型。请直接回答用户问题，只输出 <answer>最终答案</answer>。不要输出 <tool_call>、分析过程或任何额外文字。",
+  "source_train": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\train_studio.jsonl",
+  "source_eval": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth\\eval.jsonl",
+  "train_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_direct_answer\\train.jsonl",
+  "eval_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_direct_answer\\eval.jsonl",
+  "train_count": 2800,
+  "eval_count": 200,
+  "train_eval_question_overlap_count": 0,
+  "train_eval_disjoint_by_question": true,
+  "heldout_test_excluded": true,
+  "heldout_test_path": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\test.jsonl"
+}

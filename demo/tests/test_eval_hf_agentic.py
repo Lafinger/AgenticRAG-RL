@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -134,3 +135,44 @@ def test_evaluate_record_includes_hop_recall_and_gold_chunks() -> None:
     assert result["f1"] == 1.0
     assert result["hop_recall"] == 0.5
     assert result["gold_chunks"] == ["chunk-a", "chunk-c"]
+
+
+def test_write_eval_output_jsonl_writes_records_and_sidecar_summary(tmp_path: Path) -> None:
+    module = load_agentic_eval_module()
+    output = tmp_path / "sft_agentic_eval.jsonl"
+    payload = {
+        "summary": {
+            "count": 1,
+            "avg_em": 1.0,
+            "avg_f1": 1.0,
+            "avg_hop_recall": 0.5,
+            "answer_tag_rate": 1.0,
+            "valid_tool_call_rate": 1.0,
+        },
+        "results": [{"question": "问题", "prediction": "侯赢"}],
+    }
+
+    summary_path = module.write_eval_output(output, payload)
+
+    assert summary_path == tmp_path / "sft_agentic_eval_summary.json"
+    lines = output.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    assert json.loads(lines[0]) == {"question": "问题", "prediction": "侯赢"}
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert summary["avg_em"] == 1.0
+    assert summary["avg_f1"] == 1.0
+    assert summary["avg_hop_recall"] == 0.5
+    assert summary["answer_tag_rate"] == 1.0
+    assert summary["valid_tool_call_rate"] == 1.0
+    assert summary["format"] == "jsonl_records"
+
+
+def test_write_eval_output_json_keeps_legacy_summary_results_shape(tmp_path: Path) -> None:
+    module = load_agentic_eval_module()
+    output = tmp_path / "sft_agentic_eval.json"
+    payload = {"summary": {"count": 1}, "results": [{"question": "问题"}]}
+
+    summary_path = module.write_eval_output(output, payload)
+
+    assert summary_path is None
+    assert json.loads(output.read_text(encoding="utf-8")) == payload

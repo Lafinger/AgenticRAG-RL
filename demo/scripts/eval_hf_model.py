@@ -24,6 +24,7 @@ PROMPT_MODE_SYSTEM_PROMPTS = {
 
 ANSWER_RE = re.compile(r"<answer>(.*?)</answer>", re.DOTALL | re.IGNORECASE)
 TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL | re.IGNORECASE)
+TOOL_FRAGMENT_RE = re.compile(r"</?tool_call>", re.IGNORECASE)
 
 
 def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
@@ -98,6 +99,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device-map", default="auto")
     parser.add_argument("--dtype", choices=["auto", "float16", "bfloat16", "float32"], default="auto")
     parser.add_argument("--system-prompt")
+    parser.add_argument(
+        "--forbid-tool-tags",
+        action="store_true",
+        help="Diagnostic direct-answer guard: block literal <tool_call> and </tool_call> tokens during generation.",
+    )
     parser.add_argument("--trust-remote-code", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
 
@@ -178,6 +184,19 @@ def parse_tool_calls(text: str) -> tuple[int, int]:
     return len(calls), valid_count
 
 
+def has_tool_fragment(text: str) -> bool:
+    return bool(TOOL_FRAGMENT_RE.search(text))
+
+
+def tool_tag_bad_words_ids(tokenizer: Any) -> list[list[int]]:
+    bad_words_ids: list[list[int]] = []
+    for tag in ("<tool_call>", "</tool_call>"):
+        token_ids = tokenizer.encode(tag, add_special_tokens=False)
+        if token_ids:
+            bad_words_ids.append(list(token_ids))
+    return bad_words_ids
+
+
 def best_scores(prediction: str, gold: str, aliases: list[str]) -> tuple[float, float]:
     candidates = [gold, *aliases]
     return (
@@ -230,6 +249,10 @@ def generate_one(model: Any, tokenizer: Any, args: argparse.Namespace, question:
         "pad_token_id": tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id,
         "repetition_penalty": args.repetition_penalty,
     }
+    if getattr(args, "forbid_tool_tags", False):
+        bad_words_ids = tool_tag_bad_words_ids(tokenizer)
+        if bad_words_ids:
+            generation_kwargs["bad_words_ids"] = bad_words_ids
     if args.temperature <= 0:
         generation_kwargs["do_sample"] = False
     else:
@@ -252,6 +275,7 @@ def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "answer_tag_rate": sum(1 for record in records if record["answer_tag_present"]) / divisor,
         "tool_call_rate": sum(1 for record in records if record["tool_call_count"] > 0) / divisor,
         "valid_tool_call_rate": sum(1 for record in records if record["valid_tool_call_count"] > 0) / divisor,
+        "tool_fragment_rate": sum(1 for record in records if record["tool_fragment_present"]) / divisor,
         "avg_generation_chars": sum(len(record["raw_prediction"]) for record in records) / divisor,
     }
 
@@ -272,6 +296,10 @@ def write_eval_payload(records: list[dict[str, Any]], summary: dict[str, Any], o
                 "retrieved_chunk_ids": [],
                 "em": record["em"],
                 "f1": record["f1"],
+                "answer_tag_present": record["answer_tag_present"],
+                "tool_call_count": record["tool_call_count"],
+                "valid_tool_call_count": record["valid_tool_call_count"],
+                "tool_fragment_present": record["tool_fragment_present"],
             }
         )
 
@@ -308,6 +336,7 @@ def main() -> None:
             "answer_tag_present": bool(ANSWER_RE.search(raw_prediction)),
             "tool_call_count": tool_call_count,
             "valid_tool_call_count": valid_tool_call_count,
+            "tool_fragment_present": has_tool_fragment(raw_prediction),
             "gold_chunks": [str(hop["doc_chunk_id"]) for hop in example.get("hops", [])],
             "metadata": {
                 "model": args.model,
@@ -319,6 +348,7 @@ def main() -> None:
                 "temperature": args.temperature,
                 "top_p": args.top_p,
                 "repetition_penalty": args.repetition_penalty,
+                "forbid_tool_tags": args.forbid_tool_tags,
             },
         }
         records.append(record)

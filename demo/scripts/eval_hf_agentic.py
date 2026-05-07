@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--adapter", help="Optional LoRA adapter path.")
     parser.add_argument("--data", default=str(ROOT / "data" / "novel_eval" / "test.jsonl"))
     parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
-    parser.add_argument("--output", required=True, help="Eval JSON output path.")
+    parser.add_argument("--output", required=True, help="Eval JSON or JSONL output path.")
     parser.add_argument("--template", default="qwen3_nothink", help="Recorded in output metadata.")
     parser.add_argument("--max-samples", type=int, default=50)
     parser.add_argument("--max-turns", type=int, default=5)
@@ -348,6 +348,38 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
         handle.write("\r\n")
 
 
+def write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        for record in records:
+            handle.write(json.dumps(record, ensure_ascii=False))
+            handle.write("\r\n")
+
+
+def summary_path_for_jsonl(path: Path) -> Path:
+    return path.with_name(f"{path.stem}_summary.json")
+
+
+def write_eval_output(path: Path, payload: dict[str, Any]) -> Path | None:
+    if path.suffix.lower() != ".jsonl":
+        write_json(path, payload)
+        return None
+
+    records = payload.get("results", [])
+    if not isinstance(records, list):
+        raise ValueError("JSONL eval output requires payload['results'] to be a list.")
+    write_jsonl(path, records)
+
+    summary_payload = {
+        **payload.get("summary", {}),
+        "results_file": str(path),
+        "format": "jsonl_records",
+    }
+    summary_path = summary_path_for_jsonl(path)
+    write_json(summary_path, summary_payload)
+    return summary_path
+
+
 def main() -> None:
     args = parse_args()
     examples = load_jsonl(args.data)[: args.max_samples]
@@ -385,8 +417,14 @@ def main() -> None:
         )
 
     payload = {"summary": build_summary(results), "results": results}
-    write_json(Path(args.output), payload)
-    print(json.dumps({"summary": payload["summary"], "output": args.output}, ensure_ascii=False, indent=2))
+    summary_output = write_eval_output(Path(args.output), payload)
+    print(
+        json.dumps(
+            {"summary": payload["summary"], "output": args.output, "summary_output": str(summary_output) if summary_output else None},
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

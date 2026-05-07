@@ -51,7 +51,7 @@ JUDGE_SYSTEM_PROMPT = """你是一个严格的中文阅读理解评测裁判。�
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run LLM-as-Judge on evaluation results.")
-    parser.add_argument("results_file", help="Eval JSON file with summary/results.")
+    parser.add_argument("results_file", help="Eval JSON with summary/results, or JSONL with one eval result per line.")
     parser.add_argument("--output")
     parser.add_argument("--env-file", default=str(ROOT / ".env"))
     parser.add_argument("--llm-provider", default=DEFAULT_LLM_PROVIDER, choices=LLM_PROVIDER_CHOICES)
@@ -67,6 +67,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--overwrite", action="store_true", help="Ignore existing checkpoint and regenerate judge results.")
     parser.add_argument("--fail-fast", action="store_true")
     return parser.parse_args()
+
+
+def load_eval_results(path: str | Path) -> list[dict[str, Any]]:
+    input_path = Path(path)
+    if input_path.suffix.lower() == ".jsonl":
+        records: list[dict[str, Any]] = []
+        with input_path.open("r", encoding="utf-8") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    continue
+                payload = json.loads(line)
+                if not isinstance(payload, dict):
+                    raise ValueError(f"Line {line_number} is not a JSON object: {input_path}")
+                records.append(payload)
+        return records
+
+    payload = json.loads(input_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+        raise ValueError(f"Eval JSON must contain a results list: {input_path}")
+    return payload["results"]
 
 
 def evidence_text(item: dict[str, Any], *, max_chars: int = 5000) -> str:
@@ -251,8 +271,7 @@ def main() -> None:
     if args.max_concurrency < 1:
         raise SystemExit("--max-concurrency must be >= 1.")
     load_env_file(args.env_file)
-    payload = json.loads(Path(args.results_file).read_text(encoding="utf-8"))
-    input_results = payload["results"]
+    input_results = load_eval_results(args.results_file)
     if args.max_samples is not None:
         input_results = input_results[: args.max_samples]
     output_path = Path(args.output) if args.output else default_output_path(args.results_file)

@@ -1,0 +1,35 @@
+model_name_or_path: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged
+data_path: ./data/novel_eval/sft_direct_answer/train.jsonl
+eval_data_path: ./data/novel_eval/sft_direct_answer/eval.jsonl
+output_dir: ./training/outputs/unsloth_sft_qwen3_4b_direct_lora
+merged_export_dir: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-direct-merged
+max_seq_length: 1024
+load_in_4bit: true
+lora_rank: 64
+lora_alpha: 64
+lora_dropout: 0
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+learning_rate: 5.0e-5
+num_train_epochs: 2
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 8
+warmup_steps: 4
+logging_steps: 5
+save_steps: 45
+max_grad_norm: 1.0
+seed: 3407
+packing: false
+report_to:
+  - swanlab
+swanlab_project: agentic-rag-rl
+swanlab_mode: cloud
+swanlab_logdir: ./training/swanlab
+swanlab_experiment_name: sft-qwen3-4b-direct-answer
+metrics_output: ./training/outputs/unsloth_sft_qwen3_4b_direct_lora/metrics.jsonl
