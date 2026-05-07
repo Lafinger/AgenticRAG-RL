@@ -1,10 +1,12 @@
 # FQA
 
-本文记录本项目 SFT 训练中常见的数据结构问题，重点解释 `input_ids`、`attention_mask`、`labels` 和 assistant-only label mask。
+本文按主题归类解释本项目 SFT 训练样本结构，重点说明 `input_ids`、`attention_mask`、`labels` 和 assistant-only label mask。
 
-## messages、chat 文本、input_ids 是什么关系？
+## 一、样本从 messages 到 input_ids
 
-原始 SFT 样本首先是 `messages` 结构：
+### Q1: messages、chat 文本、input_ids 是什么关系？
+
+答：原始 SFT 样本首先是 `messages` 结构：
 
 ```python
 [
@@ -45,9 +47,9 @@ messages --chat template 渲染--> chat 文本 --tokenizer 编码--> input_ids
 
 训练时模型真正接收的是 `input_ids`，但 `input_ids` 承载的信息来自完整 chat 文本。
 
-## 151644 对应什么？
+### Q2: 151644 对应什么？
 
-`151644` 是 tokenizer 词表里的一个 token id。对 Qwen/Qwen3 tokenizer 来说，它通常对应特殊 token：
+答：`151644` 是 tokenizer 词表里的一个 token id。对 Qwen/Qwen3 tokenizer 来说，它通常对应特殊 token：
 
 ```text
 151644 -> <|im_start|>
@@ -70,9 +72,11 @@ messages --chat template 渲染--> chat 文本 --tokenizer 编码--> input_ids
 python -c "from transformers import AutoTokenizer; t=AutoTokenizer.from_pretrained('unsloth/Qwen3-4B-Instruct-2507', trust_remote_code=True); print(t.convert_ids_to_tokens([151644,151645,151643]))"
 ```
 
-## attention_mask 有什么用？
+## 二、训练样本三件套
 
-`attention_mask` 用来告诉模型哪些位置是真实 token，哪些位置是 padding。
+### Q3: attention_mask 有什么用？
+
+答：`attention_mask` 用来告诉模型哪些位置是真实 token，哪些位置是 padding。
 
 一个 batch 里不同样本长度可能不同，短样本会补齐到同一长度：
 
@@ -99,9 +103,9 @@ attention_mask = [
 0 = padding token，模型不要关注
 ```
 
-## labels 和 input_ids 是怎么对应的？
+### Q4: labels 和 input_ids 是怎么一一对应的？
 
-`labels` 和 `input_ids` 等长、同下标一一对应：
+答：`labels` 和 `input_ids` 等长、同下标一一对应：
 
 ```text
 位置 i: input_ids[i] -> labels[i]
@@ -150,9 +154,37 @@ labels = [
 
 所以 `labels` 不是另一段独立文本，而是同一条 token 序列上的监督开关。
 
-## labels = -100 是什么意思？
+### Q5: 最终给训练器的一条样本长什么样？
 
-`-100` 是 PyTorch / Transformers 交叉熵 loss 的 ignore label。训练时：
+答：最终给训练器的是一条包含三个数组的样本。三个数组各自负责：
+
+```text
+input_ids        模型看什么
+attention_mask   哪些输入是真的，哪些是 padding
+labels           哪些位置要计算训练 loss
+```
+
+它们共同组成：
+
+```python
+{
+    "input_ids": [...],
+    "attention_mask": [1, 1, 1, 1, ...],
+    "labels": [
+        -100, -100, ...,
+        123, 456, 789,
+        -100, -100, ...,
+        234, 567, 890,
+        ...
+    ]
+}
+```
+
+## 三、assistant-only label mask
+
+### Q6: labels = -100 是什么意思？
+
+答：`-100` 是 PyTorch / Transformers 交叉熵 loss 的 ignore label。训练时：
 
 - `labels[i] == -100`：这个位置跳过，不计算 loss。
 - `labels[i] != -100`：这个位置参与 loss，模型要学习预测该 token。
@@ -170,9 +202,9 @@ padding             labels = -100
 
 这样模型仍然能通过 `input_ids` 看到完整上下文，但只学习 assistant 应该如何输出 `<tool_call>...</tool_call>` 或 `<answer>...</answer>`。
 
-## 为什么不能让整段 chat 都参与 loss？
+### Q7: 为什么不能让整段 chat 都参与 loss？
 
-如果整段 chat 都参与 loss，模型会被训练去复现：
+答：如果整段 chat 都参与 loss，模型会被训练去复现：
 
 - system prompt
 - user 问题
@@ -186,27 +218,3 @@ padding             labels = -100
 ```
 
 因此本项目在 `training\sft_label_mask.py` 中只保留 assistant 内容作为 labels，其它位置全部置为 `-100`。
-
-## 三个数组各自负责什么？
-
-```text
-input_ids        模型看什么
-attention_mask   哪些输入是真的，哪些是 padding
-labels           哪些位置要计算训练 loss
-```
-
-它们共同组成最终给训练器的一条样本：
-
-```python
-{
-    "input_ids": [...],
-    "attention_mask": [1, 1, 1, 1, ...],
-    "labels": [
-        -100, -100, ...,
-        123, 456, 789,
-        -100, -100, ...,
-        234, 567, 890,
-        ...
-    ]
-}
-```

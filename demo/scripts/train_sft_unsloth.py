@@ -12,6 +12,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from training.checkpointing import reset_output_dir, resolve_trainer_resume_checkpoint
 from training.monitoring import (
     configure_swanlab_environment,
     create_jsonl_metrics_callback,
@@ -39,6 +40,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swanlab-experiment-name", help="SwanLab experiment name.")
     parser.add_argument("--metrics-output", help="JSONL metrics output path for the local dashboard.")
     parser.add_argument("--disable-jsonl-metrics", action="store_true")
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--resume", dest="train_mode", action="store_const", const="resume", default="resume")
+    mode_group.add_argument("--overwrite", dest="train_mode", action="store_const", const="overwrite")
     return parser.parse_args()
 
 
@@ -102,6 +106,12 @@ def build_masked_dataset_records(
     return rendered
 
 
+def train_with_resume_mode(trainer: Any, resume_checkpoint: Path | None) -> Any:
+    if resume_checkpoint is None:
+        return trainer.train()
+    return trainer.train(resume_from_checkpoint=str(resume_checkpoint))
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -120,6 +130,7 @@ def main() -> None:
     model_name = str(config["model_name_or_path"])
     max_seq_length = int(config.get("max_seq_length", 2048))
     output_dir = project_path(config["output_dir"])
+    output_path = Path(output_dir)
     report_to = normalize_report_to(args.report_to if args.report_to is not None else config.get("report_to", ["swanlab"]))
     metrics_output = (
         project_path(args.metrics_output)
@@ -137,6 +148,12 @@ def main() -> None:
         or config.get("swanlab_experiment_name")
         or Path(output_dir).name
     )
+    resume_checkpoint = (
+        resolve_trainer_resume_checkpoint(output_path)
+        if args.train_mode == "resume"
+        else None
+    )
+
     if is_swanlab_enabled(report_to):
         configure_swanlab_environment(
             project=swanlab_project,
@@ -148,6 +165,8 @@ def main() -> None:
         require_swanlab(report_to)
 
     Dataset, SFTConfig, SFTTrainer, FastLanguageModel = require_unsloth_stack()
+    if args.train_mode == "overwrite":
+        reset_output_dir(output_path)
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=model_name,
@@ -179,6 +198,7 @@ def main() -> None:
         "learning_rate": float(config.get("learning_rate", 1e-4)),
         "num_train_epochs": float(config.get("num_train_epochs", 3)),
         "logging_steps": int(config.get("logging_steps", 5)),
+        "save_strategy": "steps",
         "save_steps": int(config.get("save_steps", 45)),
         "seed": int(config.get("seed", 3407)),
         "report_to": report_to,
@@ -208,8 +228,8 @@ def main() -> None:
         args=training_args,
     )
     if not args.disable_jsonl_metrics:
-        trainer.add_callback(create_jsonl_metrics_callback(metrics_output))
-    trainer.train()
+        trainer.add_callback(create_jsonl_metrics_callback(metrics_output, reset=args.train_mode == "overwrite"))
+    train_with_resume_mode(trainer, resume_checkpoint)
     trainer.save_model(output_dir)
 
 

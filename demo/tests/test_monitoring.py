@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 from training import monitoring
 from training.monitoring import (
     SwanLabScalarLogger,
+    build_training_progress_metrics,
     configure_swanlab_environment,
     normalize_swanlab_mode,
     require_swanlab,
@@ -60,6 +61,16 @@ def test_normalize_swanlab_mode_rejects_unknown_mode() -> None:
         normalize_swanlab_mode("wrong")
 
 
+def test_build_training_progress_metrics() -> None:
+    assert build_training_progress_metrics(step=200, total_steps=525) == {
+        "progress_percent": 200 / 525 * 100,
+    }
+    assert build_training_progress_metrics(step=600, total_steps=525) == {
+        "progress_percent": 100.0,
+    }
+    assert build_training_progress_metrics(step=1, total_steps=0) == {}
+
+
 def test_swanlab_scalar_logger_init_log_and_finish(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     calls: dict[str, Any] = {"logs": [], "finished": 0}
 
@@ -90,6 +101,7 @@ def test_swanlab_scalar_logger_init_log_and_finish(monkeypatch: pytest.MonkeyPat
             "grad_norm": 3,
             "learning_rate": 0.0001,
             "eval_loss": None,
+            "progress_percent": 200 / 525 * 100,
             "sample_ids": ["sft_000001"],
             "source_lines": [1],
             "question": "不要上传",
@@ -115,6 +127,7 @@ def test_swanlab_scalar_logger_init_log_and_finish(monkeypatch: pytest.MonkeyPat
                 "train/loss": 1.25,
                 "train/grad_norm": 3.0,
                 "train/learning_rate": 0.0001,
+                "train/progress_percent": 200 / 525 * 100,
             },
             7,
         ),

@@ -51,6 +51,19 @@ def normalize_swanlab_mode(mode: Any) -> str | None:
     return normalized
 
 
+def build_training_progress_metrics(step: int, total_steps: int | None) -> dict[str, float]:
+    if total_steps is None:
+        return {}
+    total = int(total_steps)
+    if total <= 0:
+        return {}
+
+    current = max(0, min(int(step), total))
+    return {
+        "progress_percent": current / total * 100.0,
+    }
+
+
 def configure_swanlab_environment(
     *,
     project: str | None = None,
@@ -115,12 +128,14 @@ def create_jsonl_metrics_callback(path: str | Path, reset: bool = True) -> Any:
         def on_log(self, args: Any, state: Any, control: Any, logs: dict[str, Any] | None = None, **kwargs: Any) -> None:
             del args, control, kwargs
             logs = logs or {}
+            step = int(getattr(state, "global_step", 0) or 0)
             payload: dict[str, Any] = {
                 "event": "log",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "step": int(getattr(state, "global_step", 0) or 0),
+                "step": step,
                 "epoch": getattr(state, "epoch", None),
             }
+            payload.update(build_training_progress_metrics(step, getattr(state, "max_steps", None)))
             for key, value in logs.items():
                 if isinstance(value, (str, int, float, bool)) or value is None:
                     payload[key] = value
@@ -173,6 +188,7 @@ class SwanLabScalarLogger:
             "grad_norm": "train/grad_norm",
             "learning_rate": "train/learning_rate",
             "eval_loss": "eval/loss",
+            "progress_percent": "train/progress_percent",
         }
         payload: dict[str, float] = {}
         for key, target in scalar_map.items():

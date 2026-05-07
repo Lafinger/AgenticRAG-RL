@@ -14,8 +14,15 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from training.checkpointing import (
+    TRACE_CHECKPOINT_STATE_FILE,
+    reset_output_dir,
+    resolve_trace_resume_checkpoint,
+    validate_trace_checkpoint_state,
+)
 from training.monitoring import (
     SwanLabScalarLogger,
+    build_training_progress_metrics,
     configure_swanlab_environment,
     is_swanlab_enabled,
     normalize_report_to,
@@ -53,6 +60,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-grad-norm", type=float)
     parser.add_argument("--optim", choices=["adamw_8bit", "adamw_torch"], default="adamw_8bit")
     parser.add_argument("--no-shuffle", action="store_true", help="Disable random sampling for deterministic line-range debugging.")
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--resume", dest="train_mode", action="store_const", const="resume", default="resume")
+    mode_group.add_argument("--overwrite", dest="train_mode", action="store_const", const="overwrite")
     return parser.parse_args()
 
 
@@ -202,6 +212,99 @@ def create_optimizer(optim_name: str, params: list[Any], learning_rate: float) -
     return torch.optim.AdamW(params, lr=learning_rate)
 
 
+TRACE_RESUME_CONFIG_KEYS = (
+    "model_name_or_path",
+    "data_path",
+    "sample_count",
+    "max_seq_length",
+    "batch_size",
+    "gradient_accumulation_steps",
+    "num_train_epochs",
+    "total_steps",
+    "learning_rate",
+    "warmup_steps",
+    "seed",
+    "shuffle",
+    "eval_steps",
+    "max_grad_norm",
+    "optim",
+)
+
+
+def assert_trace_resume_config_compatible(saved_config: dict[str, Any], current_config: dict[str, Any]) -> None:
+    mismatches = []
+    for key in TRACE_RESUME_CONFIG_KEYS:
+        if saved_config.get(key) != current_config.get(key):
+            mismatches.append(f"{key}: checkpoint={saved_config.get(key)!r}, current={current_config.get(key)!r}")
+    if mismatches:
+        details = "; ".join(mismatches)
+        raise ValueError(f"严格断点续训失败：当前训练配置与 checkpoint 不一致：{details}。")
+
+
+def build_trace_checkpoint_state(
+    torch_module: Any,
+    optimizer: Any,
+    scheduler: Any,
+    *,
+    global_step: int,
+    completed_micro_batches: int,
+    run_config: dict[str, Any],
+) -> dict[str, Any]:
+    cuda_module = getattr(torch_module, "cuda", None)
+    cuda_rng_state = (
+        cuda_module.get_rng_state_all()
+        if cuda_module is not None and cuda_module.is_available()
+        else None
+    )
+    return {
+        "version": 1,
+        "global_step": int(global_step),
+        "completed_micro_batches": int(completed_micro_batches),
+        "optimizer_state": optimizer.state_dict(),
+        "scheduler_state": scheduler.state_dict(),
+        "rng_state": {
+            "torch": torch_module.get_rng_state(),
+            "cuda": cuda_rng_state,
+        },
+        "run_config": dict(run_config),
+    }
+
+
+def load_trace_checkpoint_state(torch_module: Any, checkpoint_dir: Path) -> dict[str, Any]:
+    state_path = checkpoint_dir / TRACE_CHECKPOINT_STATE_FILE
+    try:
+        payload = torch_module.load(state_path, map_location="cpu", weights_only=False)
+    except TypeError:
+        payload = torch_module.load(state_path, map_location="cpu")
+    return validate_trace_checkpoint_state(payload, checkpoint_path=state_path)
+
+
+def restore_trace_checkpoint_state(torch_module: Any, optimizer: Any, scheduler: Any, state: dict[str, Any]) -> None:
+    optimizer.load_state_dict(state["optimizer_state"])
+    scheduler.load_state_dict(state["scheduler_state"])
+    rng_state = state["rng_state"]
+    if "torch" not in rng_state:
+        raise ValueError("严格断点续训失败：trace checkpoint 缺少 torch RNG 状态。")
+    torch_module.set_rng_state(rng_state["torch"])
+    cuda_rng_state = rng_state.get("cuda")
+    cuda_module = getattr(torch_module, "cuda", None)
+    if cuda_rng_state is not None and cuda_module is not None and cuda_module.is_available():
+        cuda_module.set_rng_state_all(cuda_rng_state)
+
+
+def save_trace_checkpoint(
+    torch_module: Any,
+    checkpoint_dir: Path,
+    model: Any,
+    tokenizer: Any,
+    state: dict[str, Any],
+) -> None:
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    model.save_pretrained(str(checkpoint_dir))
+    tokenizer.save_pretrained(str(checkpoint_dir))
+    torch_module.save(state, checkpoint_dir / TRACE_CHECKPOINT_STATE_FILE)
+
+
 def collate_trace_features(features: list[dict[str, Any]], tokenizer: Any, torch_module: Any) -> dict[str, Any]:
     max_len = max(len(feature["input_ids"]) for feature in features)
     input_ids = []
@@ -254,7 +357,11 @@ def main() -> None:
     else:
         configured_output_dir = project_path(config["output_dir"])
         output_dir = configured_output_dir.with_name(f"{configured_output_dir.name}_trace")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    resume_checkpoint = (
+        resolve_trace_resume_checkpoint(output_dir)
+        if args.train_mode == "resume"
+        else None
+    )
     trace_output = project_path(args.trace_output) if args.trace_output else output_dir / "step_sample_trace.jsonl"
     metrics_output = project_path(args.metrics_output) if args.metrics_output else output_dir / "trace_metrics.jsonl"
     state_output = output_dir / "trace_training_state.json"
@@ -287,28 +394,38 @@ def main() -> None:
         SequentialSampler,
         get_linear_schedule_with_warmup,
     ) = require_training_stack()
-    for stale_path in (trace_output, metrics_output):
-        if stale_path.exists():
-            stale_path.unlink()
+    if args.train_mode == "overwrite":
+        reset_output_dir(output_dir)
+        for stale_path in (trace_output, metrics_output):
+            if stale_path.exists():
+                stale_path.unlink()
+    trace_output.parent.mkdir(parents=True, exist_ok=True)
+    metrics_output.parent.mkdir(parents=True, exist_ok=True)
+    resume_state = (
+        load_trace_checkpoint_state(torch, resume_checkpoint)
+        if resume_checkpoint is not None
+        else None
+    )
 
     model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=model_name,
+        model_name=str(resume_checkpoint) if resume_checkpoint is not None else model_name,
         max_seq_length=max_seq_length,
         load_in_4bit=bool(config.get("load_in_4bit", True)),
     )
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=int(config.get("lora_rank", 64)),
-        target_modules=list(config.get("lora_target_modules", [])),
-        lora_alpha=int(config.get("lora_alpha", config.get("lora_rank", 64))),
-        lora_dropout=float(config.get("lora_dropout", 0)),
-        bias="none",
-        use_gradient_checkpointing="unsloth",
-        random_state=int(config.get("seed", 3407)),
-    )
+    if resume_checkpoint is None:
+        model = FastLanguageModel.get_peft_model(
+            model,
+            r=int(config.get("lora_rank", 64)),
+            target_modules=list(config.get("lora_target_modules", [])),
+            lora_alpha=int(config.get("lora_alpha", config.get("lora_rank", 64))),
+            lora_dropout=float(config.get("lora_dropout", 0)),
+            bias="none",
+            use_gradient_checkpointing="unsloth",
+            random_state=int(config.get("seed", 3407)),
+        )
     model.train()
 
     records = load_records(project_path(config["data_path"]), max_samples=args.max_samples)
@@ -358,12 +475,16 @@ def main() -> None:
         raise ValueError("total_steps must be positive.")
 
     trainable_params = [parameter for parameter in model.parameters() if parameter.requires_grad]
+    if not trainable_params:
+        raise RuntimeError("没有可训练参数，无法进行 LoRA SFT 训练。")
     optimizer = create_optimizer(args.optim, trainable_params, learning_rate)
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
         num_warmup_steps=warmup_steps,
         num_training_steps=total_steps,
     )
+    if resume_state is not None:
+        restore_trace_checkpoint_state(torch, optimizer, scheduler, resume_state)
 
     eval_samples: list[TraceSample] = []
     configured_eval_steps = config.get("eval_steps")
@@ -420,6 +541,8 @@ def main() -> None:
         "swanlab_logdir": str(swanlab_logdir) if is_swanlab_enabled(report_to) else None,
         "swanlab_experiment_name": swanlab_experiment_name if is_swanlab_enabled(report_to) else None,
     }
+    if resume_state is not None:
+        assert_trace_resume_config_compatible(resume_state["run_config"], run_config)
     write_json(output_dir / "trace_run_config.json", run_config)
     swanlab_logger = (
         SwanLabScalarLogger(
@@ -434,11 +557,17 @@ def main() -> None:
         else None
     )
 
-    global_step = 0
-    completed_micro_batches = 0
+    resume_completed_micro_batches = (
+        int(resume_state["completed_micro_batches"])
+        if resume_state is not None
+        else 0
+    )
+    global_step = int(resume_state["global_step"]) if resume_state is not None else 0
+    completed_micro_batches = resume_completed_micro_batches
     running_loss = 0.0
     trace_buffer: list[dict[str, Any]] = []
     device = first_model_device(model)
+    skipped_resume_micro_batches = 0
 
     for epoch_index in range(int(math.ceil(num_epochs))):
         if args.no_shuffle:
@@ -452,6 +581,9 @@ def main() -> None:
         for micro_batch_index, batch in enumerate(dataloader, start=1):
             if global_step >= total_steps:
                 break
+            if skipped_resume_micro_batches < resume_completed_micro_batches:
+                skipped_resume_micro_batches += 1
+                continue
 
             trace_items = batch.pop("trace_items")
             batch = {key: value.to(device) for key, value in batch.items()}
@@ -485,6 +617,7 @@ def main() -> None:
             avg_loss = running_loss / max(len(trace_buffer), 1)
             eval_loss = run_eval() if eval_steps and global_step % eval_steps == 0 else None
             flat_items = [item for micro_batch in trace_buffer for item in micro_batch["items"]]
+            progress_metrics = build_training_progress_metrics(global_step, total_steps)
             trace_payload = {
                 "step": global_step,
                 "epoch": epoch_index + micro_batch_index / max(micro_batches_per_epoch, 1),
@@ -492,6 +625,7 @@ def main() -> None:
                 "learning_rate": current_lr,
                 "grad_norm": float(grad_norm.detach().cpu() if hasattr(grad_norm, "detach") else grad_norm),
                 "eval_loss": eval_loss,
+                **progress_metrics,
                 "micro_batches": trace_buffer,
                 "sample_ids": [item["sample_id"] for item in flat_items],
                 "source_lines": [item["source_line"] for item in flat_items],
@@ -506,6 +640,7 @@ def main() -> None:
                     "learning_rate": current_lr,
                     "grad_norm": trace_payload["grad_norm"],
                     "eval_loss": eval_loss,
+                    **progress_metrics,
                     "sample_count": len(flat_items),
                     "source_lines": trace_payload["source_lines"],
                     "sample_ids": trace_payload["sample_ids"],
@@ -531,15 +666,27 @@ def main() -> None:
 
             if save_steps > 0 and global_step % save_steps == 0:
                 checkpoint_dir = output_dir / f"checkpoint-{global_step}"
-                checkpoint_dir.mkdir(parents=True, exist_ok=True)
-                model.save_pretrained(str(checkpoint_dir))
-                tokenizer.save_pretrained(str(checkpoint_dir))
+                save_trace_checkpoint(
+                    torch,
+                    checkpoint_dir,
+                    model,
+                    tokenizer,
+                    build_trace_checkpoint_state(
+                        torch,
+                        optimizer,
+                        scheduler,
+                        global_step=global_step,
+                        completed_micro_batches=completed_micro_batches,
+                        run_config=run_config,
+                    ),
+                )
 
             write_json(
                 state_output,
                 {
                     "global_step": global_step,
                     "total_steps": total_steps,
+                    "progress_percent": progress_metrics.get("progress_percent"),
                     "epoch": trace_payload["epoch"],
                     "last_loss": avg_loss,
                     "last_grad_norm": trace_payload["grad_norm"],
