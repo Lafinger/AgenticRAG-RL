@@ -66,7 +66,7 @@ def normalize_tool_spec(tool: str | list[str], fallback_tools: list[str] | None 
 
 def make_tool_call(name: str, query: str) -> str:
     payload = {"name": name, "arguments": {"query": query}}
-    return f"<tool_call>\n{json.dumps(payload, ensure_ascii=False)}\n</tool_call>"
+    return f"<tool_call>\n{json.dumps(payload, ensure_ascii=False, separators=(',', ':'))}\n</tool_call>"
 
 
 def format_tool_response(records: list[dict[str, Any]]) -> str:

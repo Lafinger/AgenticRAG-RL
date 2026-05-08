@@ -72,11 +72,11 @@ def test_apply_chat_template_for_generation_passes_qwen3_tools() -> None:
         {"role": "tool", "content": "[chunk-a] 证据"},
     ]
 
-    rendered = module.apply_chat_template_for_generation(tokenizer, messages, "qwen3_nothink")
+    rendered = module.apply_chat_template_for_generation(tokenizer, messages, "qwen3_react")
 
     assert rendered["tools"] == module.TOOL_SCHEMAS
     assert tokenizer.calls[0]["messages"][2]["role"] == "tool"
-    assert tokenizer.calls[0]["kwargs"]["enable_thinking"] is False
+    assert "enable_thinking" not in tokenizer.calls[0]["kwargs"]
 
 
 def test_apply_chat_template_for_generation_falls_back_to_manual_tools_prompt() -> None:
@@ -85,11 +85,14 @@ def test_apply_chat_template_for_generation_falls_back_to_manual_tools_prompt() 
     messages = [
         {"role": "system", "content": module.AGENT_SYSTEM_PROMPT},
         {"role": "user", "content": "问题"},
-        {"role": "assistant", "content": '<tool_call>{"name":"keyword_search","arguments":{"query":"问题"}}</tool_call>'},
+        {
+            "role": "assistant",
+            "content": '<think>需要搜索：问题</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"问题"}}</tool_call>',
+        },
         {"role": "tool", "content": "[chunk-a] 证据"},
     ]
 
-    rendered = module.apply_chat_template_for_generation(tokenizer, messages, "qwen3_nothink")
+    rendered = module.apply_chat_template_for_generation(tokenizer, messages, "qwen3_react")
     fallback_messages = tokenizer.calls[1]["messages"]
 
     assert rendered["tools"] is None
@@ -102,7 +105,7 @@ def test_valid_tool_call_invokes_retriever_and_answer_finishes_loop() -> None:
     module = load_agentic_eval_module()
     outputs = iter(
         [
-            '<tool_call>{"name":"keyword_search","arguments":{"query":"卖饼老者 集市"}}</tool_call>',
+            '<think>需要搜索：卖饼老者 集市</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"卖饼老者 集市"}}</tool_call>',
             "<answer>侯赢</answer>",
         ]
     )
@@ -115,6 +118,11 @@ def test_valid_tool_call_invokes_retriever_and_answer_finishes_loop() -> None:
     assert result["status"] == "answered"
     assert result["valid_tool_call_count"] == 1
     assert result["retrieved_chunk_ids"] == ["chunk-a", "chunk-b"]
+    assert result["raw_turns"][0]["think_tag_present"] is True
+    assert result["raw_turns"][0]["history_assistant"] == (
+        '<think>需要搜索：卖饼老者 集市</think>\n'
+        '<tool_call>\n{"name":"keyword_search","arguments":{"query":"卖饼老者 集市"}}\n</tool_call>'
+    )
 
 
 def test_invalid_json_tool_call_records_failed_turn_without_answer() -> None:
@@ -128,6 +136,28 @@ def test_invalid_json_tool_call_records_failed_turn_without_answer() -> None:
     assert result["status"].startswith("invalid_tool_call_json")
     assert result["valid_tool_call_count"] == 0
     assert result["raw_turns"][0]["status"] == "failed"
+
+
+def test_query_only_tool_call_remains_malformed() -> None:
+    module = load_agentic_eval_module()
+    retriever = FakeRetriever()
+
+    result = module.run_agentic_loop("问题", retriever, lambda messages: "<tool_call>卖饼老者 集市</tool_call>", max_turns=1)
+
+    assert retriever.calls == []
+    assert result["prediction"] == ""
+    assert result["status"].startswith("invalid_tool_call_json")
+    assert result["valid_tool_call_count"] == 0
+    assert result["raw_turns"][0]["malformed_tool_fragment_present"] is True
+
+
+def test_resolve_local_path_or_repo_keeps_repo_ids_and_resolves_local_paths(tmp_path: Path) -> None:
+    module = load_agentic_eval_module()
+    local_dir = tmp_path / "checkpoint-1"
+    local_dir.mkdir()
+
+    assert module.resolve_local_path_or_repo(str(local_dir)) == str(local_dir.resolve())
+    assert module.resolve_local_path_or_repo("unsloth/Qwen3-4B-Instruct-2507") == "unsloth/Qwen3-4B-Instruct-2507"
 
 
 def test_answer_tag_ends_loop_without_retrieval() -> None:
@@ -174,8 +204,10 @@ def test_multiple_tool_calls_uses_first_valid_action_and_records_diagnostics() -
     assert result["status"] == "max_turns_exceeded"
     assert result["raw_turns"][0]["multi_action_present"] is True
     assert result["raw_turns"][0]["normalized_action"] == (
+        '<think>需要搜索：第一跳</think>\n'
         '<tool_call>\n{"name":"keyword_search","arguments":{"query":"第一跳"}}\n</tool_call>'
     )
+    assert result["raw_turns"][0]["think_tag_present"] is False
 
 
 def test_starts_with_closing_tool_tag_is_recorded_but_valid_action_can_run() -> None:
@@ -211,6 +243,7 @@ def test_agent_loop_writes_normalized_action_to_next_turn_history() -> None:
     assert result["prediction"] == "侯赢"
     assert result["raw_turns"][0]["assistant"].startswith("</tool_call>")
     assert result["raw_turns"][0]["history_assistant"] == (
+        '<think>需要搜索：第一跳</think>\n'
         '<tool_call>\n{"name":"keyword_search","arguments":{"query":"第一跳"}}\n</tool_call>'
     )
     assert result["raw_turns"][0]["truncated_to_first_action"] is True
@@ -231,6 +264,7 @@ def test_stop_on_action_criteria_stops_after_complete_action_tag() -> None:
 
     criteria = module.StopOnActionCriteria(DecodeTokenizer(), prompt_length=2)
 
+    assert criteria([[1, 2, *map(ord, "<think>需要搜索：问题</think>")]]) is False
     assert criteria([[1, 2, *map(ord, "<tool_call>{}")]]) is False
     assert criteria([[1, 2, *map(ord, "<tool_call>{}</tool_call>")]]) is True
     assert criteria([[1, 2, *map(ord, "<answer>侯赢</answer>")]]) is True
@@ -272,8 +306,22 @@ def test_build_summary_includes_agent_loop_diagnostic_rates() -> None:
             "status": "max_turns_exceeded",
             "valid_tool_call_count": 2,
             "raw_turns": [
-                {"malformed_tool_fragment_present": True, "multi_action_present": True, "starts_with_closing_tool": True},
-                {"malformed_tool_fragment_present": False, "multi_action_present": False, "starts_with_closing_tool": False},
+                {
+                    "status": "tool_called",
+                    "malformed_tool_fragment_present": True,
+                    "malformed_think_present": True,
+                    "think_tag_present": False,
+                    "multi_action_present": True,
+                    "starts_with_closing_tool": True,
+                },
+                {
+                    "status": "tool_called",
+                    "malformed_tool_fragment_present": False,
+                    "malformed_think_present": False,
+                    "think_tag_present": True,
+                    "multi_action_present": False,
+                    "starts_with_closing_tool": False,
+                },
             ],
         },
         {
@@ -283,7 +331,14 @@ def test_build_summary_includes_agent_loop_diagnostic_rates() -> None:
             "status": "answered",
             "valid_tool_call_count": 1,
             "raw_turns": [
-                {"malformed_tool_fragment_present": False, "multi_action_present": False, "starts_with_closing_tool": False}
+                {
+                    "status": "answered",
+                    "malformed_tool_fragment_present": False,
+                    "malformed_think_present": False,
+                    "think_tag_present": False,
+                    "multi_action_present": False,
+                    "starts_with_closing_tool": False,
+                }
             ],
         },
     ]
@@ -293,6 +348,8 @@ def test_build_summary_includes_agent_loop_diagnostic_rates() -> None:
     assert summary["max_turns_exceeded_rate"] == 0.5
     assert summary["avg_valid_tool_calls"] == 1.5
     assert summary["avg_turns"] == 1.5
+    assert summary["think_tag_rate"] == 0.5
+    assert summary["malformed_think_rate"] == 1 / 3
     assert summary["malformed_tool_fragment_rate"] == 1 / 3
     assert summary["multi_action_turn_rate"] == 1 / 3
     assert summary["starts_with_closing_tool_rate"] == 1 / 3

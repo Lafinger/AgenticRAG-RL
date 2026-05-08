@@ -13,7 +13,7 @@ def test_normalize_tool_spec_handles_legacy_and_hybrid_cases() -> None:
 
 
 def test_extract_answer_tag() -> None:
-    text = "<think>...</think><answer>双水村</answer>"
+    text = "前置文本<answer>双水村</answer>"
     assert extract_answer_tag(text) == "双水村"
 
 

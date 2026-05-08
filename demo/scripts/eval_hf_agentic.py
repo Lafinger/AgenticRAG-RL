@@ -19,16 +19,19 @@ from agentic_rag_rl.retrieval import HybridRetriever
 AGENT_SYSTEM_PROMPT = SYSTEM_PROMPT_ZH
 ANSWER_RE = re.compile(r"<answer>(.*?)</answer>", re.DOTALL | re.IGNORECASE)
 TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL | re.IGNORECASE)
+THINK_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL | re.IGNORECASE)
 ACTION_RE = re.compile(r"<answer>.*?</answer>|<tool_call>.*?</tool_call>", re.DOTALL | re.IGNORECASE)
 ACTION_END_RE = re.compile(r"</(?:answer|tool_call)>", re.IGNORECASE)
+THINK_OPEN_RE = re.compile(r"<think\b[^>]*>", re.IGNORECASE)
+THINK_CLOSE_RE = re.compile(r"</think>", re.IGNORECASE)
+THINK_TAG_FRAGMENT_RE = re.compile(r"</?think\b[^>]*>", re.IGNORECASE)
 TOOL_OPEN_RE = re.compile(r"<tool_call\b[^>]*>", re.IGNORECASE)
 TOOL_CLOSE_RE = re.compile(r"</tool_call>", re.IGNORECASE)
 TOOL_TAG_FRAGMENT_RE = re.compile(r"</?tool_call\b[^>]*>", re.IGNORECASE)
 
 
 def _template_kwargs(template_name: str) -> dict[str, Any]:
-    if template_name in {"qwen3_nothink", "qwen3_no_think", "qwen3-notthink"}:
-        return {"enable_thinking": False}
+    del template_name
     return {}
 
 
@@ -39,11 +42,12 @@ def render_qwen3_tools_system_prompt(system_prompt: str, tools: list[dict[str, A
     return (
         f"{system_prompt}\n\n"
         "# Tools\n\n"
-        "You may call one or more functions to assist with the user query.\n\n"
+        "You may call one function per assistant turn to assist with the user query.\n\n"
         "You are provided with function signatures within <tools></tools> XML tags:\n"
         f"<tools>\n{tools_json}\n</tools>\n\n"
-        "For each function call, return a json object with function name and arguments within <tool_call></tool_call> "
-        "XML tags:\n"
+        "Before each function call, write exactly one short search intent within <think></think> XML tags. "
+        "Then return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n"
+        "<think>需要搜索：<short-query></think>\n"
         "<tool_call>\n"
         "{\"name\": <function-name>, \"arguments\": <args-json-object>}\n"
         "</tool_call>"
@@ -96,7 +100,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data", default=str(ROOT / "data" / "novel_eval" / "test.jsonl"))
     parser.add_argument("--corpus", default=str(ROOT / "data" / "novel" / "corpus.jsonl"))
     parser.add_argument("--output", required=True, help="Eval JSON or JSONL output path.")
-    parser.add_argument("--template", default="qwen3_nothink", help="Recorded in output metadata.")
+    parser.add_argument("--template", default="qwen3_react", help="Recorded in output metadata.")
     parser.add_argument("--max-samples", type=int, default=50)
     parser.add_argument("--max-turns", type=int, default=5)
     parser.add_argument("--per-turn-max-new-tokens", type=int, default=256)
@@ -124,24 +128,40 @@ def torch_dtype(dtype_name: str) -> Any:
     }[dtype_name]
 
 
+def resolve_local_path_or_repo(value: str) -> str:
+    path = Path(value).expanduser()
+    if path.exists():
+        return str(path.resolve())
+    if not path.is_absolute():
+        repo_relative = ROOT / path
+        if repo_relative.exists():
+            return str(repo_relative.resolve())
+    return value
+
+
 def load_model_and_tokenizer(args: argparse.Namespace) -> tuple[Any, Any]:
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=args.trust_remote_code)
+    model_name_or_path = resolve_local_path_or_repo(args.model)
+    adapter_path = resolve_local_path_or_repo(args.adapter) if args.adapter else None
+    args.model = model_name_or_path
+    args.adapter = adapter_path
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, trust_remote_code=args.trust_remote_code)
     model = AutoModelForCausalLM.from_pretrained(
-        args.model,
+        model_name_or_path,
         device_map=args.device_map,
         torch_dtype=torch_dtype(args.dtype),
         trust_remote_code=args.trust_remote_code,
     )
 
-    if args.adapter:
+    if adapter_path:
         try:
             from peft import PeftModel
         except ImportError as exc:
             raise RuntimeError("使用 --adapter 时需要安装 peft。") from exc
 
-        model = PeftModel.from_pretrained(model, args.adapter)
+        model = PeftModel.from_pretrained(model, adapter_path)
 
     model.eval()
     return model, tokenizer
@@ -194,6 +214,28 @@ def format_tool_call(tool_call: dict[str, Any]) -> str:
     return f"<tool_call>\n{json.dumps(tool_call, ensure_ascii=False, separators=(',', ':'))}\n</tool_call>"
 
 
+def make_short_think(query: str, turn_index: int = 1) -> str:
+    prefix = "需要搜索" if turn_index <= 1 else "继续搜索"
+    return f"{prefix}：{query.strip()}"
+
+
+def format_react_tool_action(tool_call: dict[str, Any], think: str | None = None, turn_index: int = 1) -> str:
+    query = str(tool_call["arguments"]["query"])
+    think_text = think.strip() if think and think.strip() else make_short_think(query, turn_index)
+    return f"<think>{think_text}</think>\n{format_tool_call(tool_call)}"
+
+
+def _extract_valid_think_prefix(text: str, action_start: int) -> tuple[str | None, bool]:
+    prefix = text[:action_start].strip()
+    if not prefix:
+        return None, False
+    match = THINK_RE.fullmatch(prefix)
+    if match is None:
+        return None, False
+    think = match.group(1).strip()
+    return (think or None), bool(think)
+
+
 def analyze_turn_output(text: str) -> dict[str, Any]:
     tool_payloads = TOOL_CALL_RE.findall(text)
     invalid_tool_payload_present = False
@@ -205,10 +247,22 @@ def analyze_turn_output(text: str) -> dict[str, Any]:
 
     tool_open_count = len(TOOL_OPEN_RE.findall(text))
     tool_close_count = len(TOOL_CLOSE_RE.findall(text))
-    action_count = len(ACTION_RE.findall(text))
+    action_matches = list(ACTION_RE.finditer(text))
+    action_count = len(action_matches)
     tool_fragment_present = TOOL_TAG_FRAGMENT_RE.search(text) is not None
     starts_with_closing_tool = text.lstrip().lower().startswith("</tool_call>")
     empty_tool_payload_present = any(not payload.strip() for payload in tool_payloads)
+    think_open_count = len(THINK_OPEN_RE.findall(text))
+    think_close_count = len(THINK_CLOSE_RE.findall(text))
+    first_action = action_matches[0] if action_matches else None
+    first_action_is_tool = bool(first_action and first_action.group(0).lstrip().lower().startswith("<tool_call"))
+    _, valid_think_prefix = _extract_valid_think_prefix(text, first_action.start()) if first_action else (None, False)
+    malformed_think_present = THINK_TAG_FRAGMENT_RE.search(text) is not None and (
+        think_open_count != think_close_count
+        or not valid_think_prefix
+        or think_open_count != 1
+        or (first_action is not None and THINK_TAG_FRAGMENT_RE.search(text[first_action.end() :]) is not None)
+    )
     malformed_tool_fragment_present = tool_fragment_present and (
         starts_with_closing_tool
         or tool_open_count != tool_close_count
@@ -219,14 +273,18 @@ def analyze_turn_output(text: str) -> dict[str, Any]:
         "tool_fragment_present": tool_fragment_present,
         "malformed_tool_fragment_present": malformed_tool_fragment_present,
         "multi_action_present": action_count > 1,
+        "think_tag_present": first_action_is_tool and valid_think_prefix,
+        "malformed_think_present": malformed_think_present,
         "starts_with_closing_tool": starts_with_closing_tool,
         "action_count": action_count,
+        "think_open_count": think_open_count,
+        "think_close_count": think_close_count,
         "tool_open_count": tool_open_count,
         "tool_close_count": tool_close_count,
     }
 
 
-def parse_first_action(text: str) -> tuple[dict[str, Any] | None, str | None]:
+def parse_first_action(text: str, turn_index: int = 1) -> tuple[dict[str, Any] | None, str | None]:
     first_error: str | None = None
     for match in ACTION_RE.finditer(text):
         action_text = match.group(0)
@@ -242,7 +300,12 @@ def parse_first_action(text: str) -> tuple[dict[str, Any] | None, str | None]:
             if first_error is None:
                 first_error = error or "invalid_tool_call"
             continue
-        return {"kind": "tool_call", "tool_call": tool_call, "normalized_text": format_tool_call(tool_call)}, None
+        think, _ = _extract_valid_think_prefix(text, match.start())
+        return {
+            "kind": "tool_call",
+            "tool_call": tool_call,
+            "normalized_text": format_react_tool_action(tool_call, think, turn_index),
+        }, None
 
     if first_error:
         return None, first_error
@@ -318,7 +381,7 @@ def run_agentic_loop(
     for turn_index in range(1, max_turns + 1):
         assistant_text = generate_turn(messages).strip()
         diagnostics = analyze_turn_output(assistant_text)
-        action, error = parse_first_action(assistant_text)
+        action, error = parse_first_action(assistant_text, turn_index)
 
         if action is not None and action["kind"] == "answer":
             history_assistant = action["normalized_text"]
@@ -507,6 +570,8 @@ def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
     divisor = max(count, 1)
     raw_turns = [turn for record in records for turn in record.get("raw_turns", [])]
     turn_divisor = max(len(raw_turns), 1)
+    tool_turns = [turn for turn in raw_turns if turn.get("status") == "tool_called"]
+    tool_turn_divisor = max(len(tool_turns), 1)
     return {
         "count": count,
         "avg_em": sum(record["em"] for record in records) / divisor,
@@ -514,6 +579,8 @@ def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "avg_hop_recall": sum(record["hop_recall"] for record in records) / divisor,
         "answer_tag_rate": sum(1 for record in records if record["status"] == "answered") / divisor,
         "valid_tool_call_rate": sum(1 for record in records if record["valid_tool_call_count"] > 0) / divisor,
+        "think_tag_rate": sum(1 for turn in tool_turns if turn.get("think_tag_present")) / tool_turn_divisor,
+        "malformed_think_rate": sum(1 for turn in raw_turns if turn.get("malformed_think_present")) / turn_divisor,
         "malformed_tool_fragment_rate": sum(1 for turn in raw_turns if turn.get("malformed_tool_fragment_present")) / turn_divisor,
         "multi_action_turn_rate": sum(1 for turn in raw_turns if turn.get("multi_action_present")) / turn_divisor,
         "starts_with_closing_tool_rate": sum(1 for turn in raw_turns if turn.get("starts_with_closing_tool")) / turn_divisor,

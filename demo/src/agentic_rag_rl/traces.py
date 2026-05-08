@@ -25,6 +25,15 @@ def _chunk_metadata(chunk: Chunk) -> dict[str, Any]:
     return metadata
 
 
+def make_short_think(query: str, hop_index: int = 0) -> str:
+    prefix = "需要搜索" if hop_index == 0 else "继续搜索"
+    return f"{prefix}：{query.strip()}"
+
+
+def make_react_tool_action(name: str, query: str, hop_index: int = 0) -> str:
+    return f"<think>{make_short_think(query, hop_index)}</think>\n{make_tool_call(name, query)}"
+
+
 def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk], use_zh: bool = True) -> list[dict[str, Any]]:
     corpus = chunk_map(chunks)
     traces: list[dict[str, Any]] = []
@@ -34,7 +43,7 @@ def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk]
             {"role": "user", "content": example.final_question},
         ]
         gold_chunks: list[str] = []
-        for hop in example.hops:
+        for hop_index, hop in enumerate(example.hops):
             chunk = corpus[hop.doc_chunk_id]
             records = [
                 {
@@ -48,7 +57,7 @@ def build_oracle_traces(examples: Iterable[MultiHopExample], chunks: list[Chunk]
             messages.append(
                 {
                     "role": "assistant",
-                    "content": f"<think>{hop.question}</think>\n{make_tool_call('keyword_search', hop.question)}",
+                    "content": make_react_tool_action("keyword_search", hop.question, hop_index),
                 }
             )
             messages.append({"role": "tool", "content": format_tool_response(records)})
@@ -77,28 +86,32 @@ def _strip_tool_response_tags(content: str) -> str:
     return matched.group(1).strip() if matched else content
 
 
-def _normalize_assistant_content(content: str) -> str:
+def _normalize_assistant_content(content: str, hop_index: int = 0) -> str:
     tool_match = TOOL_CALL_RE.search(content)
     if tool_match is None:
         return content
 
     think_match = THINK_RE.search(content)
-    think = think_match.group(1).strip() if think_match else ""
     raw_payload = tool_match.group(1).strip()
     try:
         payload = json.loads(raw_payload)
     except json.JSONDecodeError:
-        payload_text = raw_payload
+        payload = {"name": "keyword_search", "arguments": {"query": raw_payload}}
     else:
-        payload_text = json.dumps(payload, ensure_ascii=False)
+        if not isinstance(payload, dict):
+            payload = {"name": "keyword_search", "arguments": {"query": raw_payload}}
+    payload_text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    arguments = payload.get("arguments") if isinstance(payload, dict) else None
+    query = arguments.get("query") if isinstance(arguments, dict) else raw_payload
+    think = think_match.group(1).strip() if think_match and think_match.group(1).strip() else make_short_think(str(query), hop_index)
     return f"<think>{think}</think>\n<tool_call>\n{payload_text}\n</tool_call>"
 
 
-def _normalize_message(message: dict[str, Any]) -> dict[str, Any]:
+def _normalize_message(message: dict[str, Any], hop_index: int = 0) -> dict[str, Any]:
     role = message["role"]
     content = str(message.get("content", ""))
     if role == "assistant":
-        content = _normalize_assistant_content(content)
+        content = _normalize_assistant_content(content, hop_index)
     elif role == "tool":
         content = _strip_tool_response_tags(content)
     return {"role": role, "content": content}
@@ -136,7 +149,13 @@ def _build_finalization_record(messages: list[dict[str, Any]], tools: list[dict[
 def convert_traces_to_sft_records(traces: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for trace in traces:
-        messages = [_normalize_message(message) for message in trace["messages"]]
+        messages: list[dict[str, Any]] = []
+        hop_index = 0
+        for message in trace["messages"]:
+            normalized = _normalize_message(message, hop_index)
+            if normalized["role"] == "assistant" and "<tool_call>" in normalized["content"]:
+                hop_index += 1
+            messages.append(normalized)
         tools = trace.get("tools") if isinstance(trace.get("tools"), list) else TOOL_SCHEMAS
         metadata = dict(trace["metadata"])
         records.append(

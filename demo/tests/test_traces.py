@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from agentic_rag_rl.grpo_data import build_grpo_rows
@@ -25,8 +26,16 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     assert len(sharegpt_records) == 4
     assert traces[0]["messages"][0]["role"] == "system"
     assert traces[0]["tools"] == TOOL_SCHEMAS
-    assert traces[0]["messages"][2]["content"].startswith("<think>")
+    assert traces[0]["messages"][2]["content"].startswith("<think>需要搜索：")
+    assert traces[0]["messages"][2]["content"].count("<think>") == 1
+    assert traces[0]["messages"][2]["content"].count("</think>") == 1
     assert "\n<tool_call>\n" in traces[0]["messages"][2]["content"]
+    assert "\n</tool_call>" in traces[0]["messages"][2]["content"]
+    trace_payload = traces[0]["messages"][2]["content"].split("<tool_call>\n", 1)[1].split("\n</tool_call>", 1)[0]
+    assert json.loads(trace_payload) == {
+        "name": "keyword_search",
+        "arguments": {"query": examples[0].hops[0].question},
+    }
     assert traces[0]["messages"][3]["role"] == "tool"
     assert "<tool_response>" not in traces[0]["messages"][3]["content"]
     full_trace = sft_records[0]
@@ -34,7 +43,19 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     assert full_trace["metadata"]["sample_type"] == "full_trace"
     assert full_trace["messages"][3]["role"] == "tool"
     assert full_trace["tools"] == TOOL_SCHEMAS
+    tool_turns = [message for message in full_trace["messages"] if message["role"] == "assistant" and "<tool_call>" in message["content"]]
+    assert tool_turns
+    for index, message in enumerate(tool_turns):
+        expected_prefix = "<think>需要搜索：" if index == 0 else "<think>继续搜索："
+        assert message["content"].startswith(expected_prefix)
+        assert message["content"].count("<think>") == 1
+        assert message["content"].count("</think>") == 1
+        payload = message["content"].split("<tool_call>\n", 1)[1].split("\n</tool_call>", 1)[0]
+        parsed = json.loads(payload)
+        assert parsed["name"] == "keyword_search"
+        assert isinstance(parsed["arguments"]["query"], str)
     assert full_trace["messages"][-1]["content"].startswith("<answer>")
+    assert "<think>" not in full_trace["messages"][-1]["content"]
     assert finalization["metadata"]["sample_type"] == "finalization_only"
     assert finalization["messages"][0]["role"] == "system"
     assert finalization["messages"][1]["role"] == "user"
