@@ -23,8 +23,8 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     grpo_rows = build_grpo_rows(examples)
 
     assert len(traces) == 2
-    assert len(sft_records) == 4
-    assert len(sharegpt_records) == 4
+    assert len(sft_records) == 10
+    assert len(sharegpt_records) == 10
     assert examples[0].hops[0].search_tools == ["keyword_search"]
     assert traces[0]["messages"][0]["role"] == "system"
     assert traces[0]["tools"] == TOOL_SCHEMAS
@@ -51,7 +51,10 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     assert traces[0]["messages"][3]["role"] == "tool"
     assert "<tool_response>" not in traces[0]["messages"][3]["content"]
     full_trace = sft_records[0]
-    finalization = sft_records[1]
+    first_action = sft_records[1]
+    first_action_repeat = sft_records[2]
+    next_action = sft_records[3]
+    final_answer = sft_records[4]
     assert full_trace["metadata"]["sample_type"] == "full_trace"
     assert full_trace["messages"][3]["role"] == "tool"
     assert full_trace["tools"] == TOOL_SCHEMAS
@@ -68,14 +71,23 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
         assert isinstance(parsed["arguments"]["query"], str)
     assert full_trace["messages"][-1]["content"].startswith("<answer>")
     assert "<think>" not in full_trace["messages"][-1]["content"]
-    assert finalization["metadata"]["sample_type"] == "finalization_only"
-    assert finalization["messages"][0]["role"] == "system"
-    assert finalization["messages"][1]["role"] == "user"
-    assert finalization["messages"][-1]["role"] == "assistant"
-    assert finalization["messages"][-1]["content"].startswith("<answer>")
-    assert any(message["role"] == "tool" for message in finalization["messages"])
-    assert all(message["role"] != "assistant" or "<tool_call>" not in message["content"] for message in finalization["messages"])
-    assert finalization["tools"] == TOOL_SCHEMAS
+    assert first_action["metadata"]["sample_type"] == "first_action_only"
+    assert first_action["metadata"]["repeat_index"] == 1
+    assert first_action_repeat["metadata"]["sample_type"] == "first_action_only"
+    assert first_action_repeat["metadata"]["repeat_index"] == 2
+    assert [message["role"] for message in first_action["messages"]] == ["system", "user", "assistant"]
+    assert first_action["messages"][-1]["content"].startswith("<think>要回答最终问题，先查：")
+    assert next_action["metadata"]["sample_type"] == "next_action_only"
+    assert next_action["metadata"]["target_tool_turn"] == 2
+    assert next_action["messages"][2]["loss"] is False
+    assert next_action["messages"][-1]["loss"] is True
+    assert next_action["messages"][-1]["content"].startswith("<think>已获得上一跳线索“")
+    assert final_answer["metadata"]["sample_type"] == "final_answer_only"
+    assert final_answer["messages"][2]["loss"] is False
+    assert final_answer["messages"][4]["loss"] is False
+    assert final_answer["messages"][-1]["loss"] is True
+    assert final_answer["messages"][-1]["content"].startswith("<answer>")
+    assert final_answer["tools"] == TOOL_SCHEMAS
     assert sharegpt_records[0]["messages"][0]["role"] == "system"
     assert sharegpt_records[0]["tools"] == TOOL_SCHEMAS
     assert grpo_rows[0]["agent_name"] == "tool_agent"
@@ -104,6 +116,8 @@ def test_convert_legacy_trace_rewrites_existing_think() -> None:
     assert "旧的随意 think" not in first_tool_turn
     assert first_tool_turn.startswith("<think>要回答最终问题，先查：第一跳</think>")
     assert records[0]["messages"][3]["content"] == "[chunk-a] 证据"
+    assert records[-1]["metadata"]["sample_type"] == "final_answer_only"
+    assert records[-1]["messages"][2]["loss"] is False
 
 
 def test_oracle_trace_uses_hybrid_search_for_multi_tool_hops() -> None:

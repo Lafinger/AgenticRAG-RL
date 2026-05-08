@@ -74,6 +74,19 @@ messages + tools --canonical renderer 渲染--> chat 文本 --tokenizer 编码--
 </tool_call>
 ```
 
+### Q1.2: v3 为什么新增多种 sample_type？
+
+答：上一版训练后，50 条 Agent loop 测评中大量样本首轮直接输出 `</tool_call>`。v3 不新增独立模型路线，而是在主线 SFT 内拆出更自然的训练视角：
+
+| sample_type | 作用 |
+| --- | --- |
+| `full_trace` | 学习完整 Oracle Agent 轨迹 |
+| `first_action_only` | 2 倍加权首轮 `<think> + <tool_call>`，稳定 assistant 起始状态 |
+| `next_action_only` | 带历史 assistant/tool 上下文，只监督下一轮工具动作 |
+| `final_answer_only` | 带完整历史上下文，只监督最终 `<answer>` |
+
+历史 assistant turn 会写入 `loss: false`。它仍进入模型上下文，但不会参与 loss。
+
 ### Q1.5: 为什么 JSONL 里要保留 `tool` role，而不是提前改成 user？
 
 答：项目 canonical renderer 知道如何处理 `tool` role。原始 JSONL 保留：

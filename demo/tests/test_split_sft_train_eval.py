@@ -65,7 +65,7 @@ def test_split_sft_train_eval_stratifies_by_sample_type(tmp_path: Path) -> None:
     manifest_path = tmp_path / "manifest.json"
     records = []
     for index in range(12):
-        sample_type = "full_trace" if index % 2 == 0 else "finalization_only"
+        sample_type = "full_trace" if index % 2 == 0 else "first_action_only"
         records.append(
             {
                 "id": index,
@@ -84,5 +84,5 @@ def test_split_sft_train_eval_stratifies_by_sample_type(tmp_path: Path) -> None:
     )
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    assert manifest["split_eval_sample_type_counts"] == {"finalization_only": 2, "full_trace": 2}
-    assert manifest["split_train_sample_type_counts"] == {"finalization_only": 4, "full_trace": 4}
+    assert manifest["split_eval_sample_type_counts"] == {"first_action_only": 2, "full_trace": 2}
+    assert manifest["split_train_sample_type_counts"] == {"first_action_only": 4, "full_trace": 4}

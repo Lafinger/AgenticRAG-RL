@@ -76,6 +76,19 @@ def test_build_inputs_for_generation_uses_canonical_react_renderer() -> None:
     assert tokenizer.calls[0]["kwargs"] == {"return_tensors": "pt"}
 
 
+def test_build_inputs_for_generation_can_add_diagnostic_think_anchor() -> None:
+    module = load_agentic_eval_module()
+    tokenizer = FakeTemplateTokenizer()
+    messages = [
+        {"role": "system", "content": module.AGENT_SYSTEM_PROMPT},
+        {"role": "user", "content": "问题"},
+    ]
+
+    rendered = module.build_inputs_for_generation(tokenizer, messages, "qwen3_react", "think")
+
+    assert rendered["text"].endswith("<|im_start|>assistant\n<think>")
+
+
 def test_valid_tool_call_invokes_retriever_and_answer_finishes_loop() -> None:
     module = load_agentic_eval_module()
     outputs = iter(
@@ -268,8 +281,24 @@ def test_stop_on_action_criteria_stops_after_complete_action_tag() -> None:
 
     assert criteria([[1, 2, *map(ord, "<think>要回答最终问题，先查：问题</think>")]]) is False
     assert criteria([[1, 2, *map(ord, "<tool_call>{}")]]) is False
-    assert criteria([[1, 2, *map(ord, "<tool_call>{}</tool_call>")]]) is True
+    assert criteria([[1, 2, *map(ord, "<tool_call>{}</tool_call>")]]) is False
+    assert criteria(
+        [[1, 2, *map(ord, '<think>要回答最终问题，先查：问题</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"问题"}}</tool_call>')]]
+    ) is True
     assert criteria([[1, 2, *map(ord, "<answer>侯赢</answer>")]]) is True
+
+
+def test_stop_on_action_criteria_uses_diagnostic_generated_prefix() -> None:
+    module = load_agentic_eval_module()
+
+    class DecodeTokenizer:
+        def decode(self, ids: list[int], *, skip_special_tokens: bool = True) -> str:
+            del skip_special_tokens
+            return "".join(chr(token_id) for token_id in ids)
+
+    criteria = module.StopOnActionCriteria(DecodeTokenizer(), prompt_length=2, generated_prefix="<think>")
+
+    assert criteria([[1, 2, *map(ord, '要回答最终问题，先查：问题</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"问题"}}</tool_call>')]]) is True
 
 
 def test_evaluate_record_includes_hop_recall_and_gold_chunks() -> None:
@@ -354,6 +383,7 @@ def test_build_summary_includes_agent_loop_diagnostic_rates() -> None:
     summary = module.build_summary(records)
 
     assert summary["max_turns_exceeded_rate"] == 0.5
+    assert summary["assistant_start_anchor"] == "none"
     assert summary["avg_valid_tool_calls"] == 1.5
     assert summary["avg_turns"] == 1.5
     assert summary["think_tag_rate"] == 0.5

@@ -26,9 +26,13 @@ class MaskedChatSample:
     supervised_token_count: int
 
 
-def find_assistant_spans(rendered_text: str) -> list[tuple[int, int]]:
+def find_assistant_spans(
+    rendered_text: str,
+    supervise_assistant_turns: Sequence[bool] | None = None,
+) -> list[tuple[int, int]]:
     spans: list[tuple[int, int]] = []
     cursor = 0
+    assistant_turn_index = 0
     while True:
         marker_index = rendered_text.find(ASSISTANT_START_MARKER, cursor)
         if marker_index < 0:
@@ -40,9 +44,15 @@ def find_assistant_spans(rendered_text: str) -> list[tuple[int, int]]:
             raise ValueError("Rendered chat contains an assistant turn without <|im_end|>.")
 
         span_end = content_end + len(IM_END_MARKER)
-        if span_end > content_start:
+        if supervise_assistant_turns is not None and assistant_turn_index >= len(supervise_assistant_turns):
+            raise ValueError("Rendered assistant turn count does not match message loss metadata.")
+        supervise = True if supervise_assistant_turns is None else supervise_assistant_turns[assistant_turn_index]
+        if supervise and span_end > content_start:
             spans.append((content_start, span_end))
+        assistant_turn_index += 1
         cursor = content_end + len(IM_END_MARKER)
+    if supervise_assistant_turns is not None and assistant_turn_index != len(supervise_assistant_turns):
+        raise ValueError("Rendered assistant turn count does not match message loss metadata.")
     return spans
 
 
@@ -50,6 +60,20 @@ def _token_overlaps_spans(token_start: int, token_end: int, spans: Sequence[tupl
     if token_end <= token_start:
         return False
     return any(token_start < span_end and token_end > span_start for span_start, span_end in spans)
+
+
+def _assistant_loss_enabled(message: dict[str, Any]) -> bool:
+    if message.get("loss") is False:
+        return False
+    if message.get("train") is False:
+        return False
+    if message.get("trainable") is False:
+        return False
+    return True
+
+
+def _assistant_loss_flags(messages: list[dict[str, Any]]) -> list[bool]:
+    return [_assistant_loss_enabled(message) for message in messages if message.get("role") == "assistant"]
 
 
 def tokenize_chat_with_assistant_labels(
@@ -60,7 +84,7 @@ def tokenize_chat_with_assistant_labels(
     max_length: int | None = None,
 ) -> MaskedChatSample:
     rendered_text = render_canonical_chat(messages, tools=tools, add_generation_prompt=False)
-    assistant_spans = find_assistant_spans(rendered_text)
+    assistant_spans = find_assistant_spans(rendered_text, _assistant_loss_flags(messages))
     if not assistant_spans:
         raise ValueError("Rendered chat has no assistant turn to supervise.")
 

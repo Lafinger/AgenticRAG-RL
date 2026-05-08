@@ -257,7 +257,7 @@ def main() -> None:
         "output_dir": output_dir,
         "per_device_train_batch_size": int(config.get("per_device_train_batch_size", 2)),
         "gradient_accumulation_steps": int(config.get("gradient_accumulation_steps", 8)),
-        "learning_rate": float(config.get("learning_rate", 1e-4)),
+        "learning_rate": float(config.get("learning_rate", 5e-5)),
         "num_train_epochs": float(config.get("num_train_epochs", 3)),
         "logging_steps": int(config.get("logging_steps", 5)),
         "save_strategy": "steps",

@@ -12,10 +12,10 @@ LEGACY_SPLIT_PREFIX = "stu" + "dio_"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Split SFT JSONL into disjoint command-line train/eval files.")
-    parser.add_argument("--input", default="./data/novel_eval/sft_zh_unsloth/train.jsonl")
-    parser.add_argument("--train-output", default="./data/novel_eval/sft_zh_unsloth/train_cli.jsonl")
-    parser.add_argument("--eval-output", default="./data/novel_eval/sft_zh_unsloth/eval.jsonl")
-    parser.add_argument("--manifest", default="./data/novel_eval/sft_zh_unsloth/manifest.json")
+    parser.add_argument("--input", default="./data/novel_eval/sft_zh_unsloth_react_v3/train.jsonl")
+    parser.add_argument("--train-output", default="./data/novel_eval/sft_zh_unsloth_react_v3/train_cli.jsonl")
+    parser.add_argument("--eval-output", default="./data/novel_eval/sft_zh_unsloth_react_v3/eval.jsonl")
+    parser.add_argument("--manifest", default="./data/novel_eval/sft_zh_unsloth_react_v3/manifest.json")
     parser.add_argument("--eval-count", type=int, default=200)
     return parser.parse_args()
 

@@ -94,6 +94,16 @@ def validate_record(record: dict[str, Any], index: int) -> dict[str, Any]:
     return record
 
 
+def sample_type_counts(records: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in records:
+        metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+        sample_type = metadata.get("sample_type")
+        key = str(sample_type).strip() if isinstance(sample_type, str) and sample_type.strip() else "default"
+        counts[key] = counts.get(key, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def main() -> None:
     args = parse_args()
     input_path = Path(args.input_dir) / args.input_file
@@ -114,6 +124,8 @@ def main() -> None:
         "chat_renderer": "canonical_qwen3_react",
         "tool_role_preserved": True,
         "tool_turn_requires_think": True,
+        "message_loss_metadata": "assistant messages with loss=false are context only",
+        "sample_type_counts": sample_type_counts(records),
     }
     manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2)
     with (output_dir / "manifest.json").open("w", encoding="utf-8", newline="") as handle:

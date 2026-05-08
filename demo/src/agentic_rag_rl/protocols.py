@@ -9,6 +9,7 @@ DEFAULT_AGENT_NAME = "tool_agent"
 IM_START_MARKER = "<|im_start|>"
 IM_END_MARKER = "<|im_end|>"
 ASSISTANT_START_MARKER = f"{IM_START_MARKER}assistant\n"
+MAX_TOOL_RESPONSE_TEXT_CHARS = 420
 
 SYSTEM_PROMPT_ZH = (
     "你是一个中文小说阅读问答 Agent。"
@@ -88,6 +89,8 @@ def render_tools_block(tools: list[dict[str, Any]]) -> str:
         "<tool_call>\n"
         '{"name": <function-name>, "arguments": <args-json-object>}\n'
         "</tool_call>\n\n"
+        "Every assistant turn must start with either <think> or <answer>. "
+        "Never start a turn with </tool_call>, and never emit a closing tag unless you opened the same tag in that turn.\n\n"
         "When enough evidence has been retrieved, stop calling tools and answer with <answer>...</answer>."
     )
 
@@ -131,10 +134,17 @@ def render_canonical_chat(
 def format_tool_response(records: list[dict[str, Any]]) -> str:
     lines: list[str] = []
     for record in records:
-        lines.append(f"[{record['chunk_id']}] {record['text']}")
+        lines.append(f"[{record['chunk_id']}] {truncate_tool_response_text(str(record['text']))}")
     return "\n".join(lines)
 
 
 def extract_answer_tag(text: str) -> str:
     matched = re.search(r"<answer>(.*?)</answer>", text, flags=re.DOTALL)
     return matched.group(1).strip() if matched else ""
+
+
+def truncate_tool_response_text(text: str, max_chars: int = MAX_TOOL_RESPONSE_TEXT_CHARS) -> str:
+    stripped = text.strip()
+    if len(stripped) <= max_chars:
+        return stripped
+    return f"{stripped[:max_chars].rstrip()}..."

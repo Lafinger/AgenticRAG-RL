@@ -210,29 +210,119 @@ def _metadata_with_sample_type(metadata: dict[str, Any], sample_type: str) -> di
     return {**metadata, "sample_type": sample_type}
 
 
-def _build_finalization_record(messages: list[dict[str, Any]], tools: list[dict[str, Any]], metadata: dict[str, Any]) -> dict[str, Any]:
-    if len(messages) < 3:
-        raise ValueError("SFT trace is too short to build finalization sample.")
-    system_message = messages[0]
-    user_message = messages[1]
-    tool_messages = [message for message in messages if message["role"] == "tool"]
-    final_answer = str(metadata.get("final_answer", "")).strip()
-    if not final_answer:
-        raise ValueError("SFT trace metadata is missing final_answer.")
-    finalization_messages = [
-        {"role": "system", "content": system_message["content"]},
-        {"role": "user", "content": user_message["content"]},
-        *tool_messages,
-        {"role": "assistant", "content": f"<answer>{final_answer}</answer>"},
-    ]
+def _copy_message(message: dict[str, Any], *, loss: bool | None = None) -> dict[str, Any]:
+    copied = {"role": message["role"], "content": str(message.get("content", ""))}
+    if loss is not None:
+        copied["loss"] = loss
+    return copied
+
+
+def _is_tool_assistant(message: dict[str, Any]) -> bool:
+    return message.get("role") == "assistant" and "<tool_call>" in str(message.get("content", ""))
+
+
+def _is_answer_assistant(message: dict[str, Any]) -> bool:
+    return message.get("role") == "assistant" and "<answer>" in str(message.get("content", ""))
+
+
+def _tool_assistant_indices(messages: list[dict[str, Any]]) -> list[int]:
+    return [index for index, message in enumerate(messages) if _is_tool_assistant(message)]
+
+
+def _final_answer_index(messages: list[dict[str, Any]]) -> int:
+    for index in range(len(messages) - 1, -1, -1):
+        if _is_answer_assistant(messages[index]):
+            return index
+    raise ValueError("SFT trace is missing final assistant answer.")
+
+
+def _copy_history_with_single_target(messages: list[dict[str, Any]], target_index: int) -> list[dict[str, Any]]:
+    copied: list[dict[str, Any]] = []
+    for index, message in enumerate(messages):
+        if message["role"] == "assistant":
+            copied.append(_copy_message(message, loss=index == target_index))
+        else:
+            copied.append(_copy_message(message))
+    return copied
+
+
+def _record(
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    metadata: dict[str, Any],
+    sample_type: str,
+    **extra_metadata: Any,
+) -> dict[str, Any]:
     return {
-        "messages": finalization_messages,
+        "messages": messages,
         "tools": tools,
         "metadata": {
-            **_metadata_with_sample_type(metadata, "finalization_only"),
-            "tool_response_count": len(tool_messages),
+            **_metadata_with_sample_type(metadata, sample_type),
+            **extra_metadata,
         },
     }
+
+
+def _build_first_action_records(
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    metadata: dict[str, Any],
+    *,
+    repeat: int = 2,
+) -> list[dict[str, Any]]:
+    tool_indices = _tool_assistant_indices(messages)
+    if not tool_indices:
+        return []
+    target_index = tool_indices[0]
+    first_action_messages = [_copy_message(message) for message in messages[: target_index + 1]]
+    return [
+        _record(
+            first_action_messages,
+            tools,
+            metadata,
+            "first_action_only",
+            target_tool_turn=1,
+            repeat_index=index + 1,
+            repeat_count=repeat,
+        )
+        for index in range(repeat)
+    ]
+
+
+def _build_next_action_records(
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    metadata: dict[str, Any],
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for turn_number, target_index in enumerate(_tool_assistant_indices(messages)[1:], start=2):
+        target_messages = _copy_history_with_single_target(messages[: target_index + 1], target_index)
+        records.append(
+            _record(
+                target_messages,
+                tools,
+                metadata,
+                "next_action_only",
+                target_tool_turn=turn_number,
+            )
+        )
+    return records
+
+
+def _build_final_answer_record(
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    target_index = _final_answer_index(messages)
+    target_messages = _copy_history_with_single_target(messages[: target_index + 1], target_index)
+    return _record(
+        target_messages,
+        tools,
+        metadata,
+        "final_answer_only",
+        history_tool_turn_count=len(_tool_assistant_indices(messages)),
+    )
 
 
 def _first_message_content(messages: list[dict[str, Any]], role: str) -> str:
@@ -292,17 +382,19 @@ def convert_traces_to_sft_records(traces: Iterable[dict[str, Any]]) -> list[dict
             metadata["final_question"] = _trace_question(trace)
         if "final_answer" not in metadata:
             metadata["final_answer"] = _trace_final_answer(trace)
+        tool_turn_count = len(_tool_assistant_indices(messages))
         records.append(
-            {
-                "messages": messages,
-                "tools": tools,
-                "metadata": {
-                    **_metadata_with_sample_type(metadata, "full_trace"),
-                    "tool_turn_count": sum(1 for message in messages if message["role"] == "assistant" and "<tool_call>" in message["content"]),
-                },
-            }
+            _record(
+                [_copy_message(message) for message in messages],
+                tools,
+                metadata,
+                "full_trace",
+                tool_turn_count=tool_turn_count,
+            )
         )
-        records.append(_build_finalization_record(messages, tools, metadata))
+        records.extend(_build_first_action_records(messages, tools, metadata, repeat=2))
+        records.extend(_build_next_action_records(messages, tools, metadata))
+        records.append(_build_final_answer_record(messages, tools, metadata))
     return records
 
 

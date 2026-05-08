@@ -81,6 +81,31 @@ def test_multiple_assistant_turns_are_supervised() -> None:
     assert "<tool_response>证据</tool_response>" not in supervised_text
 
 
+def test_loss_false_assistant_turn_is_context_only() -> None:
+    messages = [
+        {"role": "system", "content": "系统提示"},
+        {"role": "user", "content": "问题"},
+        {
+            "role": "assistant",
+            "content": '<think>要回答最终问题，先查：第一跳</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"第一跳"}}\n</tool_call>',
+            "loss": False,
+        },
+        {"role": "tool", "content": "[chunk-a] 证据"},
+        {
+            "role": "assistant",
+            "content": '<think>已获得上一跳线索“线索”，继续查：第二跳</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"第二跳"}}\n</tool_call>',
+        },
+    ]
+
+    sample = tokenize_chat_with_assistant_labels(FakeTokenizer(), messages)
+    supervised_text = "".join(chr(label) for label in sample.labels if label != IGNORE_INDEX)
+
+    assert "第一跳" not in supervised_text
+    assert "第二跳" in supervised_text
+    assert supervised_text.count(IM_END_MARKER) == 1
+    assert "[chunk-a] 证据" not in supervised_text
+
+
 def test_tools_rendering_masks_tool_role_response() -> None:
     tokenizer = FakeTokenizer()
     tools = [{"type": "function", "function": {"name": "keyword_search", "parameters": {"type": "object"}}}]

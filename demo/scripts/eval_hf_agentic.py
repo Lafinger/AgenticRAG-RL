@@ -16,6 +16,7 @@ from agentic_rag_rl.protocols import (
     SYSTEM_PROMPT_ZH,
     TOOL_SCHEMAS,
     render_canonical_chat,
+    truncate_tool_response_text,
 )
 from agentic_rag_rl.retrieval import HybridRetriever
 
@@ -25,7 +26,10 @@ ANSWER_RE = re.compile(r"<answer>(.*?)</answer>", re.DOTALL | re.IGNORECASE)
 TOOL_CALL_RE = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL | re.IGNORECASE)
 THINK_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL | re.IGNORECASE)
 ACTION_RE = re.compile(r"<answer>.*?</answer>|<tool_call>.*?</tool_call>", re.DOTALL | re.IGNORECASE)
-ACTION_END_RE = re.compile(r"</(?:answer|tool_call)>", re.IGNORECASE)
+COMPLETE_REACT_TOOL_ACTION_RE = re.compile(
+    r"<think>.+?</think>\s*<tool_call>.*?</tool_call>",
+    re.DOTALL | re.IGNORECASE,
+)
 THINK_OPEN_RE = re.compile(r"<think\b[^>]*>", re.IGNORECASE)
 THINK_CLOSE_RE = re.compile(r"</think>", re.IGNORECASE)
 THINK_TAG_FRAGMENT_RE = re.compile(r"</?think\b[^>]*>", re.IGNORECASE)
@@ -34,9 +38,23 @@ TOOL_CLOSE_RE = re.compile(r"</tool_call>", re.IGNORECASE)
 TOOL_TAG_FRAGMENT_RE = re.compile(r"</?tool_call\b[^>]*>", re.IGNORECASE)
 
 
-def build_inputs_for_generation(tokenizer: Any, messages: list[dict[str, str]], template_name: str) -> Any:
+def assistant_start_anchor_text(anchor: str) -> str:
+    if anchor == "none":
+        return ""
+    if anchor == "think":
+        return "<think>"
+    raise ValueError(f"Unsupported assistant start anchor: {anchor!r}.")
+
+
+def build_inputs_for_generation(
+    tokenizer: Any,
+    messages: list[dict[str, str]],
+    template_name: str,
+    assistant_start_anchor: str = "none",
+) -> Any:
     del template_name
     rendered_text = render_canonical_chat(messages, tools=TOOL_SCHEMAS, add_generation_prompt=True)
+    rendered_text += assistant_start_anchor_text(assistant_start_anchor)
     return tokenizer(rendered_text, return_tensors="pt")
 
 
@@ -55,6 +73,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top-p", type=float, default=0.8)
     parser.add_argument("--repetition-penalty", type=float, default=1.0)
+    parser.add_argument(
+        "--assistant-start-anchor",
+        choices=["none", "think"],
+        default="none",
+        help="Optional diagnostic generation prefix. Main baseline uses none.",
+    )
     parser.add_argument("--device-map", default="auto")
     parser.add_argument("--dtype", choices=["auto", "float16", "bfloat16", "float32"], default="auto")
     parser.add_argument("--system-prompt", default=AGENT_SYSTEM_PROMPT)
@@ -284,7 +308,7 @@ def parse_tool_call(text: str) -> tuple[dict[str, Any] | None, str | None]:
 def format_tool_response(results: list[Any]) -> str:
     blocks = []
     for result in results:
-        blocks.append(f"[{result.chunk_id}] {result.title}\n{result.text}")
+        blocks.append(f"[{result.chunk_id}] {result.title}\n{truncate_tool_response_text(str(result.text))}")
     return "\n\n".join(blocks)
 
 
@@ -297,17 +321,18 @@ def unique_append(target: list[str], values: list[str]) -> None:
 
 
 class StopOnActionCriteria:
-    def __init__(self, tokenizer: Any, prompt_length: int) -> None:
+    def __init__(self, tokenizer: Any, prompt_length: int, generated_prefix: str = "") -> None:
         self.tokenizer = tokenizer
         self.prompt_length = prompt_length
+        self.generated_prefix = generated_prefix
 
     def __call__(self, input_ids: Any, scores: Any = None, **kwargs: Any) -> bool:
         del scores, kwargs
         generated_ids = input_ids[0][self.prompt_length :]
         if hasattr(generated_ids, "tolist"):
             generated_ids = generated_ids.tolist()
-        generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
-        return ACTION_END_RE.search(generated_text) is not None
+        generated_text = self.generated_prefix + self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        return ANSWER_RE.search(generated_text) is not None or COMPLETE_REACT_TOOL_ACTION_RE.search(generated_text) is not None
 
 
 def best_scores(prediction: str, gold: str, aliases: list[str]) -> tuple[float, float]:
@@ -458,7 +483,8 @@ def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespa
     from transformers import StoppingCriteriaList
 
     def generate_turn(messages: list[dict[str, str]]) -> str:
-        model_inputs = build_inputs_for_generation(tokenizer, messages, args.template)
+        anchor_text = assistant_start_anchor_text(args.assistant_start_anchor)
+        model_inputs = build_inputs_for_generation(tokenizer, messages, args.template, args.assistant_start_anchor)
         if hasattr(model_inputs, "keys"):
             model_inputs = dict(model_inputs)
         else:
@@ -477,7 +503,7 @@ def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespa
             "max_new_tokens": args.per_turn_max_new_tokens,
             "pad_token_id": tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id,
             "repetition_penalty": args.repetition_penalty,
-            "stopping_criteria": StoppingCriteriaList([StopOnActionCriteria(tokenizer, int(input_ids.shape[-1]))]),
+            "stopping_criteria": StoppingCriteriaList([StopOnActionCriteria(tokenizer, int(input_ids.shape[-1]), anchor_text)]),
         }
         if args.temperature <= 0:
             generation_kwargs["do_sample"] = False
@@ -488,7 +514,7 @@ def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespa
             output_ids = model.generate(**generation_kwargs)
 
         generated_ids = output_ids[0][input_ids.shape[-1] :]
-        return tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
+        return (anchor_text + tokenizer.decode(generated_ids, skip_special_tokens=True)).strip()
 
     return generate_turn
 
@@ -525,8 +551,15 @@ def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
     turn_divisor = max(len(raw_turns), 1)
     tool_turns = [turn for turn in raw_turns if turn.get("status") == "tool_called"]
     tool_turn_divisor = max(len(tool_turns), 1)
+    anchors = sorted(
+        {
+            str(record.get("metadata", {}).get("assistant_start_anchor", "none"))
+            for record in records
+        }
+    )
     return {
         "count": count,
+        "assistant_start_anchor": anchors[0] if len(anchors) == 1 else anchors,
         "avg_em": sum(record["em"] for record in records) / divisor,
         "avg_f1": sum(record["f1"] for record in records) / divisor,
         "avg_hop_recall": sum(record["hop_recall"] for record in records) / divisor,
@@ -602,6 +635,7 @@ def main() -> None:
         "temperature": args.temperature,
         "top_p": args.top_p,
         "repetition_penalty": args.repetition_penalty,
+        "assistant_start_anchor": args.assistant_start_anchor,
     }
 
     results: list[dict[str, Any]] = []
