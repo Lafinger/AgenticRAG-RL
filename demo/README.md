@@ -955,7 +955,7 @@ flowchart LR
     A["qa_pairs.jsonl"] --> B["读取 gold hops"]
     C["corpus.jsonl"] --> B
     B --> D["生成 tool_call"]
-    D --> E["生成 tool_response"]
+    D --> E["生成 tool role 证据"]
     E --> F["生成 final answer"]
     F --> G["traces_oracle_zh.jsonl"]
 ```
@@ -981,7 +981,7 @@ uv run python .\scripts\build_oracle_traces.py `
 
 - `data/novel_eval/traces_oracle_zh.jsonl`
 - 每条 trace 包含结构化 `plan`、`tool_calls`、`evidence`、`messages[]` 和 Qwen3 `tools` schema
-- 工具调用采用 Qwen3 tool template 对齐格式：`<think>要回答最终问题，先查：...</think>\n<tool_call>\n{"name": "...", "arguments": {...}}\n</tool_call>`；后续跳使用 `已获得上一跳线索“...”，继续查：...`
+- 工具调用采用 canonical Qwen3 ReAct renderer 对齐格式：`<think>要回答最终问题，先查：...</think>\n<tool_call>\n{"name": "...", "arguments": {...}}\n</tool_call>`；后续跳使用 `已获得上一跳线索“...”，继续查：...`
 - 最终答案使用 `<answer>...</answer>`
 
 **数据结构与字段用途**：
@@ -997,7 +997,7 @@ uv run python .\scripts\build_oracle_traces.py `
 | `answer_aliases` | 标准答案别名 | reward correctness |
 | `hop_count` | 标准推理跳数 | 搜索充分性 reward |
 | `<tool_call>` | Qwen3 工具调用协议 | SFT 学习工具调用、GRPO rollout |
-| `tool` role | 原始检索证据文本 | 由 Qwen3 chat template 渲染为 `<tool_response>` |
+| `tool` role | 原始检索证据文本 | 由项目 canonical renderer 渲染为 `<tool_response>` |
 | `<answer>` | 最终答案标签 | reward 抽取答案、评测抽取答案 |
 
 **Oracle Trace Prompt / 协议核心要求**：
@@ -1007,7 +1007,7 @@ uv run python .\scripts\build_oracle_traces.py `
 | Agent 角色 | system prompt 固定为“中文小说阅读问答 Agent”，任务是逐步搜索人物、地点、事件和关系证据 |
 | 工具调用 | assistant 使用 plan-driven 短 `<think>`，第 1 跳为 `<think>要回答最终问题，先查：...</think>`，后续跳为 `<think>已获得上一跳线索“...”，继续查：...</think>`，再接 JSON `<tool_call>` |
 | 工具名称 | 只能使用 `keyword_search`、`dense_search`、`hybrid_search` 三类检索工具 |
-| 工具响应 | tool 消息只保存原始检索文本，训练/评测渲染时由 Qwen3 template 包装 `<tool_response>` |
+| 工具响应 | tool 消息只保存原始检索文本，训练/评测渲染时由项目 canonical renderer 包装 `<tool_response>` |
 | 逐跳顺序 | Oracle trace 按 `hops[]` 的 gold 顺序调用工具，保证每跳都有可追溯证据 |
 | 最终答案 | 最后一条 assistant 消息必须用 `<answer>...</answer>` 包裹最终答案 |
 
@@ -1020,7 +1020,7 @@ uv run python .\scripts\build_oracle_traces.py `
 - `trace_to_sft.py` 读取 Oracle trace，优先用结构化 `plan/evidence` 重新渲染 `messages`，保留 `system/user/assistant/tool` 消息角色，不再把 tool response 提前改写成用户消息。
 - 每条记录写入 `tools` 字段，采用 Qwen3/LLaMA-Factory 兼容的 `{"type":"function","function":...}` schema。
 - assistant 工具轮统一为短 `<think>` 加 JSON `<tool_call>`：第 1 跳 `要回答最终问题，先查：{sub_query}`，后续跳 `已获得上一跳线索“{previous_answer}”，继续查：{sub_query}`；最终答案统一为 `<answer>...</answer>`。
-- tool 消息只保留检索文本；`<tool_response>` 由 `tokenizer.apply_chat_template(..., tools=tools)` 在训练和 Agent loop 渲染时生成。
+- tool 消息只保留检索文本；`<tool_response>` 由项目 canonical Qwen3 ReAct renderer 在训练和 Agent loop 渲染时生成，不再直接依赖 tokenizer 原生 `tools=` 模板。
 
 ```mermaid
 flowchart LR
@@ -1067,9 +1067,9 @@ uv run python .\scripts\trace_to_sft.py `
 
 | 约束 | 标准 |
 | --- | --- |
-| 模板一致 | SFT、Agent loop 和 GRPO 必须共用 `tools` schema 与 Qwen3 tool template |
+| 模板一致 | SFT、Agent loop 和 GRPO 必须共用 `tools` schema 与 canonical Qwen3 ReAct renderer |
 | System prompt | 保留中文小说阅读问答 Agent system prompt，不在转换中改写任务角色 |
-| 工具协议 | assistant 保留 `<tool_call>`，tool role 保留原始文本，由模板生成 `<tool_response>` |
+| 工具协议 | assistant 保留短 `<think>` + JSON `<tool_call>`，tool role 保留原始文本，由 canonical renderer 生成 `<tool_response>` |
 | 答案协议 | 保留 `<answer>...</answer>`，后续 reward 和 eval 都依赖该标签抽取最终答案 |
 | Loss mask | 只监督 assistant token；system/user/tool response/padding 全部为 `-100` |
 
@@ -1341,8 +1341,10 @@ uv run python .\scripts\eval_agentic.py `
 - 项目脚本默认使用 Step 8 切分出的命令行训练集和验证集，即 `data/novel_eval/sft_zh_unsloth/train_cli.jsonl` 和 `data/novel_eval/sft_zh_unsloth/eval.jsonl`。
 - 标准 SFT 入口会读取 YAML 的 `eval_data_path`，从头训练命令不需要额外传参也会按 `eval_steps` 输出 eval loss。
 - 训练样本来自 Oracle traces，模型先模仿理想检索路径，而不是直接进入高噪声 RL。
-- 当前主 SFT 基线必须使用 canonical ReAct JSONL：record 级 `tools`、保留 `tool` role、Qwen3 `apply_chat_template(..., tools=tools)` 渲染和 assistant-only loss mask。
+- 当前主 SFT 基线必须使用 canonical ReAct JSONL：record 级 `tools`、保留 `tool` role、项目 canonical Qwen3 ReAct renderer 和 assistant-only loss mask。
+- 项目不再直接使用 tokenizer 原生 `tools=` 模板作为训练/评测主渲染路径，因为该模板只约束 `<tool_call>`，不会要求短 `<think>`，并可能给最终答案轮自动补空 `<think>`。
 - 当前训练入口默认只对 assistant 输出计算 loss，system/user/tool response 和 padding 都不参与 loss。
+- 训练前可运行 `scripts/diagnose_sft_protocol.py` 抽查 canonical renderer 与 labels，重点确认 `tool_turn_think_rate=1.0`、`rendered_empty_answer_think=0`、`tool_response_label_leaks=0`。
 - LoRA 只训练 adapter 权重，默认输出到 `training/outputs/unsloth_sft_qwen3_4b_lora`。
 - 合并阶段把 LoRA adapter 写回基座模型，生成后续 GRPO 默认使用的 merged model；旧协议训练得到的 `training/outputs/unsloth_sft_qwen3_4b_lora*` 和 `models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged` 需要按新协议重训后才可作为有效基线。
 - 当前 repo 不内置 Unsloth；训练前先按 `docs/环境安装.md` 装好 CUDA Torch、Unsloth、TRL、datasets、PEFT 等训练栈。

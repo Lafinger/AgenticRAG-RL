@@ -111,7 +111,9 @@ def main() -> None:
         "required_field": "messages",
         "trainer": "unsloth",
         "tool_schema": "qwen3",
+        "chat_renderer": "canonical_qwen3_react",
         "tool_role_preserved": True,
+        "tool_turn_requires_think": True,
     }
     manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2)
     with (output_dir / "manifest.json").open("w", encoding="utf-8", newline="") as handle:

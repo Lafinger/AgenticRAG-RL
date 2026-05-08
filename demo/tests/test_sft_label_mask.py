@@ -20,27 +20,6 @@ class FakeTokenizer:
     def __init__(self) -> None:
         self.last_tools: list[dict[str, Any]] | None = None
 
-    def apply_chat_template(
-        self,
-        messages: list[dict[str, Any]],
-        *,
-        tools: list[dict[str, Any]] | None = None,
-        tokenize: bool = False,
-        add_generation_prompt: bool = False,
-    ) -> str:
-        if tokenize or add_generation_prompt:
-            raise AssertionError("This fake tokenizer only supports rendered training chats.")
-        self.last_tools = tools
-        rendered = []
-        for message in messages:
-            role = message["role"]
-            content = message["content"]
-            if role == "tool":
-                role = "user"
-                content = f"<tool_response>\n{content}\n</tool_response>"
-            rendered.append(f"<|im_start|>{role}\n{content}<|im_end|>\n")
-        return "".join(rendered)
-
     def __call__(self, text: str, *, add_special_tokens: bool = False, return_offsets_mapping: bool = False) -> dict[str, Any]:
         if add_special_tokens:
             raise AssertionError("This fake tokenizer does not add special tokens.")
@@ -119,11 +98,13 @@ def test_tools_rendering_masks_tool_role_response() -> None:
     sample = tokenize_chat_with_assistant_labels(tokenizer, messages, tools=tools)
     supervised_text = "".join(chr(label) for label in sample.labels if label != IGNORE_INDEX)
 
-    assert tokenizer.last_tools == tools
+    assert "# Tools" in sample.text
+    assert "first write exactly one short search intent" in sample.text
     assert "<think>要回答最终问题，先查：问题</think>" in supervised_text
     assert "<tool_call>" in supervised_text
     assert "<answer>答案</answer>" in supervised_text
     assert supervised_text.count(IM_END_MARKER) == 2
+    assert "<think>\n\n</think>\n\n<answer>" not in supervised_text
     assert "[chunk-a] 证据" not in supervised_text
     assert "<tool_response>" not in supervised_text
 

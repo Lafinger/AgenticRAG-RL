@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
+import sys
 from typing import Any, Sequence
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from agentic_rag_rl.protocols import ASSISTANT_START_MARKER, IM_END_MARKER, render_canonical_chat
 
 
 IGNORE_INDEX = -100
-ASSISTANT_START_MARKER = "<|im_start|>assistant\n"
-IM_END_MARKER = "<|im_end|>"
 
 
 @dataclass(frozen=True)
@@ -52,12 +59,7 @@ def tokenize_chat_with_assistant_labels(
     tools: list[dict[str, Any]] | None = None,
     max_length: int | None = None,
 ) -> MaskedChatSample:
-    rendered_text = tokenizer.apply_chat_template(
-        messages,
-        tools=tools,
-        tokenize=False,
-        add_generation_prompt=False,
-    )
+    rendered_text = render_canonical_chat(messages, tools=tools, add_generation_prompt=False)
     assistant_spans = find_assistant_spans(rendered_text)
     if not assistant_spans:
         raise ValueError("Rendered chat has no assistant turn to supervise.")

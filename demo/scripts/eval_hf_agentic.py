@@ -12,7 +12,11 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from agentic_rag_rl.evaluation import exact_match, hop_recall, token_f1
 from agentic_rag_rl.io import load_chunks, load_jsonl
-from agentic_rag_rl.protocols import SYSTEM_PROMPT_ZH, TOOL_SCHEMAS
+from agentic_rag_rl.protocols import (
+    SYSTEM_PROMPT_ZH,
+    TOOL_SCHEMAS,
+    render_canonical_chat,
+)
 from agentic_rag_rl.retrieval import HybridRetriever
 
 
@@ -30,67 +34,10 @@ TOOL_CLOSE_RE = re.compile(r"</tool_call>", re.IGNORECASE)
 TOOL_TAG_FRAGMENT_RE = re.compile(r"</?tool_call\b[^>]*>", re.IGNORECASE)
 
 
-def _template_kwargs(template_name: str) -> dict[str, Any]:
+def build_inputs_for_generation(tokenizer: Any, messages: list[dict[str, str]], template_name: str) -> Any:
     del template_name
-    return {}
-
-
-def render_qwen3_tools_system_prompt(system_prompt: str, tools: list[dict[str, Any]] = TOOL_SCHEMAS) -> str:
-    if "# Tools" in system_prompt:
-        return system_prompt
-    tools_json = json.dumps(tools, ensure_ascii=False, indent=2)
-    return (
-        f"{system_prompt}\n\n"
-        "# Tools\n\n"
-        "You may call one function per assistant turn to assist with the user query.\n\n"
-        "You are provided with function signatures within <tools></tools> XML tags:\n"
-        f"<tools>\n{tools_json}\n</tools>\n\n"
-        "Before each function call, write exactly one short search intent within <think></think> XML tags. "
-        "Then return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n"
-        "<think>要回答最终问题，先查：<short-query></think>\n"
-        "<tool_call>\n"
-        "{\"name\": <function-name>, \"arguments\": <args-json-object>}\n"
-        "</tool_call>"
-    )
-
-
-def _manual_tool_response_content(content: str) -> str:
-    stripped = content.strip()
-    if stripped.startswith("<tool_response>") and stripped.endswith("</tool_response>"):
-        return stripped
-    return f"<tool_response>\n{content}\n</tool_response>"
-
-
-def build_manual_tool_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
-    rendered: list[dict[str, str]] = []
-    system_seen = False
-    for message in messages:
-        role = message["role"]
-        content = message["content"]
-        if role == "system":
-            rendered.append({"role": "system", "content": render_qwen3_tools_system_prompt(content)})
-            system_seen = True
-        elif role == "tool":
-            rendered.append({"role": "user", "content": _manual_tool_response_content(content)})
-        else:
-            rendered.append({"role": role, "content": content})
-    if not system_seen:
-        rendered.insert(0, {"role": "system", "content": render_qwen3_tools_system_prompt(AGENT_SYSTEM_PROMPT)})
-    return rendered
-
-
-def apply_chat_template_for_generation(tokenizer: Any, messages: list[dict[str, str]], template_name: str) -> Any:
-    common_kwargs = {
-        "tokenize": True,
-        "add_generation_prompt": True,
-        "return_tensors": "pt",
-        "return_dict": True,
-        **_template_kwargs(template_name),
-    }
-    try:
-        return tokenizer.apply_chat_template(messages, tools=TOOL_SCHEMAS, **common_kwargs)
-    except Exception:
-        return tokenizer.apply_chat_template(build_manual_tool_messages(messages), **common_kwargs)
+    rendered_text = render_canonical_chat(messages, tools=TOOL_SCHEMAS, add_generation_prompt=True)
+    return tokenizer(rendered_text, return_tensors="pt")
 
 
 def parse_args() -> argparse.Namespace:
@@ -257,10 +204,13 @@ def analyze_turn_output(text: str) -> dict[str, Any]:
     think_close_count = len(THINK_CLOSE_RE.findall(text))
     first_action = action_matches[0] if action_matches else None
     first_action_is_tool = bool(first_action and first_action.group(0).lstrip().lower().startswith("<tool_call"))
+    first_action_is_answer = bool(first_action and first_action.group(0).lstrip().lower().startswith("<answer"))
     _, valid_think_prefix = _extract_valid_think_prefix(text, first_action.start()) if first_action else (None, False)
+    missing_think_tool_call_present = first_action_is_tool and not valid_think_prefix
+    empty_answer_think_present = bool(first_action_is_answer and re.fullmatch(r"\s*<think>\s*</think>\s*", text[: first_action.start()], flags=re.DOTALL | re.IGNORECASE))
     malformed_think_present = THINK_TAG_FRAGMENT_RE.search(text) is not None and (
         think_open_count != think_close_count
-        or not valid_think_prefix
+        or (first_action_is_tool and not valid_think_prefix)
         or think_open_count != 1
         or (first_action is not None and THINK_TAG_FRAGMENT_RE.search(text[first_action.end() :]) is not None)
     )
@@ -269,12 +219,15 @@ def analyze_turn_output(text: str) -> dict[str, Any]:
         or tool_open_count != tool_close_count
         or empty_tool_payload_present
         or invalid_tool_payload_present
+        or missing_think_tool_call_present
     )
     return {
         "tool_fragment_present": tool_fragment_present,
         "malformed_tool_fragment_present": malformed_tool_fragment_present,
         "multi_action_present": action_count > 1,
         "think_tag_present": first_action_is_tool and valid_think_prefix,
+        "missing_think_tool_call_present": missing_think_tool_call_present,
+        "empty_answer_think_present": empty_answer_think_present,
         "malformed_think_present": malformed_think_present,
         "starts_with_closing_tool": starts_with_closing_tool,
         "action_count": action_count,
@@ -302,6 +255,10 @@ def parse_first_action(text: str, turn_index: int = 1) -> tuple[dict[str, Any] |
                 first_error = error or "invalid_tool_call"
             continue
         think, _ = _extract_valid_think_prefix(text, match.start())
+        if think is None:
+            if first_error is None:
+                first_error = "missing_think_for_tool_call"
+            continue
         return {
             "kind": "tool_call",
             "tool_call": tool_call,
@@ -501,16 +458,11 @@ def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespa
     from transformers import StoppingCriteriaList
 
     def generate_turn(messages: list[dict[str, str]]) -> str:
-        if hasattr(tokenizer, "apply_chat_template") and tokenizer.chat_template:
-            model_inputs = apply_chat_template_for_generation(tokenizer, messages, args.template)
-            if hasattr(model_inputs, "keys"):
-                model_inputs = dict(model_inputs)
-            else:
-                model_inputs = {"input_ids": model_inputs}
+        model_inputs = build_inputs_for_generation(tokenizer, messages, args.template)
+        if hasattr(model_inputs, "keys"):
+            model_inputs = dict(model_inputs)
         else:
-            manual_messages = build_manual_tool_messages(messages)
-            rendered = "\n".join(f"{message['role']}: {message['content']}" for message in manual_messages) + "\nassistant: "
-            model_inputs = dict(tokenizer(rendered, return_tensors="pt"))
+            model_inputs = {"input_ids": model_inputs}
 
         device = model_input_device(model)
         model_inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in model_inputs.items()}
@@ -581,6 +533,8 @@ def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "answer_tag_rate": sum(1 for record in records if record["status"] == "answered") / divisor,
         "valid_tool_call_rate": sum(1 for record in records if record["valid_tool_call_count"] > 0) / divisor,
         "think_tag_rate": sum(1 for turn in tool_turns if turn.get("think_tag_present")) / tool_turn_divisor,
+        "missing_think_tool_rate": sum(1 for turn in raw_turns if turn.get("missing_think_tool_call_present")) / turn_divisor,
+        "empty_answer_think_rate": sum(1 for turn in raw_turns if turn.get("empty_answer_think_present")) / turn_divisor,
         "malformed_think_rate": sum(1 for turn in raw_turns if turn.get("malformed_think_present")) / turn_divisor,
         "malformed_tool_fragment_rate": sum(1 for turn in raw_turns if turn.get("malformed_tool_fragment_present")) / turn_divisor,
         "multi_action_turn_rate": sum(1 for turn in raw_turns if turn.get("multi_action_present")) / turn_divisor,

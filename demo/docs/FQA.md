@@ -23,7 +23,7 @@
 }
 ```
 
-tokenizer 会先通过 `apply_chat_template(messages, tools=tools)` 把它渲染成模型实际看到的 chat 文本。Qwen3 模板会在 system 后注入 `# Tools` / `<tools>`，并把 `tool` role 渲染为用户侧 `<tool_response>`：
+项目会先通过 canonical Qwen3 ReAct renderer 把它渲染成模型实际看到的 chat 文本。renderer 保留 Qwen3 `<|im_start|>` / `<|im_end|>` 对话格式，在 system 后注入 `# Tools` / `<tools>`，并把 `tool` role 渲染为用户侧 `<tool_response>`：
 
 ```text
 <|im_start|>system
@@ -56,7 +56,7 @@ input_ids = [151644, ..., 151645, ...]
 所以严格关系是：
 
 ```text
-messages + tools --Qwen3 chat template 渲染--> chat 文本 --tokenizer 编码--> input_ids
+messages + tools --canonical renderer 渲染--> chat 文本 --tokenizer 编码--> input_ids
 ```
 
 训练时模型真正接收的是 `input_ids`，但 `input_ids` 承载的信息来自完整 chat 文本。
@@ -76,14 +76,14 @@ messages + tools --Qwen3 chat template 渲染--> chat 文本 --tokenizer 编码-
 
 ### Q1.5: 为什么 JSONL 里要保留 `tool` role，而不是提前改成 user？
 
-答：Qwen3 tokenizer 的 tool template 已经知道如何处理 `tool` role。原始 JSONL 保留：
+答：项目 canonical renderer 知道如何处理 `tool` role。原始 JSONL 保留：
 
 ```text
 role = tool
 content = 原始检索证据
 ```
 
-渲染时模板会自动转换成：
+渲染时 renderer 会转换成：
 
 ```text
 <|im_start|>user
@@ -92,7 +92,7 @@ content = 原始检索证据
 </tool_response><|im_end|>
 ```
 
-这样 SFT、Agent loop 和后续 GRPO 都共享同一套 `tools` schema 和模板逻辑，不会出现训练时是手写 `<tool_response>`、推理时又是另一种格式的协议漂移。
+这样 SFT、Agent loop 和后续 GRPO 都共享同一套 `tools` schema 和 renderer 逻辑，不会出现训练时是手写 `<tool_response>`、推理时又是另一种格式的协议漂移。项目不直接使用 tokenizer 原生 `tools=` 模板作为主渲染路径，因为它不会要求短 `<think>`，并可能在最终答案前补空 `<think>`。
 
 ### Q2: 151644 对应什么？
 
@@ -247,7 +247,7 @@ assistant answer    labels = token_id，包括该 assistant turn 的 <|im_end|>
 padding             labels = -100
 ```
 
-这样模型仍然能通过 `input_ids` 看到完整上下文，但只学习 assistant 应该如何输出 `<tool_call>...</tool_call>` 或 `<answer>...</answer>`。
+这样模型仍然能通过 `input_ids` 看到完整上下文，但只学习 assistant 应该如何输出短 `<think>` + JSON `<tool_call>` 或 `<answer>...</answer>`。
 
 ### Q7: 为什么不能让整段 chat 都参与 loss？
 

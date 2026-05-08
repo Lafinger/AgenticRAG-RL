@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -9,6 +10,11 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from agentic_rag_rl.protocols import render_canonical_chat
 
 
 def parse_args() -> argparse.Namespace:
@@ -45,11 +51,12 @@ def percentile(sorted_values: list[int], p: int) -> int:
 
 
 def render_text(tokenizer: Any, record: dict[str, Any], line_no: int) -> str:
+    del tokenizer
     messages = record.get("messages")
     if not isinstance(messages, list):
         raise ValueError(f"Line {line_no} is missing messages.")
     tools = record.get("tools") if isinstance(record.get("tools"), list) else None
-    return tokenizer.apply_chat_template(messages, tools=tools, tokenize=False, add_generation_prompt=False)
+    return render_canonical_chat(messages, tools=tools, add_generation_prompt=False)
 
 
 def main() -> None:
