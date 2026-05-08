@@ -13,7 +13,7 @@
     "messages": [
         {"role": "system", "content": "你是一个中文小说阅读问答 Agent..."},
         {"role": "user", "content": "问题"},
-        {"role": "assistant", "content": "<think>需要搜索：问题关键词</think>\n<tool_call>\n{\"name\":\"keyword_search\",\"arguments\":{\"query\":\"问题关键词\"}}\n</tool_call>"},
+        {"role": "assistant", "content": "<think>要回答最终问题，先查：问题关键词</think>\n<tool_call>\n{\"name\":\"keyword_search\",\"arguments\":{\"query\":\"问题关键词\"}}\n</tool_call>"},
         {"role": "tool", "content": "[chunk_id] 检索证据..."},
         {"role": "assistant", "content": "<answer>答案</answer>"}
     ],
@@ -35,7 +35,7 @@ tokenizer 会先通过 `apply_chat_template(messages, tools=tools)` 把它渲染
 <|im_start|>user
 问题<|im_end|>
 <|im_start|>assistant
-<think>需要搜索：问题关键词</think>
+<think>要回答最终问题，先查：问题关键词</think>
 <tool_call>
 {"name":"keyword_search","arguments":{"query":"问题关键词"}}
 </tool_call><|im_end|>
@@ -63,12 +63,12 @@ messages + tools --Qwen3 chat template 渲染--> chat 文本 --tokenizer 编码-
 
 ### Q1.1: 为什么工具轮要保留短思考标签？
 
-答：当前主线对齐 example 风格 ReAct。训练样本要求 assistant 工具轮先输出一个短 `<think>`，再输出一个 JSON tool call。`<think>` 只表达搜索意图，不训练长推理链；推理端仍严格校验 `<tool_call>` 内必须是 JSON。
+答：当前主线对齐 example 风格 ReAct。训练样本要求 assistant 工具轮先输出一个短 `<think>`，再输出一个 JSON tool call。`<think>` 来自结构化 Oracle plan：第 1 跳说明“要回答最终问题，先查什么”，后续跳说明“基于上一跳 gold answer 继续查什么”。它只表达检索决策，不训练长推理链；推理端仍严格校验 `<tool_call>` 内必须是 JSON。
 
 标准工具轮：
 
 ```text
-<think>需要搜索：问题关键词</think>
+<think>要回答最终问题，先查：问题关键词</think>
 <tool_call>
 {"name":"keyword_search","arguments":{"query":"问题关键词"}}
 </tool_call>

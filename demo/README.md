@@ -980,16 +980,18 @@ uv run python .\scripts\build_oracle_traces.py `
 **能拿到的结果**：
 
 - `data/novel_eval/traces_oracle_zh.jsonl`
-- 每条 trace 包含 `messages[]`
-- 每条 trace 包含 `messages[]` 和 Qwen3 `tools` schema
-- 工具调用采用 Qwen3 tool template 对齐格式：`<think>需要搜索：...</think>\n<tool_call>\n{"name": "...", "arguments": {...}}\n</tool_call>`
+- 每条 trace 包含结构化 `plan`、`tool_calls`、`evidence`、`messages[]` 和 Qwen3 `tools` schema
+- 工具调用采用 Qwen3 tool template 对齐格式：`<think>要回答最终问题，先查：...</think>\n<tool_call>\n{"name": "...", "arguments": {...}}\n</tool_call>`；后续跳使用 `已获得上一跳线索“...”，继续查：...`
 - 最终答案使用 `<answer>...</answer>`
 
 **数据结构与字段用途**：
 
 | 字段 | 含义 | 后续使用位置 |
 | --- | --- | --- |
-| `messages[]` | system/user/assistant/tool 多轮消息 | SFT 监督数据、协议回放 |
+| `plan` | 从 QA hops 生成的结构化检索计划，包含 `sub_query/tool/gold_answer/gold_chunk_id` | Oracle trace 重放、SFT 渲染 |
+| `tool_calls` | 每跳实际应调用的工具名和 query | 追溯工具选择、校验工具协议 |
+| `evidence` | 每跳 gold chunk 证据 | tool response 渲染、hop recall 对齐 |
+| `messages[]` | 由 `plan/evidence` 渲染的 system/user/assistant/tool 多轮消息 | SFT 监督数据、协议回放 |
 | `tools` | Qwen3 `type=function` 工具 schema | SFT、Agent loop、GRPO 共享工具定义 |
 | `gold_chunks` | 标准证据 chunk ID 列表 | reward hop recall、诊断评测 |
 | `answer_aliases` | 标准答案别名 | reward correctness |
@@ -1003,7 +1005,7 @@ uv run python .\scripts\build_oracle_traces.py `
 | 约束 | 标准 |
 | --- | --- |
 | Agent 角色 | system prompt 固定为“中文小说阅读问答 Agent”，任务是逐步搜索人物、地点、事件和关系证据 |
-| 工具调用 | assistant 使用短 `<think>需要搜索：...</think>` 加 `<tool_call>\n{"name":"keyword_search","arguments":{"query":"..."}}\n</tool_call>` |
+| 工具调用 | assistant 使用 plan-driven 短 `<think>`，第 1 跳为 `<think>要回答最终问题，先查：...</think>`，后续跳为 `<think>已获得上一跳线索“...”，继续查：...</think>`，再接 JSON `<tool_call>` |
 | 工具名称 | 只能使用 `keyword_search`、`dense_search`、`hybrid_search` 三类检索工具 |
 | 工具响应 | tool 消息只保存原始检索文本，训练/评测渲染时由 Qwen3 template 包装 `<tool_response>` |
 | 逐跳顺序 | Oracle trace 按 `hops[]` 的 gold 顺序调用工具，保证每跳都有可追溯证据 |
@@ -1015,9 +1017,9 @@ uv run python .\scripts\build_oracle_traces.py `
 
 **详细说明**：
 
-- `trace_to_sft.py` 读取 Oracle trace，保留 `system/user/assistant/tool` 消息角色，不再把 tool response 提前改写成用户消息。
+- `trace_to_sft.py` 读取 Oracle trace，优先用结构化 `plan/evidence` 重新渲染 `messages`，保留 `system/user/assistant/tool` 消息角色，不再把 tool response 提前改写成用户消息。
 - 每条记录写入 `tools` 字段，采用 Qwen3/LLaMA-Factory 兼容的 `{"type":"function","function":...}` schema。
-- assistant 工具轮统一为 `<think>需要搜索：...</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"..."}}\n</tool_call>`，最终答案统一为 `<answer>...</answer>`。
+- assistant 工具轮统一为短 `<think>` 加 JSON `<tool_call>`：第 1 跳 `要回答最终问题，先查：{sub_query}`，后续跳 `已获得上一跳线索“{previous_answer}”，继续查：{sub_query}`；最终答案统一为 `<answer>...</answer>`。
 - tool 消息只保留检索文本；`<tool_response>` 由 `tokenizer.apply_chat_template(..., tools=tools)` 在训练和 Agent loop 渲染时生成。
 
 ```mermaid
@@ -1511,7 +1513,7 @@ uv run python .\scripts\run_llm_judge.py `
 `eval_agentic.py` 和 `run_cloud_eval.py` 主要验证数据、检索和规则型 pipeline 是否闭环；它们不加载 SFT 后的 Qwen 模型。主 SFT 基线重训后，应以 `eval_hf_agentic.py` 作为 Agentic 结论入口：
 
 - 主线 Agent loop 评测：`eval_hf_agentic.py`，衡量真实工具调用、检索闭环、`hop_recall` 和是否能用 `<answer>` 停止。
-- 当前主线 ReAct SFT 的重点是让模型稳定输出短 `<think>` 和 JSON tool payload，例如 `<think>需要搜索：...</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"..."}}\n</tool_call>`。
+- 当前主线 ReAct SFT 的重点是让模型稳定输出 plan-driven 短 `<think>` 和 JSON tool payload，例如 `<think>要回答最终问题，先查：...</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"..."}}\n</tool_call>`。
 
 重点看这些指标：
 

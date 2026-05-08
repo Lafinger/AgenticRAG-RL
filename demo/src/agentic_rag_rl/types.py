@@ -42,6 +42,7 @@ class Hop:
     answer: str
     doc_chunk_id: str
     qa_type: str
+    search_tools: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

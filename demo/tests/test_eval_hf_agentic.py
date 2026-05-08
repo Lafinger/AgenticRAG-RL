@@ -87,7 +87,7 @@ def test_apply_chat_template_for_generation_falls_back_to_manual_tools_prompt() 
         {"role": "user", "content": "问题"},
         {
             "role": "assistant",
-            "content": '<think>需要搜索：问题</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"问题"}}</tool_call>',
+            "content": '<think>要回答最终问题，先查：问题</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"问题"}}</tool_call>',
         },
         {"role": "tool", "content": "[chunk-a] 证据"},
     ]
@@ -105,7 +105,7 @@ def test_valid_tool_call_invokes_retriever_and_answer_finishes_loop() -> None:
     module = load_agentic_eval_module()
     outputs = iter(
         [
-            '<think>需要搜索：卖饼老者 集市</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"卖饼老者 集市"}}</tool_call>',
+            '<think>要回答最终问题，先查：卖饼老者 集市</think>\n<tool_call>{"name":"keyword_search","arguments":{"query":"卖饼老者 集市"}}</tool_call>',
             "<answer>侯赢</answer>",
         ]
     )
@@ -120,7 +120,7 @@ def test_valid_tool_call_invokes_retriever_and_answer_finishes_loop() -> None:
     assert result["retrieved_chunk_ids"] == ["chunk-a", "chunk-b"]
     assert result["raw_turns"][0]["think_tag_present"] is True
     assert result["raw_turns"][0]["history_assistant"] == (
-        '<think>需要搜索：卖饼老者 集市</think>\n'
+        '<think>要回答最终问题，先查：卖饼老者 集市</think>\n'
         '<tool_call>\n{"name":"keyword_search","arguments":{"query":"卖饼老者 集市"}}\n</tool_call>'
     )
 
@@ -204,7 +204,7 @@ def test_multiple_tool_calls_uses_first_valid_action_and_records_diagnostics() -
     assert result["status"] == "max_turns_exceeded"
     assert result["raw_turns"][0]["multi_action_present"] is True
     assert result["raw_turns"][0]["normalized_action"] == (
-        '<think>需要搜索：第一跳</think>\n'
+        '<think>要回答最终问题，先查：第一跳</think>\n'
         '<tool_call>\n{"name":"keyword_search","arguments":{"query":"第一跳"}}\n</tool_call>'
     )
     assert result["raw_turns"][0]["think_tag_present"] is False
@@ -243,7 +243,7 @@ def test_agent_loop_writes_normalized_action_to_next_turn_history() -> None:
     assert result["prediction"] == "侯赢"
     assert result["raw_turns"][0]["assistant"].startswith("</tool_call>")
     assert result["raw_turns"][0]["history_assistant"] == (
-        '<think>需要搜索：第一跳</think>\n'
+        '<think>要回答最终问题，先查：第一跳</think>\n'
         '<tool_call>\n{"name":"keyword_search","arguments":{"query":"第一跳"}}\n</tool_call>'
     )
     assert result["raw_turns"][0]["truncated_to_first_action"] is True
@@ -264,7 +264,7 @@ def test_stop_on_action_criteria_stops_after_complete_action_tag() -> None:
 
     criteria = module.StopOnActionCriteria(DecodeTokenizer(), prompt_length=2)
 
-    assert criteria([[1, 2, *map(ord, "<think>需要搜索：问题</think>")]]) is False
+    assert criteria([[1, 2, *map(ord, "<think>要回答最终问题，先查：问题</think>")]]) is False
     assert criteria([[1, 2, *map(ord, "<tool_call>{}")]]) is False
     assert criteria([[1, 2, *map(ord, "<tool_call>{}</tool_call>")]]) is True
     assert criteria([[1, 2, *map(ord, "<answer>侯赢</answer>")]]) is True

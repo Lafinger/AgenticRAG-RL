@@ -47,7 +47,7 @@ def render_qwen3_tools_system_prompt(system_prompt: str, tools: list[dict[str, A
         f"<tools>\n{tools_json}\n</tools>\n\n"
         "Before each function call, write exactly one short search intent within <think></think> XML tags. "
         "Then return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n"
-        "<think>需要搜索：<short-query></think>\n"
+        "<think>要回答最终问题，先查：<short-query></think>\n"
         "<tool_call>\n"
         "{\"name\": <function-name>, \"arguments\": <args-json-object>}\n"
         "</tool_call>"
@@ -215,8 +215,9 @@ def format_tool_call(tool_call: dict[str, Any]) -> str:
 
 
 def make_short_think(query: str, turn_index: int = 1) -> str:
-    prefix = "需要搜索" if turn_index <= 1 else "继续搜索"
-    return f"{prefix}：{query.strip()}"
+    if turn_index <= 1:
+        return f"要回答最终问题，先查：{query.strip()}"
+    return f"已获得上一跳线索，继续查：{query.strip()}"
 
 
 def format_react_tool_action(tool_call: dict[str, Any], think: str | None = None, turn_index: int = 1) -> str:

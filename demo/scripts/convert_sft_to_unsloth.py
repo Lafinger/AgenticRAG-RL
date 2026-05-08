@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
+
+
+REACT_TOOL_TURN_RE = re.compile(r"^\s*<think>(?P<think>.*?)</think>\s*<tool_call>\s*(?P<payload>.*?)\s*</tool_call>\s*$", re.DOTALL)
+TOOL_TAG_RE = re.compile(r"</?tool_call\b[^>]*>", re.IGNORECASE)
+THINK_TAG_RE = re.compile(r"</?think\b[^>]*>", re.IGNORECASE)
 
 
 def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
@@ -34,6 +40,38 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def validate_react_tool_turn(content: str, record_index: int, message_index: int) -> None:
+    matched = REACT_TOOL_TURN_RE.fullmatch(content)
+    if matched is None:
+        raise ValueError(
+            f"Record {record_index} message {message_index} assistant tool turn must be exactly "
+            "<think>...</think> followed by one JSON <tool_call>...</tool_call>."
+        )
+
+    think = matched.group("think").strip()
+    if not think:
+        raise ValueError(f"Record {record_index} message {message_index} think content must not be empty.")
+    if any(fragment in think.lower() for fragment in ("<tool_call", "</tool_call", "<answer", "</answer")):
+        raise ValueError(f"Record {record_index} message {message_index} think content must not contain action tags.")
+    if "{" in think or "}" in think:
+        raise ValueError(f"Record {record_index} message {message_index} think content must not contain JSON.")
+
+    payload_text = matched.group("payload").strip()
+    try:
+        payload = json.loads(payload_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Record {record_index} message {message_index} tool_call JSON is invalid: {exc.msg}.") from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"Record {record_index} message {message_index} tool_call payload must be an object.")
+    if not isinstance(payload.get("name"), str) or not payload["name"].strip():
+        raise ValueError(f"Record {record_index} message {message_index} tool_call payload missing name.")
+    arguments = payload.get("arguments")
+    if not isinstance(arguments, dict):
+        raise ValueError(f"Record {record_index} message {message_index} tool_call arguments must be an object.")
+    if not isinstance(arguments.get("query"), str) or not arguments["query"].strip():
+        raise ValueError(f"Record {record_index} message {message_index} tool_call arguments missing query.")
+
+
 def validate_record(record: dict[str, Any], index: int) -> dict[str, Any]:
     messages = record.get("messages")
     if not isinstance(messages, list) or not messages:
@@ -45,6 +83,11 @@ def validate_record(record: dict[str, Any], index: int) -> dict[str, Any]:
             raise ValueError(f"Record {index} message {message_index} has unsupported role: {message.get('role')!r}.")
         if not isinstance(message.get("content"), str):
             raise ValueError(f"Record {index} message {message_index} content must be a string.")
+        content = message["content"]
+        if message.get("role") == "assistant" and TOOL_TAG_RE.search(content):
+            validate_react_tool_turn(content, index, message_index)
+        elif message.get("role") == "assistant" and THINK_TAG_RE.search(content):
+            raise ValueError(f"Record {index} message {message_index} think tag is only allowed in tool turns.")
     tools = record.get("tools")
     if tools is not None and not isinstance(tools, list):
         raise ValueError(f"Record {index} tools must be a list when present.")

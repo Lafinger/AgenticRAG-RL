@@ -110,7 +110,7 @@ def test_tools_rendering_masks_tool_role_response() -> None:
         {"role": "user", "content": "问题"},
         {
             "role": "assistant",
-            "content": '<think>需要搜索：问题</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"问题"}}\n</tool_call>',
+            "content": '<think>要回答最终问题，先查：问题</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"问题"}}\n</tool_call>',
         },
         {"role": "tool", "content": "[chunk-a] 证据"},
         {"role": "assistant", "content": "<answer>答案</answer>"},
@@ -120,7 +120,7 @@ def test_tools_rendering_masks_tool_role_response() -> None:
     supervised_text = "".join(chr(label) for label in sample.labels if label != IGNORE_INDEX)
 
     assert tokenizer.last_tools == tools
-    assert "<think>需要搜索：问题</think>" in supervised_text
+    assert "<think>要回答最终问题，先查：问题</think>" in supervised_text
     assert "<tool_call>" in supervised_text
     assert "<answer>答案</answer>" in supervised_text
     assert supervised_text.count(IM_END_MARKER) == 2

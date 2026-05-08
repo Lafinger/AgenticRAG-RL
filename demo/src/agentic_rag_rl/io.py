@@ -62,6 +62,7 @@ def load_multihop_examples(path: str | Path) -> list[MultiHopExample]:
                 answer=hop["answer"],
                 doc_chunk_id=hop["doc_chunk_id"],
                 qa_type=hop["qa_type"],
+                search_tools=list(hop.get("search_tools") or ["keyword_search"]),
             )
             for hop in record["hops"]
         ]
