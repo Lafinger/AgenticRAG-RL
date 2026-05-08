@@ -115,8 +115,8 @@ content = 原始检索证据
 
 可用下面命令验证：
 
-```powershell
-python -c "from transformers import AutoTokenizer; t=AutoTokenizer.from_pretrained('unsloth/Qwen3-4B-Instruct-2507', trust_remote_code=True); print(t.convert_ids_to_tokens([151644,151645,151643]))"
+```text
+uv run python -c "from transformers import AutoTokenizer; t=AutoTokenizer.from_pretrained('unsloth/Qwen3-4B-Instruct-2507', trust_remote_code=True); print(t.convert_ids_to_tokens([151644,151645,151643]))"
 ```
 
 ## 二、训练样本三件套
