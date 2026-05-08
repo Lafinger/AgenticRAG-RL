@@ -1,0 +1,18 @@
+{
+  "count": 50,
+  "avg_em": 0.0,
+  "avg_f1": 0.0,
+  "avg_hop_recall": 0.38333333333333336,
+  "answer_tag_rate": 0.0,
+  "valid_tool_call_rate": 0.8,
+  "think_tag_rate": 0.0,
+  "malformed_think_rate": 0.0,
+  "malformed_tool_fragment_rate": 0.5555555555555556,
+  "multi_action_turn_rate": 0.0,
+  "starts_with_closing_tool_rate": 0.5,
+  "max_turns_exceeded_rate": 0.0,
+  "avg_valid_tool_calls": 0.8,
+  "avg_turns": 1.8,
+  "results_file": "results\\sft_compare\\sft_agentic_ckpt765.jsonl",
+  "format": "jsonl_records"
+}

@@ -310,7 +310,7 @@ uv run python .\scripts\build_index.py `
 
 去掉 `--skip-kg` 会启用知识图谱构建，需要 `.env` 中配置在线模型供应商的 API Key。`--max-concurrency` 控制同时发起的在线 LLM 三元组抽取请求数；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
 
-如果使用 NewAPI 在线模型抽取 KG 三元组，设置 `NEWAPI_API_KEY` 后执行：
+如果使用 Common 在线模型抽取 KG 三元组，设置 `COMMON_API_KEY` 后执行：
 
 ```powershell
 uv run python .\scripts\build_index.py `
@@ -318,7 +318,7 @@ uv run python .\scripts\build_index.py `
   --index-dir .\data\novel\indexes `
   --embedding-model .\models\bge-m3 `
   --reranker-model .\models\bge-reranker-v2-m3 `
-  --llm-provider newapi `
+  --llm-provider common `
   --kg-model gpt-5.5 `
   --max-concurrency 5
 ```
@@ -342,17 +342,17 @@ uv run python .\scripts\build_index.py `
 
 | Provider | 接口 | API Key | 默认模型 |
 | --- | --- | --- | --- |
-| `newapi` | `https://api.6i2.com/v1` OpenAI-compatible | `NEWAPI_API_KEY` | `gpt-5.5` |
+| `common` | `http://127.0.0.1:53389/v1` OpenAI-compatible | `COMMON_API_KEY` | `gpt-5.5` |
 | `rightcode` | `https://api.right.codes/v1` OpenAI-compatible | `RIGHTCODE_API_KEY` | `gpt-5.5` |
 
 可通过命令行选择 provider 和模型：
 
 | 业务 | provider 参数 | 模型参数 |
 | --- | --- | --- |
-| Step 2 KG 三元组抽取 | `--llm-provider newapi` | `--kg-model gpt-5.5` |
-| Step 3 seed QA 生成 | `--llm-provider newapi` | `--model gpt-5.5` |
-| Step 4 多跳 QA 合并 + 质量门禁 | `--llm-provider newapi` | `--merge-model gpt-5.5 --judge-model gpt-5.5` |
-| LLM-as-Judge | `--llm-provider newapi` | `--judge-model gpt-5.5` |
+| Step 2 KG 三元组抽取 | `--llm-provider common` | `--kg-model gpt-5.5` |
+| Step 3 seed QA 生成 | `--llm-provider common` | `--model gpt-5.5` |
+| Step 4 多跳 QA 合并 + 质量门禁 | `--llm-provider common` | `--merge-model gpt-5.5 --judge-model gpt-5.5` |
+| LLM-as-Judge | `--llm-provider common` | `--judge-model gpt-5.5` |
 | Step 2 KG 三元组抽取 | `--llm-provider rightcode` | `--kg-model gpt-5.5` |
 | Step 3 seed QA 生成 | `--llm-provider rightcode` | `--model gpt-5.5` |
 | Step 4 多跳 QA 合并 + 质量门禁 | `--llm-provider rightcode` | `--merge-model gpt-5.5 --judge-model gpt-5.5` |
@@ -361,12 +361,12 @@ uv run python .\scripts\build_index.py `
 也可以在 `.env` 中配置默认值：
 
 ```text
-NEWAPI_API_KEY=...
-NEWAPI_BASE_URL=https://api.6i2.com/v1
-NEWAPI_MODEL=gpt-5.5
-NEWAPI_KG_MODEL=gpt-5.5
-NEWAPI_THINKING_MODEL=gpt-5.5
-NEWAPI_JUDGE_MODEL=gpt-5.5
+COMMON_API_KEY=...
+COMMON_BASE_URL=http://127.0.0.1:53389/v1
+COMMON_MODEL=gpt-5.5
+COMMON_KG_MODEL=gpt-5.5
+COMMON_THINKING_MODEL=gpt-5.5
+COMMON_JUDGE_MODEL=gpt-5.5
 RIGHTCODE_API_KEY=...
 RIGHTCODE_BASE_URL=https://api.right.codes/v1
 RIGHTCODE_MODEL=gpt-5.5
@@ -460,7 +460,7 @@ Step 7: 可选离线复洗
 **当前脚本行为**：
 
 - `gen_seed_qa.py` 逐条读取 `data/novel/corpus.jsonl`，并把每个 chunk 文本发送给所选在线模型生成 seed QA。
-- 默认 provider 为 `newapi`，默认模型为 `gpt-5.5`，默认每个 chunk 最多生成 2 条 seed。
+- 默认 provider 为 `common`，默认模型为 `gpt-5.5`，默认每个 chunk 最多生成 2 条 seed。
 - 默认并发数为 `5`，可通过 `--max-concurrency` 调整；每完成一个 chunk 就重写 `seeds.jsonl`，并保证输出按 corpus chunk 顺序排列。
 - 并发生成会打印 `seed_qa_generation.chunk_done ... progress=.../... failed=...`，用于观察请求进度和失败数。
 - 模型输出必须是 JSON 数组，元素字段为 `question/answer/qa_type/entities`。
@@ -493,10 +493,10 @@ flowchart TD
 - 脚本：`scripts/gen_seed_qa.py`
 - 清洗脚本：`scripts/clean_seed_qa.py`
 - 环境文件：复制 `.env.example` 为 `.env`，填写所选供应商 API Key
-- 默认 Provider：`newapi`，也可用 `--llm-provider rightcode`
-- 默认模型：NewAPI 和 RightCode 均使用 `gpt-5.5`
+- 默认 Provider：`common`，也可用 `--llm-provider rightcode`
+- 默认模型：Common 和 RightCode 均使用 `gpt-5.5`
 - 默认最大并发：`5`
-- 默认 Base URL：NewAPI 为 `https://api.6i2.com/v1`，RightCode 为 `https://api.right.codes/v1`
+- 默认 Base URL：Common 为 `http://127.0.0.1:53389/v1`，RightCode 为 `https://api.right.codes/v1`
 - 输出：`data/novel_eval/seeds.jsonl`
 
 **怎么做**：
@@ -519,13 +519,13 @@ uv run python .\scripts\gen_seed_qa.py `
 
 `--max-concurrency` 控制同时发起的在线模型请求数。默认值是 `5`；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
 
-如果使用 NewAPI 在线模型生成 seed QA：
+如果使用 Common 在线模型生成 seed QA：
 
 ```powershell
 uv run python .\scripts\gen_seed_qa.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\seeds.jsonl `
-  --llm-provider newapi `
+  --llm-provider common `
   --model gpt-5.5 `
   --max-concurrency 5
 ```
@@ -760,8 +760,8 @@ flowchart TD
 - 输入：`data/novel/corpus.jsonl`
 - 脚本：`scripts/domain_multihop_synthesis.py`
 - 环境文件：`.env` 中填写所选供应商 API Key
-- 默认 Provider：`newapi`，也可用 `--llm-provider rightcode`
-- 默认合并模型：NewAPI 和 RightCode 均使用 `gpt-5.5`
+- 默认 Provider：`common`，也可用 `--llm-provider rightcode`
+- 默认合并模型：Common 和 RightCode 均使用 `gpt-5.5`
 - 默认质量门禁：`--quality-gate llm`，先规则过滤，再调用 `--judge-model` 做语义审查
 - 默认候选倍率：LLM 门禁模式下 `--candidate-multiplier 5`，即每个输出槽位最多 5 条候选
 - 默认最大并发：`5`
@@ -796,7 +796,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --max-concurrency 5
 ```
 
-如果使用 NewAPI 在线模型做多跳 QA 合并：
+如果使用 Common 在线模型做多跳 QA 合并：
 
 ```powershell
 uv run python .\scripts\domain_multihop_synthesis.py `
@@ -804,7 +804,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --corpus .\data\novel\corpus.jsonl `
   --output .\data\novel_eval\qa_pairs.jsonl `
   --target-count 50 `
-  --llm-provider newapi `
+  --llm-provider common `
   --merge-model gpt-5.5 `
   --judge-model gpt-5.5 `
   --quality-gate llm `
@@ -812,7 +812,7 @@ uv run python .\scripts\domain_multihop_synthesis.py `
   --max-concurrency 5
 ```
 
-NewAPI 的模型名必须以当前网关实际可用通道为准；如果 `gpt-5.5` 返回 `model_not_found`，需要替换为该 NewAPI 分组下可用的模型名。
+Common 的模型名必须以当前网关实际可用通道为准；如果 `gpt-5.5` 返回 `model_not_found`，需要替换为该 Common 分组下可用的模型名。
 
 如果使用 RightCode 在线模型做多跳 QA 合并：
 
@@ -1489,13 +1489,13 @@ uv run python .\scripts\run_llm_judge.py `
   --max-concurrency 5
 ```
 
-如果使用 NewAPI 在线模型跑 LLM-as-Judge：
+如果使用 Common 在线模型跑 LLM-as-Judge：
 
 ```powershell
 uv run python .\scripts\run_llm_judge.py `
   .\results\agentic_eval.json `
   --output .\results\agentic_eval_judged.json `
-  --llm-provider newapi `
+  --llm-provider common `
   --judge-model gpt-5.5 `
   --max-concurrency 5
 ```
@@ -1573,7 +1573,7 @@ Set-Location E:\AI\AgenticRAG-RL\demo
 Copy-Item .\.env.example .\.env
 ```
 
-在 `.env` 中填写所选在线模型供应商的 API Key。默认 NewAPI 使用 `NEWAPI_API_KEY`；使用 RightCode 时填写 `RIGHTCODE_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
+在 `.env` 中填写所选在线模型供应商的 API Key。默认 Common 使用 `COMMON_API_KEY`；使用 RightCode 时填写 `RIGHTCODE_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
 
 ```powershell
 uv run python -m pytest

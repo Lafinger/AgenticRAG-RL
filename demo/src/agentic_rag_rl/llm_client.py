@@ -9,10 +9,10 @@ from typing import Any, Protocol, TypedDict
 import httpx
 
 
-DEFAULT_LLM_PROVIDER = "newapi"
-LLM_PROVIDER_CHOICES = ("newapi", "rightcode")
-DEFAULT_NEWAPI_MODEL = "gpt-5.5"
-DEFAULT_NEWAPI_BASE_URL = "https://api.6i2.com/v1"
+DEFAULT_LLM_PROVIDER = "common"
+LLM_PROVIDER_CHOICES = ("common", "rightcode")
+DEFAULT_COMMON_MODEL = "gpt-5.5"
+DEFAULT_COMMON_BASE_URL = "http://127.0.0.1:53389/v1"
 DEFAULT_RIGHTCODE_MODEL = "gpt-5.5"
 DEFAULT_RIGHTCODE_BASE_URL = "https://api.right.codes/v1"
 OPENAI_CHAT_COMPLETIONS_PATH = "/chat/completions"
@@ -39,8 +39,8 @@ def create_llm_client(
     transport: Callable[[list[ChatMessage]], str] | None = None,
 ) -> LLMClient:
     normalized_provider = normalize_llm_provider(provider)
-    if normalized_provider == "newapi":
-        return NewAPILLMClient(
+    if normalized_provider == "common":
+        return CommonLLMClient(
             api_key=api_key,
             model=model,
             base_url=base_url,
@@ -58,34 +58,34 @@ def create_llm_client(
     raise ValueError(f"Unsupported LLM provider: {provider}")
 
 
-def get_newapi_model(explicit_model: str | None = None) -> str:
-    return explicit_model or os.getenv("NEWAPI_MODEL") or DEFAULT_NEWAPI_MODEL
+def get_common_model(explicit_model: str | None = None) -> str:
+    return explicit_model or os.getenv("COMMON_MODEL") or DEFAULT_COMMON_MODEL
 
 
-def get_newapi_kg_model(explicit_model: str | None = None) -> str:
-    return explicit_model or os.getenv("NEWAPI_KG_MODEL") or os.getenv("NEWAPI_MODEL") or DEFAULT_NEWAPI_MODEL
+def get_common_kg_model(explicit_model: str | None = None) -> str:
+    return explicit_model or os.getenv("COMMON_KG_MODEL") or os.getenv("COMMON_MODEL") or DEFAULT_COMMON_MODEL
 
 
-def get_newapi_thinking_model(explicit_model: str | None = None) -> str:
+def get_common_thinking_model(explicit_model: str | None = None) -> str:
     return (
         explicit_model
-        or os.getenv("NEWAPI_THINKING_MODEL")
-        or os.getenv("NEWAPI_MODEL")
-        or DEFAULT_NEWAPI_MODEL
+        or os.getenv("COMMON_THINKING_MODEL")
+        or os.getenv("COMMON_MODEL")
+        or DEFAULT_COMMON_MODEL
     )
 
 
-def get_newapi_judge_model(explicit_model: str | None = None) -> str:
+def get_common_judge_model(explicit_model: str | None = None) -> str:
     return (
         explicit_model
-        or os.getenv("NEWAPI_JUDGE_MODEL")
-        or os.getenv("NEWAPI_MODEL")
-        or DEFAULT_NEWAPI_MODEL
+        or os.getenv("COMMON_JUDGE_MODEL")
+        or os.getenv("COMMON_MODEL")
+        or DEFAULT_COMMON_MODEL
     )
 
 
-def get_newapi_base_url(explicit_base_url: str | None = None) -> str:
-    return explicit_base_url or os.getenv("NEWAPI_BASE_URL") or DEFAULT_NEWAPI_BASE_URL
+def get_common_base_url(explicit_base_url: str | None = None) -> str:
+    return explicit_base_url or os.getenv("COMMON_BASE_URL") or DEFAULT_COMMON_BASE_URL
 
 
 def get_rightcode_model(explicit_model: str | None = None) -> str:
@@ -127,43 +127,43 @@ def normalize_llm_provider(provider: str | None) -> str:
 
 def resolve_llm_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
-    if normalized_provider == "newapi":
-        return get_newapi_model(explicit_model)
+    if normalized_provider == "common":
+        return get_common_model(explicit_model)
     return get_rightcode_model(explicit_model)
 
 
 def resolve_kg_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
-    if normalized_provider == "newapi":
-        return get_newapi_kg_model(explicit_model)
+    if normalized_provider == "common":
+        return get_common_kg_model(explicit_model)
     return get_rightcode_kg_model(explicit_model)
 
 
 def resolve_thinking_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
-    if normalized_provider == "newapi":
-        return get_newapi_thinking_model(explicit_model)
+    if normalized_provider == "common":
+        return get_common_thinking_model(explicit_model)
     return get_rightcode_thinking_model(explicit_model)
 
 
 def resolve_judge_model(provider: str, explicit_model: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
-    if normalized_provider == "newapi":
-        return get_newapi_judge_model(explicit_model)
+    if normalized_provider == "common":
+        return get_common_judge_model(explicit_model)
     return get_rightcode_judge_model(explicit_model)
 
 
 def resolve_llm_base_url(provider: str, explicit_base_url: str | None = None) -> str:
     normalized_provider = normalize_llm_provider(provider)
-    if normalized_provider == "newapi":
-        return get_newapi_base_url(explicit_base_url)
+    if normalized_provider == "common":
+        return get_common_base_url(explicit_base_url)
     return get_rightcode_base_url(explicit_base_url)
 
 
-def get_newapi_timeout(explicit_timeout: float | None = None) -> float:
+def get_common_timeout(explicit_timeout: float | None = None) -> float:
     if explicit_timeout is not None:
         return explicit_timeout
-    return float(os.getenv("NEWAPI_TIMEOUT_SECONDS", "60"))
+    return float(os.getenv("COMMON_TIMEOUT_SECONDS", "60"))
 
 
 def get_rightcode_timeout(explicit_timeout: float | None = None) -> float:
@@ -174,15 +174,15 @@ def get_rightcode_timeout(explicit_timeout: float | None = None) -> float:
 
 def resolve_llm_timeout(provider: str, explicit_timeout: float | None = None) -> float:
     normalized_provider = normalize_llm_provider(provider)
-    if normalized_provider == "newapi":
-        return get_newapi_timeout(explicit_timeout)
+    if normalized_provider == "common":
+        return get_common_timeout(explicit_timeout)
     return get_rightcode_timeout(explicit_timeout)
 
 
-def _read_newapi_api_key(explicit_api_key: str | None = None) -> str:
-    api_key = explicit_api_key or os.getenv("NEWAPI_API_KEY") or ""
+def _read_common_api_key(explicit_api_key: str | None = None) -> str:
+    api_key = explicit_api_key or os.getenv("COMMON_API_KEY") or ""
     if not api_key.strip():
-        raise ValueError("NewAPI API key is required. Set NEWAPI_API_KEY or pass --api-key.")
+        raise ValueError("Common API key is required. Set COMMON_API_KEY or pass --api-key.")
     return api_key.strip()
 
 
@@ -206,8 +206,8 @@ class OpenAICompatibleLLMClient:
         transport: Callable[[list[ChatMessage]], str] | None = None,
     ) -> None:
         self.provider = normalize_llm_provider(provider)
-        if self.provider == "newapi":
-            self.api_key = _read_newapi_api_key(api_key) if transport is None else (api_key or "test-key")
+        if self.provider == "common":
+            self.api_key = _read_common_api_key(api_key) if transport is None else (api_key or "test-key")
         else:
             self.api_key = _read_rightcode_api_key(api_key) if transport is None else (api_key or "test-key")
         self.model = resolve_llm_model(self.provider, model)
@@ -271,7 +271,7 @@ class OpenAICompatibleLLMClient:
             ) from exc
 
 
-class NewAPILLMClient(OpenAICompatibleLLMClient):
+class CommonLLMClient(OpenAICompatibleLLMClient):
     def __init__(
         self,
         api_key: str | None = None,
@@ -281,7 +281,7 @@ class NewAPILLMClient(OpenAICompatibleLLMClient):
         transport: Callable[[list[ChatMessage]], str] | None = None,
     ) -> None:
         super().__init__(
-            provider="newapi",
+            provider="common",
             api_key=api_key,
             model=model,
             base_url=base_url,

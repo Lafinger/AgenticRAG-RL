@@ -19,7 +19,7 @@ def run_script(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_llm_business_scripts_only_accept_newapi_and_rightcode_providers() -> None:
+def test_llm_business_scripts_only_accept_common_and_rightcode_providers() -> None:
     removed_provider = "dou" + "bao"
     removed_batch_arg = "--use-batch" + "-inference"
     scripts = [
@@ -32,7 +32,8 @@ def test_llm_business_scripts_only_accept_newapi_and_rightcode_providers() -> No
     for script in scripts:
         result = run_script(script, "--help")
         assert result.returncode == 0
-        assert "newapi,rightcode" in result.stdout
+        assert "common,rightcode" in result.stdout
+        assert ("new" + "api") not in result.stdout.lower()
         assert removed_provider not in result.stdout.lower()
         assert removed_batch_arg not in result.stdout
 
@@ -53,7 +54,27 @@ def test_build_index_rejects_removed_legacy_provider() -> None:
 
     assert result.returncode != 0
     assert "invalid choice" in result.stderr
-    assert "newapi" in result.stderr
+    assert "common" in result.stderr
+    assert "rightcode" in result.stderr
+
+
+def test_build_index_rejects_previous_common_provider_name() -> None:
+    removed_provider = "new" + "api"
+    result = run_script(
+        "scripts/build_index.py",
+        "--corpus",
+        "missing.jsonl",
+        "--index-dir",
+        "indexes",
+        "--embedding-model",
+        "BAAI/bge-m3",
+        "--llm-provider",
+        removed_provider,
+    )
+
+    assert result.returncode != 0
+    assert "invalid choice" in result.stderr
+    assert "common" in result.stderr
     assert "rightcode" in result.stderr
 
 
