@@ -23,11 +23,15 @@ from training.checkpointing import (
 from training.monitoring import (
     SwanLabScalarLogger,
     build_training_progress_metrics,
+    checkpoint_step_from_path,
     configure_swanlab_environment,
     is_swanlab_enabled,
     normalize_report_to,
     normalize_swanlab_mode,
+    normalize_swanlab_resume,
     require_swanlab,
+    resolve_swanlab_run_id,
+    should_replay_swanlab_history,
 )
 from training.sft_label_mask import tokenize_chat_with_assistant_labels
 
@@ -47,6 +51,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swanlab-mode", help="SwanLab mode, for example: cloud.")
     parser.add_argument("--swanlab-logdir", help="SwanLab local log directory.")
     parser.add_argument("--swanlab-experiment-name", help="SwanLab experiment name.")
+    parser.add_argument("--swanlab-run-id", help="Explicit SwanLab run id to resume or create.")
+    parser.add_argument("--swanlab-resume", choices=["allow", "must", "never"], help="SwanLab resume mode.")
+    parser.add_argument(
+        "--swanlab-replay-history",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Replay local metrics history to SwanLab before resuming training.",
+    )
     parser.add_argument("--max-samples", type=int)
     parser.add_argument("--max-steps", type=int)
     parser.add_argument("--num-train-epochs", type=float)
@@ -378,15 +390,16 @@ def main() -> None:
         or config.get("swanlab_experiment_name")
         or output_dir.name
     )
-    if is_swanlab_enabled(report_to):
-        configure_swanlab_environment(
-            project=swanlab_project,
-            workspace=swanlab_workspace,
-            mode=swanlab_mode,
-            logdir=swanlab_logdir,
-            experiment_name=swanlab_experiment_name,
-        )
-        require_swanlab(report_to)
+    swanlab_resume = normalize_swanlab_resume(args.swanlab_resume or config.get("swanlab_resume") or "allow") or "allow"
+    swanlab_replay_setting = (
+        args.swanlab_replay_history
+        if args.swanlab_replay_history is not None
+        else config.get("swanlab_replay_history", "auto")
+    )
+    replay_swanlab_history = should_replay_swanlab_history(
+        swanlab_replay_setting,
+        resume_checkpoint=resume_checkpoint,
+    )
 
     (
         torch,
@@ -404,6 +417,25 @@ def main() -> None:
                 stale_path.unlink()
     trace_output.parent.mkdir(parents=True, exist_ok=True)
     metrics_output.parent.mkdir(parents=True, exist_ok=True)
+
+    swanlab_run_id: str | None = None
+    if is_swanlab_enabled(report_to):
+        swanlab_run_id = resolve_swanlab_run_id(
+            output_dir,
+            explicit_run_id=args.swanlab_run_id,
+            reset=args.train_mode == "overwrite",
+        )
+        configure_swanlab_environment(
+            project=swanlab_project,
+            workspace=swanlab_workspace,
+            mode=swanlab_mode,
+            logdir=swanlab_logdir,
+            experiment_name=swanlab_experiment_name,
+            run_id=swanlab_run_id,
+            resume=swanlab_resume,
+        )
+        require_swanlab(report_to)
+
     resume_state = (
         load_trace_checkpoint_state(torch, resume_checkpoint)
         if resume_checkpoint is not None
@@ -544,6 +576,9 @@ def main() -> None:
         "swanlab_mode": swanlab_mode if is_swanlab_enabled(report_to) else None,
         "swanlab_logdir": str(swanlab_logdir) if is_swanlab_enabled(report_to) else None,
         "swanlab_experiment_name": swanlab_experiment_name if is_swanlab_enabled(report_to) else None,
+        "swanlab_run_id": swanlab_run_id if is_swanlab_enabled(report_to) else None,
+        "swanlab_resume": swanlab_resume if is_swanlab_enabled(report_to) else None,
+        "swanlab_replay_history": replay_swanlab_history if is_swanlab_enabled(report_to) else None,
     }
     if resume_state is not None:
         assert_trace_resume_config_compatible(resume_state["run_config"], run_config)
@@ -556,10 +591,22 @@ def main() -> None:
             mode=swanlab_mode,
             logdir=swanlab_logdir,
             config=run_config,
+            run_id=swanlab_run_id,
+            resume=swanlab_resume,
         )
         if is_swanlab_enabled(report_to)
         else None
     )
+    if swanlab_logger is not None and replay_swanlab_history:
+        replay_until_step = None
+        if resume_state is not None:
+            replay_until_step = checkpoint_step_from_path(resume_checkpoint) or int(resume_state["global_step"])
+        swanlab_logger.replay_history(
+            output_dir,
+            max_step=replay_until_step,
+            metrics_path=metrics_output,
+            checkpoint_path=resume_checkpoint,
+        )
 
     resume_completed_micro_batches = (
         int(resume_state["completed_micro_batches"])

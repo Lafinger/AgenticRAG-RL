@@ -65,6 +65,45 @@ def test_standard_trainer_accepts_eval_data_path(monkeypatch: pytest.MonkeyPatch
     assert standard.parse_args().eval_data_path == "eval.jsonl"
 
 
+def test_trainers_accept_swanlab_resume_options(monkeypatch: pytest.MonkeyPatch) -> None:
+    standard = load_script(STANDARD_SCRIPT, "train_sft_unsloth_swanlab_resume_args")
+    trace = load_script(TRACE_SCRIPT, "train_sft_unsloth_trace_swanlab_resume_args")
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_sft_unsloth.py",
+            "--swanlab-run-id",
+            "run-abc",
+            "--swanlab-resume",
+            "allow",
+            "--no-swanlab-replay-history",
+        ],
+    )
+    standard_args = standard.parse_args()
+    assert standard_args.swanlab_run_id == "run-abc"
+    assert standard_args.swanlab_resume == "allow"
+    assert standard_args.swanlab_replay_history is False
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_sft_unsloth_trace.py",
+            "--swanlab-run-id",
+            "run-trace",
+            "--swanlab-resume",
+            "must",
+            "--swanlab-replay-history",
+        ],
+    )
+    trace_args = trace.parse_args()
+    assert trace_args.swanlab_run_id == "run-trace"
+    assert trace_args.swanlab_resume == "must"
+    assert trace_args.swanlab_replay_history is True
+
+
 def test_standard_trainer_adds_eval_strategy_for_current_sft_config() -> None:
     standard = load_script(STANDARD_SCRIPT, "train_sft_unsloth_eval_strategy_current")
 

@@ -1348,6 +1348,7 @@ uv run python .\scripts\eval_agentic.py `
 - 当前 repo 不内置 Unsloth；训练前先按 `docs/环境安装.md` 装好 CUDA Torch、Unsloth、TRL、datasets、PEFT 等训练栈。
 - 标准训练、可追溯训练、SwanLab、本地 dashboard 和 LoRA 合并命令统一见 `docs/训练&观测.md`。
 - 训练后测评见 `docs/训练测评.md`，按 step 追溯异常样本见 `docs/训练追溯.md`。
+- 断点续训会复用 `output_dir` 下的 `swanlab_run_id.txt`，自动设置 SwanLab resume，并把本地历史 `metrics.jsonl` 或 checkpoint `trainer_state.json` 中的旧 step 标量回放到同一个 SwanLab run。SFT JSONL 训练数据不会因此改变。
 
 ```mermaid
 flowchart LR
@@ -1364,6 +1365,7 @@ flowchart LR
 - 可追溯训练输出：`training/outputs/unsloth_sft_qwen3_4b_lora_trace`
 - SwanLab 云端实验：`agentic-rag-rl`
 - dashboard 指标：`training/outputs/*/metrics.jsonl` 或 `trace_metrics.jsonl`
+- SwanLab 续训状态：`training/outputs/*/swanlab_run_id.txt` 和 `swanlab_history_replay_state.json`
 - 合并模型：`models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged`
 - 该模型作为 GRPO Stage1 的默认 base
 
@@ -1374,6 +1376,7 @@ flowchart LR
 | `training/unsloth_sft.yaml` | model/dataset/template/output_dir | SFT 训练参数 | Unsloth |
 | `training/outputs/unsloth_sft_qwen3_4b_lora` | LoRA adapter | 新协议重训后才是有效主 SFT adapter | export |
 | `training/outputs/unsloth_sft_qwen3_4b_lora/metrics.jsonl` | Trainer JSONL metrics | dashboard 标准曲线 | `docs/训练&观测.md` |
+| `training/outputs/unsloth_sft_qwen3_4b_lora/swanlab_history_replay_state.json` | SwanLab 历史回放审计 | 记录回放到哪个 run 和 step，避免重复上传 | `docs/训练&观测.md` |
 | `training/outputs/unsloth_sft_qwen3_4b_lora_trace/step_sample_trace.jsonl` | JSONL trace | 每个 optimizer step 对应的样本、loss、lr、grad norm、eval loss | 突刺追溯 |
 | SwanLab `agentic-rag-rl` | 云端实验 | loss、eval loss、grad norm、learning rate 曲线 | `docs/训练&观测.md` |
 | `models/Qwen3-4B-Instruct-2507-Unsloth-SFT-merged` | 合并后的 HF 模型目录 | 新协议重训后作为 GRPO 初始模型 | GRPO / RL |

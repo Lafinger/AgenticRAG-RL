@@ -15,12 +15,17 @@ sys.path.insert(0, str(ROOT))
 
 from training.checkpointing import reset_output_dir, resolve_trainer_resume_checkpoint
 from training.monitoring import (
+    checkpoint_step_from_path,
     configure_swanlab_environment,
+    create_swanlab_history_replay_callback,
     create_jsonl_metrics_callback,
     is_swanlab_enabled,
     normalize_report_to,
     normalize_swanlab_mode,
+    normalize_swanlab_resume,
     require_swanlab,
+    resolve_swanlab_run_id,
+    should_replay_swanlab_history,
 )
 from training.sft_label_mask import tokenize_chat_with_assistant_labels
 
@@ -40,6 +45,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swanlab-mode", help="SwanLab mode, for example: cloud.")
     parser.add_argument("--swanlab-logdir", help="SwanLab local log directory.")
     parser.add_argument("--swanlab-experiment-name", help="SwanLab experiment name.")
+    parser.add_argument("--swanlab-run-id", help="Explicit SwanLab run id to resume or create.")
+    parser.add_argument("--swanlab-resume", choices=["allow", "must", "never"], help="SwanLab resume mode.")
+    parser.add_argument(
+        "--swanlab-replay-history",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Replay local metrics history to SwanLab before resuming training.",
+    )
     parser.add_argument("--metrics-output", help="JSONL metrics output path for the local dashboard.")
     parser.add_argument("--disable-jsonl-metrics", action="store_true")
     mode_group = parser.add_mutually_exclusive_group()
@@ -178,20 +191,38 @@ def main() -> None:
         if args.train_mode == "resume"
         else None
     )
+    if args.train_mode == "overwrite":
+        reset_output_dir(output_path)
 
+    swanlab_run_id: str | None = None
+    swanlab_resume = normalize_swanlab_resume(args.swanlab_resume or config.get("swanlab_resume") or "allow") or "allow"
+    swanlab_replay_setting = (
+        args.swanlab_replay_history
+        if args.swanlab_replay_history is not None
+        else config.get("swanlab_replay_history", "auto")
+    )
+    replay_swanlab_history = should_replay_swanlab_history(
+        swanlab_replay_setting,
+        resume_checkpoint=resume_checkpoint,
+    )
     if is_swanlab_enabled(report_to):
+        swanlab_run_id = resolve_swanlab_run_id(
+            output_path,
+            explicit_run_id=args.swanlab_run_id,
+            reset=args.train_mode == "overwrite",
+        )
         configure_swanlab_environment(
             project=swanlab_project,
             workspace=swanlab_workspace,
             mode=swanlab_mode,
             logdir=swanlab_logdir,
             experiment_name=swanlab_experiment_name,
+            run_id=swanlab_run_id,
+            resume=swanlab_resume,
         )
         require_swanlab(report_to)
 
     Dataset, SFTConfig, SFTTrainer, FastLanguageModel = require_unsloth_stack()
-    if args.train_mode == "overwrite":
-        reset_output_dir(output_path)
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=model_name,
@@ -263,6 +294,16 @@ def main() -> None:
     if eval_dataset is not None:
         trainer_kwargs["eval_dataset"] = eval_dataset
     trainer = SFTTrainer(**trainer_kwargs)
+    if is_swanlab_enabled(report_to) and replay_swanlab_history and swanlab_run_id:
+        trainer.add_callback(
+            create_swanlab_history_replay_callback(
+                output_dir=output_path,
+                run_id=swanlab_run_id,
+                max_step=checkpoint_step_from_path(resume_checkpoint),
+                metrics_path=metrics_output,
+                checkpoint_path=resume_checkpoint,
+            )
+        )
     if not args.disable_jsonl_metrics:
         trainer.add_callback(create_jsonl_metrics_callback(metrics_output, reset=args.train_mode == "overwrite"))
     train_with_resume_mode(trainer, resume_checkpoint)

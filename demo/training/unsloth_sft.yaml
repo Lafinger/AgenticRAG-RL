@@ -31,5 +31,7 @@ report_to:
   - swanlab
 swanlab_project: agentic-rag-rl
 swanlab_mode: cloud
+swanlab_resume: allow
+swanlab_replay_history: auto
 swanlab_logdir: ./training/swanlab
 metrics_output: ./training/outputs/unsloth_sft_qwen3_4b_lora/metrics.jsonl
