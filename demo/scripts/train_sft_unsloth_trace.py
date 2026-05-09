@@ -34,6 +34,7 @@ from training.monitoring import (
     should_replay_swanlab_history,
 )
 from training.sft_label_mask import tokenize_chat_with_assistant_labels
+from training.weighted_sft import weighted_causal_lm_loss
 
 
 def parse_args() -> argparse.Namespace:
@@ -162,6 +163,7 @@ class TraceSample:
     input_ids: list[int]
     attention_mask: list[int]
     labels: list[int]
+    loss_weights: list[float]
     token_length: int
     supervised_token_count: int
     metadata: dict[str, Any]
@@ -185,6 +187,7 @@ def build_samples(records: list[dict[str, Any]], tokenizer: Any, *, max_seq_leng
                 input_ids=masked.input_ids,
                 attention_mask=masked.attention_mask,
                 labels=masked.labels,
+                loss_weights=masked.loss_weights,
                 token_length=masked.token_length,
                 supervised_token_count=masked.supervised_token_count,
                 metadata=metadata,
@@ -325,19 +328,23 @@ def collate_trace_features(features: list[dict[str, Any]], tokenizer: Any, torch
     input_ids = []
     attention_mask = []
     labels = []
+    loss_weights = []
     for feature in features:
         ids = list(feature["input_ids"])
         mask = list(feature["attention_mask"])
         feature_labels = list(feature["labels"])
+        feature_loss_weights = list(feature.get("loss_weights", [1.0 if label != -100 else 0.0 for label in feature_labels]))
         pad_len = max_len - len(ids)
         input_ids.append(ids + [tokenizer.pad_token_id] * pad_len)
         attention_mask.append(mask + [0] * pad_len)
         labels.append(feature_labels + [-100] * pad_len)
+        loss_weights.append(feature_loss_weights + [0.0] * pad_len)
 
     return {
         "input_ids": torch_module.tensor(input_ids, dtype=torch_module.long),
         "attention_mask": torch_module.tensor(attention_mask, dtype=torch_module.long),
         "labels": torch_module.tensor(labels, dtype=torch_module.long),
+        "loss_weights": torch_module.tensor(loss_weights, dtype=getattr(torch_module, "float32", torch_module.long)),
         "trace_items": [
             {
                 "sample_id": feature["sample_id"],
@@ -477,6 +484,7 @@ def main() -> None:
                 "input_ids": sample.input_ids,
                 "attention_mask": sample.attention_mask,
                 "labels": sample.labels,
+                "loss_weights": sample.loss_weights,
                 "sample_id": sample.sample_id,
                 "source_line": sample.source_line,
                 "token_length": sample.token_length,
@@ -544,8 +552,10 @@ def main() -> None:
                     "attention_mask": torch.tensor([sample.attention_mask], dtype=torch.long, device=device),
                 }
                 labels = torch.tensor([sample.labels], dtype=torch.long, device=device)
+                loss_weights = torch.tensor([sample.loss_weights], dtype=torch.float32, device=device)
                 outputs = model(**encoded, labels=labels)
-                losses.append(float(outputs.loss.detach().cpu()))
+                loss = weighted_causal_lm_loss(outputs.logits, labels, loss_weights)
+                losses.append(float(loss.detach().cpu()))
         model.train()
         return sum(losses) / max(len(losses), 1)
 
@@ -638,8 +648,9 @@ def main() -> None:
 
             trace_items = batch.pop("trace_items")
             batch = {key: value.to(device) for key, value in batch.items()}
+            loss_weights = batch.pop("loss_weights")
             outputs = model(**batch)
-            raw_loss = outputs.loss
+            raw_loss = weighted_causal_lm_loss(outputs.logits, batch["labels"], loss_weights)
             loss = raw_loss / gradient_accumulation_steps
             loss.backward()
             running_loss += float(raw_loss.detach().cpu())

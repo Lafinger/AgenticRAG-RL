@@ -51,7 +51,7 @@ def test_trace_sft_config_contains_yaml_managed_training_controls() -> None:
     assert config["learning_rate"] == 5.0e-5
     assert config["eval_steps"] == 105
     assert config["max_grad_norm"] == 1.0
-    assert config["eval_data_path"] == "./data/novel_eval/sft_zh_unsloth_react_v3/eval.jsonl"
+    assert config["eval_data_path"] == "./data/novel_eval/sft_zh_unsloth_react_v4/eval.jsonl"
 
 
 def test_trace_sft_cli_still_overrides_yaml_training_controls() -> None:

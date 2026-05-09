@@ -28,6 +28,7 @@ from training.monitoring import (
     should_replay_swanlab_history,
 )
 from training.sft_label_mask import tokenize_chat_with_assistant_labels
+from training.weighted_sft import WeightedDataCollatorForLanguageModeling, make_weighted_sft_trainer_class
 
 
 def parse_args() -> argparse.Namespace:
@@ -117,6 +118,7 @@ def build_masked_dataset_records(
                 "input_ids": sample.input_ids,
                 "attention_mask": sample.attention_mask,
                 "labels": sample.labels,
+                "loss_weights": sample.loss_weights,
             }
         )
     return rendered
@@ -285,15 +287,19 @@ def main() -> None:
         add_eval_training_args(training_config, config, SFTConfig)
 
     training_args = SFTConfig(**training_config)
+    WeightedSFTTrainer = make_weighted_sft_trainer_class(SFTTrainer)
     trainer_kwargs: dict[str, Any] = {
         "model": model,
         "processing_class": tokenizer,
         "train_dataset": dataset,
         "args": training_args,
+        "data_collator": WeightedDataCollatorForLanguageModeling(
+            pad_token_id=int(tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id)
+        ),
     }
     if eval_dataset is not None:
         trainer_kwargs["eval_dataset"] = eval_dataset
-    trainer = SFTTrainer(**trainer_kwargs)
+    trainer = WeightedSFTTrainer(**trainer_kwargs)
     if is_swanlab_enabled(report_to) and replay_swanlab_history and swanlab_run_id:
         trainer.add_callback(
             create_swanlab_history_replay_callback(

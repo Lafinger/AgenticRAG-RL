@@ -74,18 +74,22 @@ messages + tools --canonical renderer 渲染--> chat 文本 --tokenizer 编码--
 </tool_call>
 ```
 
-### Q1.2: v3 为什么新增多种 sample_type？
+### Q1.2: V3/V4 为什么新增多种 sample_type？
 
-答：上一版训练后，50 条 Agent loop 测评中大量样本首轮直接输出 `</tool_call>`。v3 不新增独立模型路线，而是在主线 SFT 内拆出更自然的训练视角：
+答：V2 训练后，50 条 Agent loop 测评中大量样本首轮直接输出 `</tool_call>`。V3 不新增独立模型路线，而是在主线 SFT 内拆出更自然的训练视角；V4 继续沿用这四类主线样本，并提高 `final_answer_only` 占比，用于修复加 `<think>` 锚点后仍不会稳定输出 `<answer>` 的问题：
 
 | sample_type | 作用 |
 | --- | --- |
 | `full_trace` | 学习完整 Oracle Agent 轨迹 |
 | `first_action_only` | 2 倍加权首轮 `<think> + <tool_call>`，稳定 assistant 起始状态 |
 | `next_action_only` | 带历史 assistant/tool 上下文，只监督下一轮工具动作 |
-| `final_answer_only` | 带完整历史上下文，只监督最终 `<answer>` |
+| `final_answer_only` | 带完整历史上下文，只监督最终 `<answer>`；V4 中也做 2 倍强化 |
 
 历史 assistant turn 会写入 `loss: false`。它仍进入模型上下文，但不会参与 loss。
+
+### Q1.3: V4 为什么不是简单继续加数据，而是增加 `loss_weights`？
+
+答：V3 已经把数据拆成更自然的 Agent 历史，但主测评仍出现 50/50 首轮以 `</tool_call>` 开头。这个现象说明问题集中在 assistant turn 的协议边界，而不是 JSONL 整体缺几条样本。V4 因此在 tokenization 后派生 `loss_weights`，提高 assistant 首 token、`<think>`、`<answer>` 和 `<|im_end|>` 的训练权重；`</tool_call>` 不额外加权，避免继续强化 closing tag 先验。
 
 ### Q1.5: 为什么 JSONL 里要保留 `tool` role，而不是提前改成 user？
 
@@ -138,7 +142,7 @@ uv run python `
   -c $code
 ```
 
-## 二、训练样本三件套
+## 二、训练样本四项张量
 
 ### Q3: attention_mask 有什么用？
 
@@ -222,12 +226,13 @@ labels = [
 
 ### Q5: 最终给训练器的一条样本长什么样？
 
-答：最终给训练器的是一条包含三个数组的样本。三个数组各自负责：
+答：最终给训练器的是一条包含四个数组的样本。前三个数组负责常规 causal LM 训练，`loss_weights` 是 V4 增加的协议边界权重：
 
 ```text
 input_ids        模型看什么
 attention_mask   哪些输入是真的，哪些是 padding
 labels           哪些位置要计算训练 loss
+loss_weights     每个 label token 的 loss 权重
 ```
 
 它们共同组成：
@@ -241,6 +246,13 @@ labels           哪些位置要计算训练 loss
         123, 456, 789,
         -100, -100, ...,
         234, 567, 890,
+        ...
+    ],
+    "loss_weights": [
+        0.0, 0.0, ...,
+        12.0, 12.0, 1.0,
+        0.0, 0.0, ...,
+        12.0, 1.0, 4.0,
         ...
     ]
 }

@@ -28,6 +28,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--show-rendered", action="store_true")
     parser.add_argument("--show-supervised", action="store_true")
     parser.add_argument("--eval-summary", help="Optional Agent loop summary JSON to include in the report.")
+    parser.add_argument("--probe-model", help="Optional HF model path/name for first-token protocol probability probe.")
+    parser.add_argument("--probe-adapter", help="Optional LoRA adapter path for the probability probe.")
+    parser.add_argument("--probe-max-prompts", type=int, default=5)
+    parser.add_argument("--probe-device-map", default="auto")
+    parser.add_argument("--probe-dtype", choices=["auto", "float16", "bfloat16", "float32"], default="auto")
     parser.add_argument("--trust-remote-code", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
 
@@ -60,6 +65,138 @@ def iter_jsonl(path: Path, limit: int) -> list[dict[str, Any]]:
 
 def assistant_contents(record: dict[str, Any]) -> list[str]:
     return [str(message.get("content", "")) for message in record.get("messages", []) if message.get("role") == "assistant"]
+
+
+def assistant_loss_enabled(message: dict[str, Any]) -> bool:
+    return message.get("role") == "assistant" and message.get("loss") is not False and message.get("train") is not False and message.get("trainable") is not False
+
+
+def probe_prompt(record: dict[str, Any]) -> str | None:
+    messages = record.get("messages")
+    if not isinstance(messages, list):
+        return None
+    for index, message in enumerate(messages):
+        if assistant_loss_enabled(message):
+            tools = record.get("tools") if isinstance(record.get("tools"), list) else None
+            return render_canonical_chat(messages[:index], tools=tools, add_generation_prompt=True)
+    return None
+
+
+def torch_dtype(dtype_name: str) -> Any:
+    if dtype_name == "auto":
+        return "auto"
+    import torch
+
+    return {"float16": torch.float16, "bfloat16": torch.bfloat16, "float32": torch.float32}[dtype_name]
+
+
+def resolve_local_path_or_repo(value: str) -> str:
+    path = Path(value).expanduser()
+    if path.exists():
+        return str(path.resolve())
+    if not path.is_absolute():
+        repo_relative = ROOT / path
+        if repo_relative.exists():
+            return str(repo_relative.resolve())
+    return value
+
+
+def load_probe_model(args: argparse.Namespace) -> tuple[Any, Any]:
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    model_path = resolve_local_path_or_repo(str(args.probe_model))
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=args.trust_remote_code)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
+        device_map=args.probe_device_map,
+        torch_dtype=torch_dtype(args.probe_dtype),
+        trust_remote_code=args.trust_remote_code,
+    )
+    if args.probe_adapter:
+        from peft import PeftModel
+
+        model = PeftModel.from_pretrained(model, resolve_local_path_or_repo(str(args.probe_adapter)))
+    model.eval()
+    return model, tokenizer
+
+
+def first_model_device(model: Any) -> Any:
+    for parameter in model.parameters():
+        if getattr(parameter, "device", None) is not None and parameter.device.type != "meta":
+            return parameter.device
+    raise RuntimeError("Cannot find model device.")
+
+
+def sequence_probability(model: Any, tokenizer: Any, prompt_text: str, sequence_text: str) -> float | None:
+    import torch
+
+    token_ids = tokenizer.encode(sequence_text, add_special_tokens=False)
+    if not token_ids:
+        return None
+    encoded = tokenizer(prompt_text, return_tensors="pt", add_special_tokens=False)
+    device = first_model_device(model)
+    input_ids = encoded["input_ids"].to(device)
+    attention_mask = encoded.get("attention_mask")
+    if attention_mask is not None:
+        attention_mask = attention_mask.to(device)
+    probability = 1.0
+    with torch.no_grad():
+        for token_id in token_ids:
+            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            probs = torch.softmax(outputs.logits[0, -1].float(), dim=-1)
+            probability *= float(probs[int(token_id)].detach().cpu())
+            next_id = torch.tensor([[int(token_id)]], dtype=input_ids.dtype, device=device)
+            input_ids = torch.cat([input_ids, next_id], dim=1)
+            if attention_mask is not None:
+                attention_mask = torch.cat([attention_mask, torch.ones_like(next_id)], dim=1)
+    return probability
+
+
+def run_probability_probe(args: argparse.Namespace, records: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not args.probe_model:
+        return None
+    model, tokenizer = load_probe_model(args)
+    prompts = [prompt for record in records for prompt in [probe_prompt(record)] if prompt][: args.probe_max_prompts]
+    if not prompts:
+        return {"prompt_count": 0}
+    literals = ["<think>", "<answer>", "<tool_call>", "</tool_call>"]
+    rows: list[dict[str, Any]] = []
+    top1_counts: dict[str, int] = {}
+    for prompt in prompts:
+        encoded = tokenizer(prompt, return_tensors="pt", add_special_tokens=False)
+        device = first_model_device(model)
+        input_ids = encoded["input_ids"].to(device)
+        attention_mask = encoded.get("attention_mask")
+        if attention_mask is not None:
+            attention_mask = attention_mask.to(device)
+        import torch
+
+        with torch.no_grad():
+            logits = model(input_ids=input_ids, attention_mask=attention_mask).logits[0, -1]
+            probs = torch.softmax(logits.float(), dim=-1)
+            values, ids = torch.topk(probs, 5)
+        top_tokens = [
+            {
+                "token_id": int(token_id),
+                "text": tokenizer.decode([int(token_id)], skip_special_tokens=False),
+                "prob": float(prob),
+            }
+            for prob, token_id in zip(values.detach().cpu().tolist(), ids.detach().cpu().tolist(), strict=True)
+        ]
+        top1 = top_tokens[0]["text"]
+        top1_counts[top1] = top1_counts.get(top1, 0) + 1
+        rows.append(
+            {
+                "top_tokens": top_tokens,
+                "sequence_probs": {literal: sequence_probability(model, tokenizer, prompt, literal) for literal in literals},
+            }
+        )
+    return {
+        "prompt_count": len(prompts),
+        "top1_counts": top1_counts,
+        "top1_closing_tool_rate": top1_counts.get("</tool_call>", 0) / max(len(prompts), 1),
+        "probes": rows,
+    }
 
 
 def main() -> None:
@@ -119,6 +256,10 @@ def main() -> None:
     if args.eval_summary:
         with project_path(args.eval_summary).open("r", encoding="utf-8") as handle:
             report["eval_summary"] = json.load(handle)
+
+    probe = run_probability_probe(args, records)
+    if probe is not None:
+        report["first_token_probe"] = probe
 
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if args.show_rendered and first_rendered:

@@ -1,8 +1,8 @@
 model_name_or_path: unsloth/Qwen3-4B-Instruct-2507
-data_path: ./data/novel_eval/sft_zh_unsloth_react_v3/train_cli.jsonl
-eval_data_path: ./data/novel_eval/sft_zh_unsloth_react_v3/eval.jsonl
-output_dir: ./training/outputs/unsloth_sft_qwen3_4b_lora_react_v3
-merged_export_dir: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v3-merged
+data_path: ./data/novel_eval/sft_zh_unsloth_react_v4/train_cli.jsonl
+eval_data_path: ./data/novel_eval/sft_zh_unsloth_react_v4/eval.jsonl
+output_dir: ./training/outputs/unsloth_sft_qwen3_4b_lora_react_v4
+merged_export_dir: ./models/Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v4-merged
 max_seq_length: 2048
 load_in_4bit: true
 lora_rank: 64
@@ -34,4 +34,4 @@ swanlab_mode: cloud
 swanlab_resume: allow
 swanlab_replay_history: auto
 swanlab_logdir: ./training/swanlab
-metrics_output: ./training/outputs/unsloth_sft_qwen3_4b_lora_react_v3/metrics.jsonl
+metrics_output: ./training/outputs/unsloth_sft_qwen3_4b_lora_react_v4/metrics.jsonl

@@ -79,6 +79,12 @@ def parse_args() -> argparse.Namespace:
         default="none",
         help="Optional diagnostic generation prefix. Main baseline uses none.",
     )
+    parser.add_argument(
+        "--protocol-constraints",
+        choices=["none", "strict"],
+        default="none",
+        help="Optional generation guard. Main baseline uses none.",
+    )
     parser.add_argument("--device-map", default="auto")
     parser.add_argument("--dtype", choices=["auto", "float16", "bfloat16", "float32"], default="auto")
     parser.add_argument("--system-prompt", default=AGENT_SYSTEM_PROMPT)
@@ -335,6 +341,22 @@ class StopOnActionCriteria:
         return ANSWER_RE.search(generated_text) is not None or COMPLETE_REACT_TOOL_ACTION_RE.search(generated_text) is not None
 
 
+class ProtocolStartLogitsProcessor:
+    def __init__(self, tokenizer: Any, prompt_length: int) -> None:
+        self.prompt_length = prompt_length
+        self.blocked_token_ids: list[int] = []
+        for literal in ("</tool_call>", "<tool_call>", "</think>", "<|im_end|>"):
+            token_ids = tokenizer.encode(literal, add_special_tokens=False)
+            if len(token_ids) == 1:
+                self.blocked_token_ids.append(int(token_ids[0]))
+
+    def __call__(self, input_ids: Any, scores: Any) -> Any:
+        if int(input_ids.shape[-1]) == self.prompt_length:
+            for token_id in self.blocked_token_ids:
+                scores[:, token_id] = float("-inf")
+        return scores
+
+
 def best_scores(prediction: str, gold: str, aliases: list[str]) -> tuple[float, float]:
     candidates = [gold, *aliases]
     return (
@@ -480,7 +502,7 @@ def run_agentic_loop(
 
 def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespace) -> Callable[[list[dict[str, str]]], str]:
     import torch
-    from transformers import StoppingCriteriaList
+    from transformers import LogitsProcessorList, StoppingCriteriaList
 
     def generate_turn(messages: list[dict[str, str]]) -> str:
         anchor_text = assistant_start_anchor_text(args.assistant_start_anchor)
@@ -505,6 +527,10 @@ def build_model_generate_turn(model: Any, tokenizer: Any, args: argparse.Namespa
             "repetition_penalty": args.repetition_penalty,
             "stopping_criteria": StoppingCriteriaList([StopOnActionCriteria(tokenizer, int(input_ids.shape[-1]), anchor_text)]),
         }
+        if args.protocol_constraints == "strict":
+            generation_kwargs["logits_processor"] = LogitsProcessorList(
+                [ProtocolStartLogitsProcessor(tokenizer, int(input_ids.shape[-1]))]
+            )
         if args.temperature <= 0:
             generation_kwargs["do_sample"] = False
         else:
@@ -557,9 +583,16 @@ def build_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
             for record in records
         }
     )
+    constraints = sorted(
+        {
+            str(record.get("metadata", {}).get("protocol_constraints", "none"))
+            for record in records
+        }
+    )
     return {
         "count": count,
         "assistant_start_anchor": anchors[0] if len(anchors) == 1 else anchors,
+        "protocol_constraints": constraints[0] if len(constraints) == 1 else constraints,
         "avg_em": sum(record["em"] for record in records) / divisor,
         "avg_f1": sum(record["f1"] for record in records) / divisor,
         "avg_hop_recall": sum(record["hop_recall"] for record in records) / divisor,
@@ -636,6 +669,7 @@ def main() -> None:
         "top_p": args.top_p,
         "repetition_penalty": args.repetition_penalty,
         "assistant_start_anchor": args.assistant_start_anchor,
+        "protocol_constraints": args.protocol_constraints,
     }
 
     results: list[dict[str, Any]] = []

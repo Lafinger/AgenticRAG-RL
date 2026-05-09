@@ -14,6 +14,11 @@ from agentic_rag_rl.protocols import ASSISTANT_START_MARKER, IM_END_MARKER, rend
 
 
 IGNORE_INDEX = -100
+DEFAULT_LABEL_WEIGHT = 1.0
+ASSISTANT_START_TOKEN_WEIGHT = 12.0
+ACTION_START_TAG_WEIGHT = 12.0
+TOOL_CALL_START_TAG_WEIGHT = 4.0
+ASSISTANT_END_WEIGHT = 4.0
 
 
 @dataclass(frozen=True)
@@ -22,6 +27,7 @@ class MaskedChatSample:
     input_ids: list[int]
     attention_mask: list[int]
     labels: list[int]
+    loss_weights: list[float]
     token_length: int
     supervised_token_count: int
 
@@ -62,6 +68,57 @@ def _token_overlaps_spans(token_start: int, token_end: int, spans: Sequence[tupl
     return any(token_start < span_end and token_end > span_start for span_start, span_end in spans)
 
 
+def _find_literal_spans(text: str, literal: str, assistant_spans: Sequence[tuple[int, int]]) -> list[tuple[int, int]]:
+    spans: list[tuple[int, int]] = []
+    cursor = 0
+    while True:
+        index = text.find(literal, cursor)
+        if index < 0:
+            break
+        span = (index, index + len(literal))
+        if _token_overlaps_spans(span[0], span[1], assistant_spans):
+            spans.append(span)
+        cursor = index + len(literal)
+    return spans
+
+
+def _build_loss_weights(
+    rendered_text: str,
+    offsets: Sequence[tuple[int, int]],
+    labels: Sequence[int],
+    assistant_spans: Sequence[tuple[int, int]],
+) -> list[float]:
+    weights = [DEFAULT_LABEL_WEIGHT if label != IGNORE_INDEX else 0.0 for label in labels]
+
+    high_weight_spans = _find_literal_spans(rendered_text, "<think>", assistant_spans)
+    high_weight_spans.extend(_find_literal_spans(rendered_text, "<answer>", assistant_spans))
+    tool_call_start_spans = _find_literal_spans(rendered_text, "<tool_call>", assistant_spans)
+    assistant_end_spans = _find_literal_spans(rendered_text, IM_END_MARKER, assistant_spans)
+
+    for span_start, span_end in high_weight_spans:
+        for index, (token_start, token_end) in enumerate(offsets):
+            if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
+                weights[index] = max(weights[index], ACTION_START_TAG_WEIGHT)
+
+    for span_start, span_end in tool_call_start_spans:
+        for index, (token_start, token_end) in enumerate(offsets):
+            if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
+                weights[index] = max(weights[index], TOOL_CALL_START_TAG_WEIGHT)
+
+    for span_start, span_end in assistant_end_spans:
+        for index, (token_start, token_end) in enumerate(offsets):
+            if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
+                weights[index] = max(weights[index], ASSISTANT_END_WEIGHT)
+
+    for span_start, span_end in assistant_spans:
+        for index, (token_start, token_end) in enumerate(offsets):
+            if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
+                weights[index] = max(weights[index], ASSISTANT_START_TOKEN_WEIGHT)
+                break
+
+    return weights
+
+
 def _assistant_loss_enabled(message: dict[str, Any]) -> bool:
     if message.get("loss") is False:
         return False
@@ -99,12 +156,19 @@ def tokenize_chat_with_assistant_labels(
         token_id if _token_overlaps_spans(int(start), int(end), assistant_spans) else IGNORE_INDEX
         for token_id, (start, end) in zip(input_ids, offsets, strict=True)
     ]
+    loss_weights = _build_loss_weights(
+        rendered_text,
+        [(int(start), int(end)) for start, end in offsets],
+        labels,
+        assistant_spans,
+    )
     token_length = len(input_ids)
 
     if max_length is not None:
         input_ids = input_ids[:max_length]
         attention_mask = attention_mask[:max_length]
         labels = labels[:max_length]
+        loss_weights = loss_weights[:max_length]
 
     supervised_token_count = sum(1 for label in labels if label != IGNORE_INDEX)
     if supervised_token_count == 0:
@@ -115,6 +179,7 @@ def tokenize_chat_with_assistant_labels(
         input_ids=input_ids,
         attention_mask=attention_mask,
         labels=labels,
+        loss_weights=loss_weights,
         token_length=token_length,
         supervised_token_count=supervised_token_count,
     )

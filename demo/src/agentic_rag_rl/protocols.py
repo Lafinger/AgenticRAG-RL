@@ -90,7 +90,7 @@ def render_tools_block(tools: list[dict[str, Any]]) -> str:
         '{"name": <function-name>, "arguments": <args-json-object>}\n'
         "</tool_call>\n\n"
         "Every assistant turn must start with either <think> or <answer>. "
-        "Never start a turn with </tool_call>, and never emit a closing tag unless you opened the same tag in that turn.\n\n"
+        "Never start a turn with <tool_call> or </tool_call>, and never emit a closing tag unless you opened the same tag in that turn.\n\n"
         "When enough evidence has been retrieved, stop calling tools and answer with <answer>...</answer>."
     )
 

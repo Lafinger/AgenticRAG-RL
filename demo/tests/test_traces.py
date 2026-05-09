@@ -23,8 +23,8 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     grpo_rows = build_grpo_rows(examples)
 
     assert len(traces) == 2
-    assert len(sft_records) == 10
-    assert len(sharegpt_records) == 10
+    assert len(sft_records) == 12
+    assert len(sharegpt_records) == 12
     assert examples[0].hops[0].search_tools == ["keyword_search"]
     assert traces[0]["messages"][0]["role"] == "system"
     assert traces[0]["tools"] == TOOL_SCHEMAS
@@ -83,6 +83,9 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     assert next_action["messages"][-1]["loss"] is True
     assert next_action["messages"][-1]["content"].startswith("<think>已获得上一跳线索“")
     assert final_answer["metadata"]["sample_type"] == "final_answer_only"
+    assert final_answer["metadata"]["repeat_index"] == 1
+    assert sft_records[5]["metadata"]["sample_type"] == "final_answer_only"
+    assert sft_records[5]["metadata"]["repeat_index"] == 2
     assert final_answer["messages"][2]["loss"] is False
     assert final_answer["messages"][4]["loss"] is False
     assert final_answer["messages"][-1]["loss"] is True

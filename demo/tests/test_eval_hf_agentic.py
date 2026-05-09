@@ -384,6 +384,7 @@ def test_build_summary_includes_agent_loop_diagnostic_rates() -> None:
 
     assert summary["max_turns_exceeded_rate"] == 0.5
     assert summary["assistant_start_anchor"] == "none"
+    assert summary["protocol_constraints"] == "none"
     assert summary["avg_valid_tool_calls"] == 1.5
     assert summary["avg_turns"] == 1.5
     assert summary["think_tag_rate"] == 0.5
@@ -393,6 +394,29 @@ def test_build_summary_includes_agent_loop_diagnostic_rates() -> None:
     assert summary["malformed_tool_fragment_rate"] == 1 / 3
     assert summary["multi_action_turn_rate"] == 1 / 3
     assert summary["starts_with_closing_tool_rate"] == 1 / 3
+
+
+def test_protocol_start_logits_processor_blocks_invalid_start_tags() -> None:
+    module = load_agentic_eval_module()
+    import torch
+
+    class Tokenizer:
+        ids = {"</tool_call>": [5], "<tool_call>": [6], "</think>": [7], "<|im_end|>": [8]}
+
+        def encode(self, text: str, *, add_special_tokens: bool = False) -> list[int]:
+            del add_special_tokens
+            return self.ids.get(text, [99, 100])
+
+    processor = module.ProtocolStartLogitsProcessor(Tokenizer(), prompt_length=3)
+    scores = torch.zeros((1, 10), dtype=torch.float32)
+    blocked = processor(torch.tensor([[1, 2, 3]]), scores.clone())
+    later = processor(torch.tensor([[1, 2, 3, 4]]), scores.clone())
+
+    assert torch.isneginf(blocked[0, 5])
+    assert torch.isneginf(blocked[0, 6])
+    assert torch.isneginf(blocked[0, 7])
+    assert torch.isneginf(blocked[0, 8])
+    assert later[0, 5] == 0
 
 
 def test_write_eval_output_jsonl_writes_records_and_sidecar_summary(tmp_path: Path) -> None:

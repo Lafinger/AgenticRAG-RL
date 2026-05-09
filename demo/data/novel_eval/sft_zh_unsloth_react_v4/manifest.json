@@ -1,0 +1,38 @@
+{
+  "format": "sharegpt_messages_jsonl",
+  "source": "data\\novel_eval\\sft_react_v4\\sharegpt.jsonl",
+  "output": "data\\novel_eval\\sft_zh_unsloth_react_v4\\train.jsonl",
+  "count": 19561,
+  "required_field": "messages",
+  "trainer": "unsloth",
+  "tool_schema": "qwen3",
+  "chat_renderer": "canonical_qwen3_react",
+  "tool_role_preserved": true,
+  "tool_turn_requires_think": true,
+  "message_loss_metadata": "assistant messages with loss=false are context only",
+  "sample_type_counts": {
+    "final_answer_only": 6000,
+    "first_action_only": 6000,
+    "full_trace": 3000,
+    "next_action_only": 4561
+  },
+  "split_train_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth_react_v4\\train_cli.jsonl",
+  "split_eval_output": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth_react_v4\\eval.jsonl",
+  "split_source": "E:\\AI\\AgenticRAG-RL\\demo\\data\\novel_eval\\sft_zh_unsloth_react_v4\\train.jsonl",
+  "split_train_count": 19361,
+  "split_eval_count": 200,
+  "split_eval_stride": 97,
+  "split_eval_disjoint_from_train": true,
+  "split_train_sample_type_counts": {
+    "final_answer_only": 5939,
+    "first_action_only": 5939,
+    "full_trace": 2969,
+    "next_action_only": 4514
+  },
+  "split_eval_sample_type_counts": {
+    "final_answer_only": 61,
+    "first_action_only": 61,
+    "full_trace": 31,
+    "next_action_only": 47
+  }
+}

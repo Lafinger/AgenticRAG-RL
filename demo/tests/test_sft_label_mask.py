@@ -11,7 +11,17 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from training.sft_label_mask import IGNORE_INDEX, IM_END_MARKER, find_assistant_spans, tokenize_chat_with_assistant_labels
+from training.sft_label_mask import (
+    ACTION_START_TAG_WEIGHT,
+    ASSISTANT_END_WEIGHT,
+    ASSISTANT_START_TOKEN_WEIGHT,
+    DEFAULT_LABEL_WEIGHT,
+    IGNORE_INDEX,
+    IM_END_MARKER,
+    TOOL_CALL_START_TAG_WEIGHT,
+    find_assistant_spans,
+    tokenize_chat_with_assistant_labels,
+)
 
 
 class FakeTokenizer:
@@ -53,13 +63,16 @@ def test_assistant_only_labels_mask_non_assistant_turns() -> None:
     sample = tokenize_chat_with_assistant_labels(FakeTokenizer(), messages)
     spans = find_assistant_spans(sample.text)
     assert spans
+    assert len(sample.loss_weights) == len(sample.labels)
 
     for index, label in enumerate(sample.labels):
         inside_assistant = any(index >= start and index < end for start, end in spans)
         if inside_assistant:
             assert label == sample.input_ids[index]
+            assert sample.loss_weights[index] >= DEFAULT_LABEL_WEIGHT
         else:
             assert label == IGNORE_INDEX
+            assert sample.loss_weights[index] == 0.0
     supervised_text = "".join(chr(label) for label in sample.labels if label != IGNORE_INDEX)
     assert supervised_text.count(IM_END_MARKER) == 2
 
@@ -134,6 +147,30 @@ def test_tools_rendering_masks_tool_role_response() -> None:
     assert "<tool_response>" not in supervised_text
 
 
+def test_protocol_boundary_tokens_receive_higher_loss_weights() -> None:
+    content = (
+        '<think>要回答最终问题，先查：问题</think>\n'
+        '<tool_call>\n{"name":"keyword_search","arguments":{"query":"问题"}}\n</tool_call>'
+    )
+    sample = tokenize_chat_with_assistant_labels(
+        FakeTokenizer(),
+        [
+            {"role": "user", "content": "问题"},
+            {"role": "assistant", "content": content},
+        ],
+    )
+
+    def weights_for(fragment: str, *, last: bool = False) -> list[float]:
+        start = sample.text.rindex(fragment) if last else sample.text.index(fragment)
+        return sample.loss_weights[start : start + len(fragment)]
+
+    assert weights_for("<think>")[0] == ASSISTANT_START_TOKEN_WEIGHT
+    assert min(weights_for("<think>")) >= ACTION_START_TAG_WEIGHT
+    assert min(weights_for("<tool_call>")) >= TOOL_CALL_START_TAG_WEIGHT
+    assert max(weights_for("</tool_call>")) == DEFAULT_LABEL_WEIGHT
+    assert min(weights_for(IM_END_MARKER, last=True)) >= ASSISTANT_END_WEIGHT
+
+
 def test_truncation_without_assistant_label_raises_clear_error() -> None:
     messages = [
         {"role": "system", "content": "系统提示"},
@@ -194,3 +231,4 @@ def test_trace_collate_keeps_label_shape_and_masks_padding() -> None:
     assert len(batch["input_ids"][1]) == len(batch["labels"][1])
     assert batch["input_ids"][1] == [4, 0, 0]
     assert batch["labels"][1] == [4, IGNORE_INDEX, IGNORE_INDEX]
+    assert batch["loss_weights"][1] == [1.0, 0.0, 0.0]

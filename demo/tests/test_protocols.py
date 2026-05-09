@@ -43,6 +43,7 @@ def test_canonical_renderer_injects_react_tool_contract_and_tool_response() -> N
 
     assert "# Tools" in rendered
     assert "first write exactly one short search intent" in rendered
+    assert "Never start a turn with <tool_call> or </tool_call>" in rendered
     assert "<think>要回答最终问题，先查：<query></think>" in rendered
     assert "<tool_response>\n[chunk-a] 证据\n</tool_response>" in rendered
     assert "<think>\n\n</think>\n\n<answer>" not in rendered

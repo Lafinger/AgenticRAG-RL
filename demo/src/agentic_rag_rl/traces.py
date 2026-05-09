@@ -309,20 +309,27 @@ def _build_next_action_records(
     return records
 
 
-def _build_final_answer_record(
+def _build_final_answer_records(
     messages: list[dict[str, Any]],
     tools: list[dict[str, Any]],
     metadata: dict[str, Any],
-) -> dict[str, Any]:
+    *,
+    repeat: int = 2,
+) -> list[dict[str, Any]]:
     target_index = _final_answer_index(messages)
     target_messages = _copy_history_with_single_target(messages[: target_index + 1], target_index)
-    return _record(
-        target_messages,
-        tools,
-        metadata,
-        "final_answer_only",
-        history_tool_turn_count=len(_tool_assistant_indices(messages)),
-    )
+    return [
+        _record(
+            target_messages,
+            tools,
+            metadata,
+            "final_answer_only",
+            history_tool_turn_count=len(_tool_assistant_indices(messages)),
+            repeat_index=index + 1,
+            repeat_count=repeat,
+        )
+        for index in range(repeat)
+    ]
 
 
 def _first_message_content(messages: list[dict[str, Any]], role: str) -> str:
@@ -394,7 +401,7 @@ def convert_traces_to_sft_records(traces: Iterable[dict[str, Any]]) -> list[dict
         )
         records.extend(_build_first_action_records(messages, tools, metadata, repeat=2))
         records.extend(_build_next_action_records(messages, tools, metadata))
-        records.append(_build_final_answer_record(messages, tools, metadata))
+        records.extend(_build_final_answer_records(messages, tools, metadata, repeat=2))
     return records
 
 
