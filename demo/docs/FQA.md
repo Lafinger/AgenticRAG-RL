@@ -128,8 +128,14 @@ content = 原始检索证据
 
 可用下面命令验证：
 
-```text
-uv run python -c "from transformers import AutoTokenizer; t=AutoTokenizer.from_pretrained('unsloth/Qwen3-4B-Instruct-2507', trust_remote_code=True); print(t.convert_ids_to_tokens([151644,151645,151643]))"
+```powershell
+$code = @'
+from transformers import AutoTokenizer
+t=AutoTokenizer.from_pretrained('unsloth/Qwen3-4B-Instruct-2507', trust_remote_code=True)
+print(t.convert_ids_to_tokens([151644,151645,151643]))
+'@
+uv run python `
+  -c $code
 ```
 
 ## 二、训练样本三件套

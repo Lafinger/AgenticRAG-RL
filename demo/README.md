@@ -133,8 +133,9 @@ flowchart LR
 
 **怎么做**：
 
-```text
-python ./scripts/setup_env.py
+```powershell
+python `
+  ./scripts/setup_env.py
 ```
 
 如果已经安装了 Unsloth 训练栈，并且只想同步项目元信息而保留额外包：
@@ -189,8 +190,11 @@ flowchart LR
 
 **怎么做**：
 
-```text
-uv run python ./scripts/parse_text_corpus.py --input-dir ./data/original_data --output ./data/novel/corpus.jsonl
+```powershell
+uv run python `
+  ./scripts/parse_text_corpus.py `
+  --input-dir ./data/original_data `
+  --output ./data/novel/corpus.jsonl
 ```
 
 **能拿到的结果**：
@@ -292,22 +296,45 @@ uv run hf download BAAI/bge-reranker-v2-m3 --local-dir ./models/bge-reranker-v2-
 
 然后构建索引：
 
-```text
-uv run python ./scripts/build_index.py --corpus ./data/novel/corpus.jsonl --index-dir ./data/novel/indexes --embedding-model ./models/bge-m3 --reranker-model ./models/bge-reranker-v2-m3 --max-concurrency 5 --skip-kg
+```powershell
+uv run python `
+  ./scripts/build_index.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --index-dir ./data/novel/indexes `
+  --embedding-model ./models/bge-m3 `
+  --reranker-model ./models/bge-reranker-v2-m3 `
+  --max-concurrency 5 `
+  --skip-kg
 ```
 
 去掉 `--skip-kg` 会启用知识图谱构建，需要 `.env` 中配置在线模型供应商的 API Key。`--max-concurrency` 控制同时发起的在线 LLM 三元组抽取请求数；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
 
 如果使用 Common 在线模型抽取 KG 三元组，设置 `COMMON_API_KEY` 后执行：
 
-```text
-uv run python ./scripts/build_index.py --corpus ./data/novel/corpus.jsonl --index-dir ./data/novel/indexes --embedding-model ./models/bge-m3 --reranker-model ./models/bge-reranker-v2-m3 --llm-provider common --kg-model gpt-5.5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/build_index.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --index-dir ./data/novel/indexes `
+  --embedding-model ./models/bge-m3 `
+  --reranker-model ./models/bge-reranker-v2-m3 `
+  --llm-provider common `
+  --kg-model gpt-5.5 `
+  --max-concurrency 5
 ```
 
 如果使用 RightCode 在线模型抽取 KG 三元组，设置 `RIGHTCODE_API_KEY` 后执行：
 
-```text
-uv run python ./scripts/build_index.py --corpus ./data/novel/corpus.jsonl --index-dir ./data/novel/indexes --embedding-model ./models/bge-m3 --reranker-model ./models/bge-reranker-v2-m3 --llm-provider rightcode --kg-model gpt-5.5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/build_index.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --index-dir ./data/novel/indexes `
+  --embedding-model ./models/bge-m3 `
+  --reranker-model ./models/bge-reranker-v2-m3 `
+  --llm-provider rightcode `
+  --kg-model gpt-5.5 `
+  --max-concurrency 5
 ```
 
 ### 在线模型供应商选择
@@ -475,34 +502,59 @@ flowchart TD
 
 **怎么做**：
 
-```text
-uv run python ./scripts/gen_seed_qa.py --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/seeds.jsonl --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/gen_seed_qa.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/seeds.jsonl `
+  --max-concurrency 5
 ```
 
 失败后继续执行同一条命令即可续写；如果确认要从头生成，执行：
 
-```text
-uv run python ./scripts/gen_seed_qa.py --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/seeds.jsonl --overwrite
+```powershell
+uv run python `
+  ./scripts/gen_seed_qa.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/seeds.jsonl `
+  --overwrite
 ```
 
 `--max-concurrency` 控制同时发起的在线模型请求数。默认值是 `5`；如果遇到接口限流、网络不稳定或失败数上升，可以先降到 `1` 或 `2`。
 
 如果使用 Common 在线模型生成 seed QA：
 
-```text
-uv run python ./scripts/gen_seed_qa.py --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/seeds.jsonl --llm-provider common --model gpt-5.5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/gen_seed_qa.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/seeds.jsonl `
+  --llm-provider common `
+  --model gpt-5.5 `
+  --max-concurrency 5
 ```
 
 如果使用 RightCode 在线模型生成 seed QA：
 
-```text
-uv run python ./scripts/gen_seed_qa.py --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/seeds.jsonl --llm-provider rightcode --model gpt-5.5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/gen_seed_qa.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/seeds.jsonl `
+  --llm-provider rightcode `
+  --model gpt-5.5 `
+  --max-concurrency 5
 ```
 
 生成后执行离线复洗，产出 Step 4 默认使用的 `seeds_clean.jsonl`：
 
-```text
-uv run python ./scripts/clean_seed_qa.py --input ./data/novel_eval/seeds.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/seeds_clean.jsonl --dropped-output ./data/novel_eval/seeds_dropped.jsonl
+```powershell
+uv run python `
+  ./scripts/clean_seed_qa.py `
+  --input ./data/novel_eval/seeds.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/seeds_clean.jsonl `
+  --dropped-output ./data/novel_eval/seeds_dropped.jsonl
 ```
 
 **能拿到的结果**：
@@ -724,36 +776,83 @@ flowchart TD
 
 **怎么做**：
 
-```text
-uv run python ./scripts/domain_multihop_synthesis.py --seeds ./data/novel_eval/seeds_clean.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/qa_pairs.jsonl --target-count 50 --quality-gate llm --candidate-multiplier 5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/domain_multihop_synthesis.py `
+  --seeds ./data/novel_eval/seeds_clean.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/qa_pairs.jsonl `
+  --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier 5 `
+  --max-concurrency 5
 ```
 
 `--candidate-multiplier 5` 的正数模式不会补样到 50 条通过样本，而是处理 50 个候选组，每组最多 5 条，组内通过门禁的候选会由 `--rank-model` 选择最优样本写入。`--max-concurrency` 控制同一候选组内同时发起的多跳 merge 请求数。默认值是 `5`；如果遇到接口限流或合并失败数上升，可以先降到 `1` 或 `2`。`--quality-gate llm` 是正式数据默认模式；如果只想先看硬规则过滤结果，可改为 `--quality-gate rules`。
 
 如果需要旧的“持续补样直到得到 50 条通过样本”语义，使用在线模式并设置 `--candidate-multiplier -1`：
 
-```text
-uv run python ./scripts/domain_multihop_synthesis.py --seeds ./data/novel_eval/seeds_clean.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/qa_pairs.jsonl --target-count 50 --quality-gate llm --candidate-multiplier -1 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/domain_multihop_synthesis.py `
+  --seeds ./data/novel_eval/seeds_clean.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/qa_pairs.jsonl `
+  --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier -1 `
+  --max-concurrency 5
 ```
 
 如果使用 Common 在线模型做多跳 QA 合并：
 
-```text
-uv run python ./scripts/domain_multihop_synthesis.py --seeds ./data/novel_eval/seeds_clean.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/qa_pairs.jsonl --target-count 50 --llm-provider common --merge-model gpt-5.5 --judge-model gpt-5.5 --quality-gate llm --candidate-multiplier 5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/domain_multihop_synthesis.py `
+  --seeds ./data/novel_eval/seeds_clean.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/qa_pairs.jsonl `
+  --target-count 50 `
+  --llm-provider common `
+  --merge-model gpt-5.5 `
+  --judge-model gpt-5.5 `
+  --quality-gate llm `
+  --candidate-multiplier 5 `
+  --max-concurrency 5
 ```
 
 Common 的模型名必须以当前网关实际可用通道为准；如果 `gpt-5.5` 返回 `model_not_found`，需要替换为该 Common 分组下可用的模型名。
 
 如果使用 RightCode 在线模型做多跳 QA 合并：
 
-```text
-uv run python ./scripts/domain_multihop_synthesis.py --seeds ./data/novel_eval/seeds_clean.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/qa_pairs.jsonl --target-count 50 --llm-provider rightcode --merge-model gpt-5.5 --judge-model gpt-5.5 --quality-gate llm --candidate-multiplier 5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/domain_multihop_synthesis.py `
+  --seeds ./data/novel_eval/seeds_clean.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/qa_pairs.jsonl `
+  --target-count 50 `
+  --llm-provider rightcode `
+  --merge-model gpt-5.5 `
+  --judge-model gpt-5.5 `
+  --quality-gate llm `
+  --candidate-multiplier 5 `
+  --max-concurrency 5
 ```
 
 失败后继续执行同一条命令即可续写；如果确认要从头合成，执行：
 
-```text
-uv run python ./scripts/domain_multihop_synthesis.py --seeds ./data/novel_eval/seeds_clean.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/qa_pairs.jsonl --target-count 50 --quality-gate llm --candidate-multiplier 5 --max-concurrency 5 --overwrite
+```powershell
+uv run python `
+  ./scripts/domain_multihop_synthesis.py `
+  --seeds ./data/novel_eval/seeds_clean.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/qa_pairs.jsonl `
+  --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier 5 `
+  --max-concurrency 5 `
+  --overwrite
 ```
 
 **能拿到的结果**：
@@ -819,12 +918,22 @@ flowchart TD
 
 **怎么做**：
 
-```text
-uv run python ./scripts/clean_synthesis.py --input ./data/novel_eval/qa_pairs.jsonl --output ./data/novel_eval/qa_pairs_clean.jsonl --corpus ./data/novel/corpus.jsonl
+```powershell
+uv run python `
+  ./scripts/clean_synthesis.py `
+  --input ./data/novel_eval/qa_pairs.jsonl `
+  --output ./data/novel_eval/qa_pairs_clean.jsonl `
+  --corpus ./data/novel/corpus.jsonl
 
-uv run python ./scripts/split_train_test.py --input ./data/novel_eval/qa_pairs_clean.jsonl --output ./data/novel_eval
+uv run python `
+  ./scripts/split_train_test.py `
+  --input ./data/novel_eval/qa_pairs_clean.jsonl `
+  --output ./data/novel_eval
 
-uv run python ./scripts/gen_enhanced_aliases.py --input ./data/novel_eval/qa_pairs_clean.jsonl --output ./data/novel_eval/qa_pairs_aliases.json
+uv run python `
+  ./scripts/gen_enhanced_aliases.py `
+  --input ./data/novel_eval/qa_pairs_clean.jsonl `
+  --output ./data/novel_eval/qa_pairs_aliases.json
 ```
 
 **能拿到的结果**：
@@ -874,8 +983,13 @@ flowchart LR
 
 **怎么做**：
 
-```text
-uv run python ./scripts/build_oracle_traces.py --qa ./data/novel_eval/qa_pairs.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/traces_oracle_zh.jsonl --use-zh
+```powershell
+uv run python `
+  ./scripts/build_oracle_traces.py `
+  --qa ./data/novel_eval/qa_pairs.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/traces_oracle_zh.jsonl `
+  --use-zh
 ```
 
 **能拿到的结果**：
@@ -939,8 +1053,12 @@ flowchart LR
 
 **怎么做**：
 
-```text
-uv run python ./scripts/trace_to_sft.py --input ./data/novel_eval/traces_oracle_zh.jsonl --output-dir ./data/novel_eval/sft_react_v3 --lang zh
+```powershell
+uv run python `
+  ./scripts/trace_to_sft.py `
+  --input ./data/novel_eval/traces_oracle_zh.jsonl `
+  --output-dir ./data/novel_eval/sft_react_v3 `
+  --lang zh
 ```
 
 **能拿到的结果**：
@@ -1001,14 +1119,23 @@ flowchart LR
 
 **怎么做**：
 
-```text
-uv run python ./scripts/convert_sft_to_unsloth.py --input-dir ./data/novel_eval/sft_react_v3 --output-dir ./data/novel_eval/sft_zh_unsloth_react_v3
+```powershell
+uv run python `
+  ./scripts/convert_sft_to_unsloth.py `
+  --input-dir ./data/novel_eval/sft_react_v3 `
+  --output-dir ./data/novel_eval/sft_zh_unsloth_react_v3
 ```
 
 如需命令行 train/eval 验证，用 Python 脚本切分互不重叠的训练集和验证集：
 
-```text
-uv run python ./scripts/split_sft_train_eval.py --input ./data/novel_eval/sft_zh_unsloth_react_v3/train.jsonl --train-output ./data/novel_eval/sft_zh_unsloth_react_v3/train_cli.jsonl --eval-output ./data/novel_eval/sft_zh_unsloth_react_v3/eval.jsonl --manifest ./data/novel_eval/sft_zh_unsloth_react_v3/manifest.json --eval-count 200
+```powershell
+uv run python `
+  ./scripts/split_sft_train_eval.py `
+  --input ./data/novel_eval/sft_zh_unsloth_react_v3/train.jsonl `
+  --train-output ./data/novel_eval/sft_zh_unsloth_react_v3/train_cli.jsonl `
+  --eval-output ./data/novel_eval/sft_zh_unsloth_react_v3/eval.jsonl `
+  --manifest ./data/novel_eval/sft_zh_unsloth_react_v3/manifest.json `
+  --eval-count 200
 ```
 
 **能拿到的结果**：
@@ -1067,8 +1194,12 @@ flowchart TD
 
 **怎么做**：
 
-```text
-uv run python ./scripts/prepare_agentic_grpo_data.py --input ./data/novel_eval/qa_pairs.jsonl --train-output ./data/novel_eval/grpo_agentic_train.parquet --val-output ./data/novel_eval/grpo_agentic_val.parquet
+```powershell
+uv run python `
+  ./scripts/prepare_agentic_grpo_data.py `
+  --input ./data/novel_eval/qa_pairs.jsonl `
+  --train-output ./data/novel_eval/grpo_agentic_train.parquet `
+  --val-output ./data/novel_eval/grpo_agentic_val.parquet
 ```
 
 **能拿到的结果**：
@@ -1131,8 +1262,11 @@ flowchart LR
 
 **怎么做**：
 
-```text
-uv run python ./training/tools/retrieval_server.py --port 8790 --corpus ./data/novel/corpus.jsonl
+```powershell
+uv run python `
+  ./training/tools/retrieval_server.py `
+  --port 8790 `
+  --corpus ./data/novel/corpus.jsonl
 ```
 
 **能拿到的结果**：
@@ -1192,8 +1326,12 @@ flowchart TD
 
 **怎么做**：
 
-```text
-uv run python ./scripts/eval_agentic.py --data ./data/novel_eval/qa_pairs.jsonl --corpus ./data/novel/corpus.jsonl --max-samples 2
+```powershell
+uv run python `
+  ./scripts/eval_agentic.py `
+  --data ./data/novel_eval/qa_pairs.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --max-samples 2
 ```
 
 **能拿到的结果**：
@@ -1356,24 +1494,49 @@ flowchart LR
 
 **怎么做**：
 
-```text
-uv run python ./scripts/eval_agentic.py --data ./data/novel_eval/qa_pairs.jsonl --corpus ./data/novel/corpus.jsonl --max-samples 20 --output ./results/agentic_eval.json
+```powershell
+uv run python `
+  ./scripts/eval_agentic.py `
+  --data ./data/novel_eval/qa_pairs.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --max-samples 20 `
+  --output ./results/agentic_eval.json
 
-uv run python ./scripts/run_cloud_eval.py --data ./data/novel_eval/qa_pairs.jsonl --corpus ./data/novel/corpus.jsonl --output ./results/pipeline_eval.json
+uv run python `
+  ./scripts/run_cloud_eval.py `
+  --data ./data/novel_eval/qa_pairs.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./results/pipeline_eval.json
 
-uv run python ./scripts/run_llm_judge.py ./results/agentic_eval.json --output ./results/agentic_eval_judged.json --max-concurrency 5
+uv run python `
+  ./scripts/run_llm_judge.py `
+  ./results/agentic_eval.json `
+  --output ./results/agentic_eval_judged.json `
+  --max-concurrency 5
 ```
 
 如果使用 Common 在线模型跑 LLM-as-Judge：
 
-```text
-uv run python ./scripts/run_llm_judge.py ./results/agentic_eval.json --output ./results/agentic_eval_judged.json --llm-provider common --judge-model gpt-5.5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/run_llm_judge.py `
+  ./results/agentic_eval.json `
+  --output ./results/agentic_eval_judged.json `
+  --llm-provider common `
+  --judge-model gpt-5.5 `
+  --max-concurrency 5
 ```
 
 如果使用 RightCode 在线模型跑 LLM-as-Judge：
 
-```text
-uv run python ./scripts/run_llm_judge.py ./results/agentic_eval.json --output ./results/agentic_eval_judged.json --llm-provider rightcode --judge-model gpt-5.5 --max-concurrency 5
+```powershell
+uv run python `
+  ./scripts/run_llm_judge.py `
+  ./results/agentic_eval.json `
+  --output ./results/agentic_eval_judged.json `
+  --llm-provider rightcode `
+  --judge-model gpt-5.5 `
+  --max-concurrency 5
 ```
 
 ### SFT LoRA 训练前后测评
@@ -1433,18 +1596,65 @@ uv run python ./scripts/run_llm_judge.py ./results/agentic_eval.json --output ./
 
 执行到 `gen_seed_qa.py` 前，如果还没有 `.env`，先按 `.env.example` 新建 `.env` 并填写所选在线模型供应商的 API Key。默认 Common 使用 `COMMON_API_KEY`；使用 RightCode 时填写 `RIGHTCODE_API_KEY`。脚本启动时会自动读取 `.env` 中的环境变量。
 
-```text
-uv run python -m pytest
-uv run python ./scripts/parse_text_corpus.py --input-dir ./data/original_data --output ./data/novel/corpus.jsonl
-uv run python ./scripts/build_index.py --corpus ./data/novel/corpus.jsonl --index-dir ./data/novel/indexes --embedding-model ./models/bge-m3 --reranker-model ./models/bge-reranker-v2-m3 --max-concurrency 5 --skip-kg
-uv run python ./scripts/gen_seed_qa.py --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/seeds.jsonl
-uv run python ./scripts/clean_seed_qa.py --input ./data/novel_eval/seeds.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/seeds_clean.jsonl --dropped-output ./data/novel_eval/seeds_dropped.jsonl
-uv run python ./scripts/domain_multihop_synthesis.py --seeds ./data/novel_eval/seeds_clean.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/qa_pairs.jsonl --target-count 50 --quality-gate llm --candidate-multiplier 5 --max-concurrency 5
-uv run python ./scripts/build_oracle_traces.py --qa ./data/novel_eval/qa_pairs.jsonl --corpus ./data/novel/corpus.jsonl --output ./data/novel_eval/traces_oracle_zh.jsonl --use-zh
-uv run python ./scripts/trace_to_sft.py --input ./data/novel_eval/traces_oracle_zh.jsonl --output-dir ./data/novel_eval/sft_react_v3 --lang zh
-uv run python ./scripts/convert_sft_to_unsloth.py --input-dir ./data/novel_eval/sft_react_v3 --output-dir ./data/novel_eval/sft_zh_unsloth_react_v3
-uv run python ./scripts/prepare_agentic_grpo_data.py --input ./data/novel_eval/qa_pairs.jsonl --train-output ./data/novel_eval/grpo_agentic_train.parquet --val-output ./data/novel_eval/grpo_agentic_val.parquet
-uv run python ./scripts/eval_agentic.py --data ./data/novel_eval/qa_pairs.jsonl --corpus ./data/novel/corpus.jsonl --max-samples 2
+```powershell
+uv run python `
+  -m pytest
+uv run python `
+  ./scripts/parse_text_corpus.py `
+  --input-dir ./data/original_data `
+  --output ./data/novel/corpus.jsonl
+uv run python `
+  ./scripts/build_index.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --index-dir ./data/novel/indexes `
+  --embedding-model ./models/bge-m3 `
+  --reranker-model ./models/bge-reranker-v2-m3 `
+  --max-concurrency 5 `
+  --skip-kg
+uv run python `
+  ./scripts/gen_seed_qa.py `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/seeds.jsonl
+uv run python `
+  ./scripts/clean_seed_qa.py `
+  --input ./data/novel_eval/seeds.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/seeds_clean.jsonl `
+  --dropped-output ./data/novel_eval/seeds_dropped.jsonl
+uv run python `
+  ./scripts/domain_multihop_synthesis.py `
+  --seeds ./data/novel_eval/seeds_clean.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/qa_pairs.jsonl `
+  --target-count 50 `
+  --quality-gate llm `
+  --candidate-multiplier 5 `
+  --max-concurrency 5
+uv run python `
+  ./scripts/build_oracle_traces.py `
+  --qa ./data/novel_eval/qa_pairs.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --output ./data/novel_eval/traces_oracle_zh.jsonl `
+  --use-zh
+uv run python `
+  ./scripts/trace_to_sft.py `
+  --input ./data/novel_eval/traces_oracle_zh.jsonl `
+  --output-dir ./data/novel_eval/sft_react_v3 `
+  --lang zh
+uv run python `
+  ./scripts/convert_sft_to_unsloth.py `
+  --input-dir ./data/novel_eval/sft_react_v3 `
+  --output-dir ./data/novel_eval/sft_zh_unsloth_react_v3
+uv run python `
+  ./scripts/prepare_agentic_grpo_data.py `
+  --input ./data/novel_eval/qa_pairs.jsonl `
+  --train-output ./data/novel_eval/grpo_agentic_train.parquet `
+  --val-output ./data/novel_eval/grpo_agentic_val.parquet
+uv run python `
+  ./scripts/eval_agentic.py `
+  --data ./data/novel_eval/qa_pairs.jsonl `
+  --corpus ./data/novel/corpus.jsonl `
+  --max-samples 2
 ```
 
 切换到金庸多文档 corpus 后，旧的 `seeds.jsonl`、`qa_pairs.jsonl`、oracle traces、SFT/GRPO 数据都不再和新 `chunk_id` 对齐，需要按上面的顺序重新生成。
