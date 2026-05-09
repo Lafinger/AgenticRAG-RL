@@ -89,7 +89,7 @@ messages + tools --canonical renderer 渲染--> chat 文本 --tokenizer 编码--
 
 ### Q1.3: V4 为什么不是简单继续加数据，而是增加 `loss_weights`？
 
-答：V3 已经把数据拆成更自然的 Agent 历史，但主测评仍出现 50/50 首轮以 `</tool_call>` 开头。这个现象说明问题集中在 assistant turn 的协议边界，而不是 JSONL 整体缺几条样本。V4 因此在 tokenization 后派生 `loss_weights`，提高 assistant 首 token、`<think>`、`<answer>` 和 `<|im_end|>` 的训练权重；`</tool_call>` 不额外加权，避免继续强化 closing tag 先验。
+答：V3 已经把数据拆成更自然的 Agent 历史，但主测评仍出现 50/50 首轮以 `</tool_call>` 开头。这个现象说明问题集中在 assistant turn 的协议边界，而不是 JSONL 整体缺几条样本。V4 因此在 tokenization 后派生 `loss_weights`，提高 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 的训练权重；`</tool_call>` 会降权，避免继续强化 closing tag 先验。最近一次 smoke 已证明初始权重仍不足，因此当前实现额外强化了 `</think>`，专门修复“应该闭合 think 却输出 `</tool_call>`”的失败形态。
 
 因为加权 loss 需要访问模型 logits，训练脚本会自动设置 `UNSLOTH_RETURN_LOGITS=1`。如果没有这个环境变量，新版 Unsloth 会隐藏 logits，weighted loss 无法计算。
 
@@ -252,9 +252,9 @@ loss_weights     每个 label token 的 loss 权重
     ],
     "loss_weights": [
         0.0, 0.0, ...,
-        12.0, 12.0, 1.0,
+        48.0, 32.0, 1.0,
         0.0, 0.0, ...,
-        12.0, 1.0, 4.0,
+        48.0, 1.0, 8.0,
         ...
     ]
 }

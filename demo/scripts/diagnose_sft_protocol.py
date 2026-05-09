@@ -159,7 +159,7 @@ def run_probability_probe(args: argparse.Namespace, records: list[dict[str, Any]
     prompts = [prompt for record in records for prompt in [probe_prompt(record)] if prompt][: args.probe_max_prompts]
     if not prompts:
         return {"prompt_count": 0}
-    literals = ["<think>", "<answer>", "<tool_call>", "</tool_call>"]
+    literals = ["<think>", "</think>", "<answer>", "<tool_call>", "</tool_call>"]
     rows: list[dict[str, Any]] = []
     top1_counts: dict[str, int] = {}
     for prompt in prompts:

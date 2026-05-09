@@ -13,11 +13,14 @@ if str(ROOT) not in sys.path:
 
 from training.sft_label_mask import (
     ACTION_START_TAG_WEIGHT,
+    ANSWER_END_TAG_WEIGHT,
     ASSISTANT_END_WEIGHT,
     ASSISTANT_START_TOKEN_WEIGHT,
     DEFAULT_LABEL_WEIGHT,
     IGNORE_INDEX,
     IM_END_MARKER,
+    THINK_END_TAG_WEIGHT,
+    TOOL_CALL_END_TAG_WEIGHT,
     TOOL_CALL_START_TAG_WEIGHT,
     find_assistant_spans,
     tokenize_chat_with_assistant_labels,
@@ -69,7 +72,7 @@ def test_assistant_only_labels_mask_non_assistant_turns() -> None:
         inside_assistant = any(index >= start and index < end for start, end in spans)
         if inside_assistant:
             assert label == sample.input_ids[index]
-            assert sample.loss_weights[index] >= DEFAULT_LABEL_WEIGHT
+            assert sample.loss_weights[index] > 0.0
         else:
             assert label == IGNORE_INDEX
             assert sample.loss_weights[index] == 0.0
@@ -166,8 +169,29 @@ def test_protocol_boundary_tokens_receive_higher_loss_weights() -> None:
 
     assert weights_for("<think>")[0] == ASSISTANT_START_TOKEN_WEIGHT
     assert min(weights_for("<think>")) >= ACTION_START_TAG_WEIGHT
+    assert min(weights_for("</think>")) >= THINK_END_TAG_WEIGHT
     assert min(weights_for("<tool_call>")) >= TOOL_CALL_START_TAG_WEIGHT
-    assert max(weights_for("</tool_call>")) == DEFAULT_LABEL_WEIGHT
+    assert max(weights_for("</tool_call>")) == TOOL_CALL_END_TAG_WEIGHT
+    assert min(weights_for(IM_END_MARKER, last=True)) >= ASSISTANT_END_WEIGHT
+
+
+def test_answer_boundary_tokens_receive_higher_loss_weights() -> None:
+    content = "<answer>答案</answer>"
+    sample = tokenize_chat_with_assistant_labels(
+        FakeTokenizer(),
+        [
+            {"role": "user", "content": "问题"},
+            {"role": "assistant", "content": content},
+        ],
+    )
+
+    def weights_for(fragment: str, *, last: bool = False) -> list[float]:
+        start = sample.text.rindex(fragment) if last else sample.text.index(fragment)
+        return sample.loss_weights[start : start + len(fragment)]
+
+    assert weights_for("<answer>")[0] == ASSISTANT_START_TOKEN_WEIGHT
+    assert min(weights_for("<answer>")) >= ACTION_START_TAG_WEIGHT
+    assert min(weights_for("</answer>")) >= ANSWER_END_TAG_WEIGHT
     assert min(weights_for(IM_END_MARKER, last=True)) >= ASSISTANT_END_WEIGHT
 
 

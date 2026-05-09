@@ -9,7 +9,7 @@
 | V1 | 普通 messages，工具响应以手写消息混入 | 非严格 tool-aware ShareGPT records | 能检索但不会稳定停止回答，`answer_tag_rate=0` | 废弃为有效基线，转向 canonical ReAct |
 | V2 | 短 `<think>` + JSON `<tool_call>`，最终 `<answer>` | `full_trace + finalization_only` | 50 条测评 49 条失败，首轮大量直接输出 `</tool_call>` | 废弃为有效基线，转向 V3 数据拆分 |
 | V3 | canonical Qwen3 ReAct renderer + assistant-only loss | `full_trace / first_action_only / next_action_only / final_answer_only` | 无锚点主测评 50/50 首轮以 `</tool_call>` 开头；`think` 锚点能恢复工具调用但仍不会稳定回答 | 废弃为有效主基线，转向 V4 协议边界加权 loss |
-| V4 | canonical ReAct + weighted protocol loss | 四类主线样本，`final_answer_only` 2 倍强化，训练时派生 `loss_weights` | 当前待训练/测评主线 | 当前唯一有效主线 |
+| V4 | canonical ReAct + weighted protocol loss | 四类主线样本，`final_answer_only` 2 倍强化，训练时派生 `loss_weights` | 初始 smoke 仍出现首轮 `</tool_call>`；已升级边界权重并等待重新 smoke | 当前唯一有效主线 |
 
 ## V1：普通 messages / 非严格 tool-aware 阶段
 
@@ -213,12 +213,14 @@ V4 全量 SFT 数据仍由四类样本组成，但 `final_answer_only` 也做 2 
 | --- | --- |
 | assistant 目标首 token | 强化新 assistant turn 的起始边界 |
 | `<think>` | 强化工具轮必须先输出短 think |
+| `</think>` | 强化 think 正确闭合，避免在 think 结束位置误输出 `</tool_call>` |
+| `<tool_call>` | 强化工具动作开始 |
 | `<answer>` | 强化最终回答状态切换 |
-| `<tool_call>` | 适度强化工具动作开始 |
+| `</answer>` | 强化最终回答闭合 |
 | `<|im_end|>` | 强化 action/answer 完成后结束当前 turn |
-| `</tool_call>` | 不额外加权，避免继续放大 closing tag 先验 |
+| `</tool_call>` | 降权，避免继续放大 closing tag 先验 |
 
-`loss_weights` 不写入 JSONL 数据文件，而是在 `training/sft_label_mask.py` tokenization 时派生，并由自定义 collator 和 weighted CE Trainer 消费。
+`loss_weights` 不写入 JSONL 数据文件，而是在 `training/sft_label_mask.py` tokenization 时派生，并由自定义 collator 和 weighted CE Trainer 消费。最近一次 v4 smoke 显示 `</tool_call>` 仍是高概率首 token，因此当前实现把 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 的权重进一步提高，并对 `</tool_call>` 降权；这不改变 JSONL 数据，只改变训练目标。
 
 ### 当前数据验收
 

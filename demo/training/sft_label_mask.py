@@ -15,10 +15,13 @@ from agentic_rag_rl.protocols import ASSISTANT_START_MARKER, IM_END_MARKER, rend
 
 IGNORE_INDEX = -100
 DEFAULT_LABEL_WEIGHT = 1.0
-ASSISTANT_START_TOKEN_WEIGHT = 12.0
-ACTION_START_TAG_WEIGHT = 12.0
-TOOL_CALL_START_TAG_WEIGHT = 4.0
-ASSISTANT_END_WEIGHT = 4.0
+ASSISTANT_START_TOKEN_WEIGHT = 48.0
+ACTION_START_TAG_WEIGHT = 32.0
+THINK_END_TAG_WEIGHT = 32.0
+TOOL_CALL_START_TAG_WEIGHT = 16.0
+ANSWER_END_TAG_WEIGHT = 16.0
+ASSISTANT_END_WEIGHT = 8.0
+TOOL_CALL_END_TAG_WEIGHT = 0.25
 
 
 @dataclass(frozen=True)
@@ -92,7 +95,10 @@ def _build_loss_weights(
 
     high_weight_spans = _find_literal_spans(rendered_text, "<think>", assistant_spans)
     high_weight_spans.extend(_find_literal_spans(rendered_text, "<answer>", assistant_spans))
+    think_end_spans = _find_literal_spans(rendered_text, "</think>", assistant_spans)
     tool_call_start_spans = _find_literal_spans(rendered_text, "<tool_call>", assistant_spans)
+    tool_call_end_spans = _find_literal_spans(rendered_text, "</tool_call>", assistant_spans)
+    answer_end_spans = _find_literal_spans(rendered_text, "</answer>", assistant_spans)
     assistant_end_spans = _find_literal_spans(rendered_text, IM_END_MARKER, assistant_spans)
 
     for span_start, span_end in high_weight_spans:
@@ -105,10 +111,25 @@ def _build_loss_weights(
             if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
                 weights[index] = max(weights[index], TOOL_CALL_START_TAG_WEIGHT)
 
+    for span_start, span_end in think_end_spans:
+        for index, (token_start, token_end) in enumerate(offsets):
+            if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
+                weights[index] = max(weights[index], THINK_END_TAG_WEIGHT)
+
+    for span_start, span_end in answer_end_spans:
+        for index, (token_start, token_end) in enumerate(offsets):
+            if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
+                weights[index] = max(weights[index], ANSWER_END_TAG_WEIGHT)
+
     for span_start, span_end in assistant_end_spans:
         for index, (token_start, token_end) in enumerate(offsets):
             if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
                 weights[index] = max(weights[index], ASSISTANT_END_WEIGHT)
+
+    for span_start, span_end in tool_call_end_spans:
+        for index, (token_start, token_end) in enumerate(offsets):
+            if labels[index] != IGNORE_INDEX and token_start < span_end and token_end > span_start:
+                weights[index] = min(weights[index], TOOL_CALL_END_TAG_WEIGHT)
 
     for span_start, span_end in assistant_spans:
         for index, (token_start, token_end) in enumerate(offsets):

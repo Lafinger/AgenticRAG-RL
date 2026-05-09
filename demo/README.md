@@ -1156,7 +1156,7 @@ uv run python `
 | `manifest.json` | 数据格式、来源和 CLI split 摘要 | 记录转换来源、样本数和训练器 | 数据审计 |
 | `training/unsloth_sft_v4.yaml` | `dataset/template/model/output_dir` | v4 SFT 训练配置 | Step 12 |
 
-当前 v4 全量导出为 `19561` 条 records，默认切分为 `19361` 条 CLI 训练样本和 `200` 条 CLI 验证样本，二者不重叠；训练集包含 `full_trace`、`first_action_only`、`next_action_only` 和 `final_answer_only`。v4 不再只靠增加样本数修复协议问题，而是在训练入口为 assistant 首 token、`<think>`、`<answer>` 和 `<|im_end|>` 派生 `loss_weights` 做协议边界加权监督；`</tool_call>` 不额外加权。训练、eval loss、trace 追溯和 LoRA 合并命令统一见 `docs/训练&观测.md`。
+当前 v4 全量导出为 `19561` 条 records，默认切分为 `19361` 条 CLI 训练样本和 `200` 条 CLI 验证样本，二者不重叠；训练集包含 `full_trace`、`first_action_only`、`next_action_only` 和 `final_answer_only`。v4 不再只靠增加样本数修复协议问题，而是在训练入口为 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 派生 `loss_weights` 做协议边界加权监督；`</tool_call>` 会降权，避免继续放大 closing-tag 先验。训练、eval loss、trace 追溯和 LoRA 合并命令统一见 `docs/训练&观测.md`。
 
 ## Step 9: 构造 GRPO parquet 数据
 
@@ -1365,7 +1365,7 @@ uv run python `
 - 当前主 SFT 基线必须使用 canonical ReAct JSONL：record 级 `tools`、保留 `tool` role、项目 canonical Qwen3 ReAct renderer 和 assistant-only loss mask。
 - 项目不再直接使用 tokenizer 原生 `tools=` 模板作为训练/评测主渲染路径，因为该模板只约束 `<tool_call>`，不会要求短 `<think>`，并可能给最终答案轮自动补空 `<think>`。
 - 当前训练入口默认只对 assistant 输出计算 loss，system/user/tool response 和 padding 都不参与 loss；带 `loss: false` 的历史 assistant turn 只作为上下文，不参与监督。
-- v4 训练入口会生成 `loss_weights`，对 assistant 首 token、`<think>`、`<answer>` 和 `<|im_end|>` 做协议边界加权监督；`</tool_call>` 不额外加权，避免继续放大 closing-tag 先验。
+- v4 训练入口会生成 `loss_weights`，对 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 做协议边界加权监督；`</tool_call>` 会降权，避免继续放大 closing-tag 先验。
 - 训练前可运行 `scripts/diagnose_sft_protocol.py` 抽查 canonical renderer 与 labels，重点确认 `tool_turn_think_rate=1.0`、`rendered_empty_answer_think=0`、`tool_response_label_leaks=0`；训练或 smoke checkpoint 产出后，再用同一脚本的 `--probe-model/--probe-adapter` 做首 token 概率诊断，确认 `</tool_call>` 不再是高概率起始 token。
 - LoRA 只训练 adapter 权重，默认输出到 `training/outputs/unsloth_sft_qwen3_4b_lora_react_v4`。
 - 合并阶段把 LoRA adapter 写回基座模型，生成后续 GRPO 默认使用的 merged model；V1/V2/V3 旧 checkpoint 已确认为协议失败或历史追溯基线，不再作为有效主结果。
