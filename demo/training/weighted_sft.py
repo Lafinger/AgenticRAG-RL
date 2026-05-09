@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from training.sft_label_mask import IGNORE_INDEX
+
+
+def enable_unsloth_logits_for_weighted_loss() -> None:
+    os.environ["UNSLOTH_RETURN_LOGITS"] = "1"
 
 
 class WeightedDataCollatorForLanguageModeling:
@@ -68,6 +73,7 @@ def make_weighted_sft_trainer_class(base_trainer_class: type[Any]) -> type[Any]:
                     num_items_in_batch=num_items_in_batch,
                 )
 
+            enable_unsloth_logits_for_weighted_loss()
             labels = inputs["labels"]
             outputs = model(**inputs)
             loss = weighted_causal_lm_loss(outputs.logits, labels, loss_weights)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import sys
 from dataclasses import dataclass
 from multiprocessing import freeze_support
@@ -10,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+os.environ["UNSLOTH_RETURN_LOGITS"] = "1"
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -34,7 +37,7 @@ from training.monitoring import (
     should_replay_swanlab_history,
 )
 from training.sft_label_mask import tokenize_chat_with_assistant_labels
-from training.weighted_sft import weighted_causal_lm_loss
+from training.weighted_sft import enable_unsloth_logits_for_weighted_loss, weighted_causal_lm_loss
 
 
 def parse_args() -> argparse.Namespace:
@@ -368,6 +371,7 @@ def main() -> None:
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
 
+    enable_unsloth_logits_for_weighted_loss()
     args = parse_args()
     config = load_config(args.config)
     apply_cli_config_overrides(config, args)
@@ -553,6 +557,7 @@ def main() -> None:
                 }
                 labels = torch.tensor([sample.labels], dtype=torch.long, device=device)
                 loss_weights = torch.tensor([sample.loss_weights], dtype=torch.float32, device=device)
+                enable_unsloth_logits_for_weighted_loss()
                 outputs = model(**encoded, labels=labels)
                 loss = weighted_causal_lm_loss(outputs.logits, labels, loss_weights)
                 losses.append(float(loss.detach().cpu()))
@@ -649,6 +654,7 @@ def main() -> None:
             trace_items = batch.pop("trace_items")
             batch = {key: value.to(device) for key, value in batch.items()}
             loss_weights = batch.pop("loss_weights")
+            enable_unsloth_logits_for_weighted_loss()
             outputs = model(**batch)
             raw_loss = weighted_causal_lm_loss(outputs.logits, batch["labels"], loss_weights)
             loss = raw_loss / gradient_accumulation_steps

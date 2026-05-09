@@ -4,7 +4,19 @@ import torch
 import pytest
 
 from training.sft_label_mask import IGNORE_INDEX
-from training.weighted_sft import WeightedDataCollatorForLanguageModeling, weighted_causal_lm_loss
+from training.weighted_sft import (
+    WeightedDataCollatorForLanguageModeling,
+    enable_unsloth_logits_for_weighted_loss,
+    weighted_causal_lm_loss,
+)
+
+
+def test_enable_unsloth_logits_for_weighted_loss_sets_required_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("UNSLOTH_RETURN_LOGITS", "0")
+
+    enable_unsloth_logits_for_weighted_loss()
+
+    assert __import__("os").environ["UNSLOTH_RETURN_LOGITS"] == "1"
 
 
 def test_weighted_data_collator_pads_loss_weights() -> None:

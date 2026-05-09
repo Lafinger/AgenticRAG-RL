@@ -91,6 +91,8 @@ messages + tools --canonical renderer 渲染--> chat 文本 --tokenizer 编码--
 
 答：V3 已经把数据拆成更自然的 Agent 历史，但主测评仍出现 50/50 首轮以 `</tool_call>` 开头。这个现象说明问题集中在 assistant turn 的协议边界，而不是 JSONL 整体缺几条样本。V4 因此在 tokenization 后派生 `loss_weights`，提高 assistant 首 token、`<think>`、`<answer>` 和 `<|im_end|>` 的训练权重；`</tool_call>` 不额外加权，避免继续强化 closing tag 先验。
 
+因为加权 loss 需要访问模型 logits，训练脚本会自动设置 `UNSLOTH_RETURN_LOGITS=1`。如果没有这个环境变量，新版 Unsloth 会隐藏 logits，weighted loss 无法计算。
+
 ### Q1.5: 为什么 JSONL 里要保留 `tool` role，而不是提前改成 user？
 
 答：项目 canonical renderer 知道如何处理 `tool` role。原始 JSONL 保留：

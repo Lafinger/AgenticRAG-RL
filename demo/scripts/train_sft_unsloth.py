@@ -3,12 +3,15 @@ from __future__ import annotations
 import argparse
 import inspect
 import json
+import os
 import sys
 from multiprocessing import freeze_support
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+os.environ["UNSLOTH_RETURN_LOGITS"] = "1"
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -28,7 +31,11 @@ from training.monitoring import (
     should_replay_swanlab_history,
 )
 from training.sft_label_mask import tokenize_chat_with_assistant_labels
-from training.weighted_sft import WeightedDataCollatorForLanguageModeling, make_weighted_sft_trainer_class
+from training.weighted_sft import (
+    WeightedDataCollatorForLanguageModeling,
+    enable_unsloth_logits_for_weighted_loss,
+    make_weighted_sft_trainer_class,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -156,6 +163,7 @@ def main() -> None:
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
 
+    enable_unsloth_logits_for_weighted_loss()
     args = parse_args()
     config = load_config(args.config)
     if args.model_name_or_path:
