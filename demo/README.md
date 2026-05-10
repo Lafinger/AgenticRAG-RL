@@ -1404,7 +1404,9 @@ flowchart LR
 | `training/outputs/unsloth_sft_qwen3_4b_lora_react_v4_trace/step_sample_trace.jsonl` | JSONL trace | 每个 optimizer step 对应的样本、loss、lr、grad norm、eval loss | 突刺追溯 |
 | SwanLab `agentic-rag-rl` | 云端实验 | loss、eval loss、grad norm、learning rate 曲线 | `docs/训练&观测.md` |
 | `models/Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v4-merged` | 合并后的 HF 模型目录 | 新协议重训后作为 GRPO 初始模型 | GRPO / RL |
-| `results/sft_compare/summary.json` | Base/SFT 指标对比 | 判断冷启动是否提升协议遵循和答案指标 | Step 14 |
+| `results/sft_compare/react_v4_full_ckpt3633_50_summary.json` | v4 主测评 summary | 当前有效 SFT baseline 的 50 条 Agent loop 结果 | Step 14 |
+
+当前 v4 有效基线为 `training/outputs/unsloth_sft_qwen3_4b_lora_react_v4/checkpoint-3633`。该 checkpoint 在无锚点、无协议约束主测评下通过 50 条 Agent loop 验收：`avg_em=0.84`、`avg_f1=0.8433`、`avg_hop_recall=0.75`，且 `answer_tag_rate=1.0`、`valid_tool_call_rate=1.0`、`think_tag_rate=1.0`、`starts_with_closing_tool_rate=0.0`、`malformed_tool_fragment_rate=0.0`。V4 已解决首轮 `</tool_call>` 崩溃；后续优化重点转为检索召回、答案抽取和低分样本归因。
 
 ## Step 13: Unsloth GRPO / RL 训练
 
@@ -1547,6 +1549,7 @@ uv run python `
 - 主线 Agent loop 评测：`eval_hf_agentic.py`，衡量真实工具调用、检索闭环、`hop_recall` 和是否能用 `<answer>` 停止。
 - 当前主线 ReAct SFT 的重点是让模型稳定输出 plan-driven 短 `<think>` 和 JSON tool payload，例如 `<think>要回答最终问题，先查：...</think>\n<tool_call>\n{"name":"keyword_search","arguments":{"query":"..."}}\n</tool_call>`。
 - v4 主报告必须使用 `--assistant-start-anchor none --protocol-constraints none`；`--assistant-start-anchor think` 和 `--protocol-constraints strict` 只用于诊断或生产保护对照。
+- 当前推荐 baseline 是 `training/outputs/unsloth_sft_qwen3_4b_lora_react_v4/checkpoint-3633`；50 条主测评结果保存在 `results/sft_compare/react_v4_full_ckpt3633_50_summary.json`。
 
 重点看这些指标：
 
@@ -1571,6 +1574,8 @@ uv run python `
 - `results/sft_compare/base_predictions.jsonl`
 - `results/sft_compare/sft_agentic_eval.jsonl`
 - `results/sft_compare/sft_agentic_eval_summary.json`
+- `results/sft_compare/react_v4_full_ckpt3633_50.jsonl`
+- `results/sft_compare/react_v4_full_ckpt3633_50_summary.json`
 - `results/sft_compare/summary.json`
 - `results/sft_compare/base_judged.json` 和 `sft_judged.json`，仅在执行可选 Judge 时产生
 - `results/agentic_eval_judged.checkpoint.jsonl`，文件名前缀随 `--output` 变化

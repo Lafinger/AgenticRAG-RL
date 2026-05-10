@@ -89,9 +89,25 @@ messages + tools --canonical renderer 渲染--> chat 文本 --tokenizer 编码--
 
 ### Q1.3: V4 为什么不是简单继续加数据，而是增加 `loss_weights`？
 
-答：V3 已经把数据拆成更自然的 Agent 历史，但主测评仍出现 50/50 首轮以 `</tool_call>` 开头。这个现象说明问题集中在 assistant turn 的协议边界，而不是 JSONL 整体缺几条样本。V4 因此在 tokenization 后派生 `loss_weights`，提高 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 的训练权重；`</tool_call>` 会降权，避免继续强化 closing tag 先验。最近一次 smoke 已证明初始权重仍不足，因此当前实现额外强化了 `</think>`，专门修复“应该闭合 think 却输出 `</tool_call>`”的失败形态。
+答：V3 已经把数据拆成更自然的 Agent 历史，但主测评仍出现 50/50 首轮以 `</tool_call>` 开头。这个现象说明问题集中在 assistant turn 的协议边界，而不是 JSONL 整体缺几条样本。V4 因此在 tokenization 后派生 `loss_weights`，提高 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 的训练权重；`</tool_call>` 会降权，避免继续强化 closing tag 先验。早期 smoke 曾证明初始权重仍不足，因此后续实现额外强化了 `</think>`，专门修复“应该闭合 think 却输出 `</tool_call>`”的失败形态。完整训练后的 `checkpoint-3633` 已在 50 条无锚点主测评中通过验收：`starts_with_closing_tool_rate=0.0`、`answer_tag_rate=1.0`、`valid_tool_call_rate=1.0`。
 
 因为加权 loss 需要访问模型 logits，训练脚本会自动设置 `UNSLOTH_RETURN_LOGITS=1`。如果没有这个环境变量，新版 Unsloth 会隐藏 logits，weighted loss 无法计算。
+
+### Q1.4: 当前 v4 是否已经通过主测评？
+
+答：是。当前有效基线是：
+
+```text
+training\outputs\unsloth_sft_qwen3_4b_lora_react_v4\checkpoint-3633
+```
+
+主测评必须使用 `--assistant-start-anchor none --protocol-constraints none`，结果文件为：
+
+```text
+results\sft_compare\react_v4_full_ckpt3633_50_summary.json
+```
+
+50 条 Agent loop 指标为 `avg_em=0.84`、`avg_f1=0.8433`、`avg_hop_recall=0.75`、`answer_tag_rate=1.0`、`valid_tool_call_rate=1.0`、`think_tag_rate=1.0`、`starts_with_closing_tool_rate=0.0`、`malformed_tool_fragment_rate=0.0`。这说明当前剩余问题主要是答案质量、检索召回或别名覆盖，不是 ReAct 协议没有学会。
 
 ### Q1.5: 为什么 JSONL 里要保留 `tool` role，而不是提前改成 user？
 

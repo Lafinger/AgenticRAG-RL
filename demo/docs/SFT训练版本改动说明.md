@@ -9,7 +9,7 @@
 | V1 | 普通 messages，工具响应以手写消息混入 | 非严格 tool-aware ShareGPT records | 能检索但不会稳定停止回答，`answer_tag_rate=0` | 废弃为有效基线，转向 canonical ReAct |
 | V2 | 短 `<think>` + JSON `<tool_call>`，最终 `<answer>` | `full_trace + finalization_only` | 50 条测评 49 条失败，首轮大量直接输出 `</tool_call>` | 废弃为有效基线，转向 V3 数据拆分 |
 | V3 | canonical Qwen3 ReAct renderer + assistant-only loss | `full_trace / first_action_only / next_action_only / final_answer_only` | 无锚点主测评 50/50 首轮以 `</tool_call>` 开头；`think` 锚点能恢复工具调用但仍不会稳定回答 | 废弃为有效主基线，转向 V4 协议边界加权 loss |
-| V4 | canonical ReAct + weighted protocol loss | 四类主线样本，`final_answer_only` 2 倍强化，训练时派生 `loss_weights` | 初始 smoke 仍出现首轮 `</tool_call>`；已升级边界权重并等待重新 smoke | 当前唯一有效主线 |
+| V4 | canonical ReAct + weighted protocol loss | 四类主线样本，`final_answer_only` 2 倍强化，训练时派生 `loss_weights` | 初始 smoke 暴露边界权重不足；完整训练后 `checkpoint-3633` 通过无锚点主测评 | 当前唯一有效主线 |
 
 ## V1：普通 messages / 非严格 tool-aware 阶段
 
@@ -220,7 +220,7 @@ V4 全量 SFT 数据仍由四类样本组成，但 `final_answer_only` 也做 2 
 | `<|im_end|>` | 强化 action/answer 完成后结束当前 turn |
 | `</tool_call>` | 降权，避免继续放大 closing tag 先验 |
 
-`loss_weights` 不写入 JSONL 数据文件，而是在 `training/sft_label_mask.py` tokenization 时派生，并由自定义 collator 和 weighted CE Trainer 消费。最近一次 v4 smoke 显示 `</tool_call>` 仍是高概率首 token，因此当前实现把 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 的权重进一步提高，并对 `</tool_call>` 降权；这不改变 JSONL 数据，只改变训练目标。
+`loss_weights` 不写入 JSONL 数据文件，而是在 `training/sft_label_mask.py` tokenization 时派生，并由自定义 collator 和 weighted CE Trainer 消费。早期 v4 smoke 曾显示 `</tool_call>` 仍是高概率首 token，因此后续实现把 assistant 首 token、`<think>`、`</think>`、`<tool_call>`、`<answer>`、`</answer>` 和 `<|im_end|>` 的权重进一步提高，并对 `</tool_call>` 降权；这不改变 JSONL 数据，只改变训练目标。完整训练后的 `checkpoint-3633` 已在主测评中验证该策略有效。
 
 ### 当前数据验收
 
@@ -249,7 +249,7 @@ packing = false
 
 ### 训练和测评要求
 
-完整训练前先跑 smoke：
+新实验完整训练前仍需先跑 smoke：
 
 ```text
 --max-samples 512
@@ -264,7 +264,7 @@ think_tag_rate >= 0.90
 valid_tool_call_rate >= 0.80
 ```
 
-完整训练后，主报告必须使用：
+当前完整训练已达到 `checkpoint-3633`。完整训练后，主报告必须使用：
 
 ```text
 --assistant-start-anchor none
@@ -284,6 +284,36 @@ avg_f1 / avg_hop_recall 高于 V3 失败基线
 
 `--assistant-start-anchor think` 和 `--protocol-constraints strict` 只能用于诊断或生产保护对照，不能作为主线达标依据。
 
+### 当前 V4 主测评结果
+
+当前推荐 checkpoint：
+
+```text
+training\outputs\unsloth_sft_qwen3_4b_lora_react_v4\checkpoint-3633
+```
+
+50 条无锚点、无协议约束 Agent loop 主测评结果：
+
+```text
+results\sft_compare\react_v4_full_ckpt3633_50.jsonl
+results\sft_compare\react_v4_full_ckpt3633_50_summary.json
+```
+
+关键指标：
+
+| 指标 | 当前值 | 验收目标 | 结论 |
+| --- | ---: | ---: | --- |
+| `avg_em` | 0.84 | 高于 V3 失败基线 | 通过 |
+| `avg_f1` | 0.8433 | 高于 V3 失败基线 | 通过 |
+| `avg_hop_recall` | 0.75 | 高于 V3 失败基线 | 通过 |
+| `answer_tag_rate` | 1.0 | >= 0.80 | 通过 |
+| `valid_tool_call_rate` | 1.0 | >= 0.95 | 通过 |
+| `think_tag_rate` | 1.0 | >= 0.95 | 通过 |
+| `malformed_tool_fragment_rate` | 0.0 | <= 0.20 | 通过 |
+| `starts_with_closing_tool_rate` | 0.0 | <= 0.05 | 通过 |
+
+这说明 V4 已解决 V2/V3 的首轮 `</tool_call>` 崩溃、缺 `<answer>` 和 malformed tool call 问题。当前剩余误差主要来自检索召回不完整、答案抽取错位或别名覆盖不足，不再是主协议失效。
+
 ## 当前主线结论
 
 当前有效 SFT 主线只认 V4。提交、训练和测评时按下面规则执行：
@@ -291,7 +321,7 @@ avg_f1 / avg_hop_recall 高于 V3 失败基线
 1. 训练数据使用 `data\novel_eval\sft_zh_unsloth_react_v4\train_cli.jsonl`。
 2. 训练验证使用 `data\novel_eval\sft_zh_unsloth_react_v4\eval.jsonl`。
 3. 配置使用 `training\unsloth_sft_v4.yaml`，`training\unsloth_sft.yaml` 当前也指向同一套 v4 主线。
-4. LoRA 输出使用 `training\outputs\unsloth_sft_qwen3_4b_lora_react_v4`。
+4. LoRA 输出使用 `training\outputs\unsloth_sft_qwen3_4b_lora_react_v4`，当前推荐 checkpoint 为 `checkpoint-3633`。
 5. Agent loop 主测评使用 `--assistant-start-anchor none --protocol-constraints none`。
 6. V1/V2/V3 的数据、checkpoint 和 merged model 只能用于问题追溯，不能作为当前有效基线。
 
