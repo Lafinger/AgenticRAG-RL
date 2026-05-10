@@ -1,0 +1,2982 @@
+{
+  "source": "results\\sft_compare\\react_v4_full_ckpt3633_qa_pairs_200.jsonl",
+  "scope_note": "qa_pairs expanded diagnostic; use strict held-out test.jsonl for final generalization claims.",
+  "summaries": {
+    "first_100": {
+      "count": 100,
+      "assistant_start_anchor": "none",
+      "protocol_constraints": "none",
+      "avg_em": 0.82,
+      "avg_f1": 0.8311111111111111,
+      "avg_hop_recall": 0.8183333333333332,
+      "answer_tag_rate": 1.0,
+      "valid_tool_call_rate": 1.0,
+      "think_tag_rate": 1.0,
+      "missing_think_tool_rate": 0.0,
+      "empty_answer_think_rate": 0.0,
+      "malformed_think_rate": 0.0,
+      "malformed_tool_fragment_rate": 0.0,
+      "multi_action_turn_rate": 0.0,
+      "starts_with_closing_tool_rate": 0.0,
+      "max_turns_exceeded_rate": 0.0,
+      "avg_valid_tool_calls": 2.47,
+      "avg_turns": 3.47,
+      "results_file": "results\\sft_compare\\react_v4_full_ckpt3633_qa_pairs_100.jsonl",
+      "format": "jsonl_records",
+      "note": "diagnostic subset: first 100 records from qa_pairs.jsonl; not strict held-out test.jsonl"
+    },
+    "first_200": {
+      "count": 200,
+      "assistant_start_anchor": "none",
+      "protocol_constraints": "none",
+      "avg_em": 0.825,
+      "avg_f1": 0.8507936507936508,
+      "avg_hop_recall": 0.81,
+      "answer_tag_rate": 1.0,
+      "valid_tool_call_rate": 1.0,
+      "think_tag_rate": 1.0,
+      "missing_think_tool_rate": 0.0,
+      "empty_answer_think_rate": 0.0,
+      "malformed_think_rate": 0.0,
+      "malformed_tool_fragment_rate": 0.0,
+      "multi_action_turn_rate": 0.0,
+      "starts_with_closing_tool_rate": 0.0,
+      "max_turns_exceeded_rate": 0.0,
+      "avg_valid_tool_calls": 2.47,
+      "avg_turns": 3.47,
+      "results_file": "results\\sft_compare\\react_v4_full_ckpt3633_qa_pairs_200.jsonl",
+      "format": "jsonl_records",
+      "note": "diagnostic expanded eval over qa_pairs.jsonl; may overlap SFT data and must not replace strict held-out test.jsonl summary"
+    }
+  },
+  "error_counts": {
+    "first_100": {
+      "answer_extraction_or_reasoning_error": 5,
+      "retrieval_or_bridge_miss": 13,
+      "no_gold_evidence_retrieved": 3,
+      "partial_match_or_alias_gap": 2
+    },
+    "first_200": {
+      "answer_extraction_or_reasoning_error": 8,
+      "retrieval_or_bridge_miss": 27,
+      "no_gold_evidence_retrieved": 4,
+      "partial_match_or_alias_gap": 8
+    }
+  },
+  "low_score_records": [
+    {
+      "index": 4,
+      "primary_reason": "答案抽取或推理错误",
+      "tags": [
+        "answer_extraction_or_reasoning_error"
+      ],
+      "question": "那个曾用一件厨房里烤制食物的铁器抵挡迎头劈来单刀的人，被搜出一个小包后，这个小包又被转到另一人手中；石清后来是从那个人的什么位置搜出该物件的？",
+      "gold": "左脚皮靴的靴筒",
+      "aliases": [
+        "左脚皮靴的靴筒",
+        "靴筒",
+        "左脚靴筒"
+      ],
+      "prediction": "吴道通",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0018",
+        "xkx_0034",
+        "xkx_0041"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "吴道通抵挡迎头劈来的单刀时使用的物品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0018",
+            "xkx_0019",
+            "xkx_0031"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石破天从谁的身上搜到了小包？",
+          "retrieved_chunk_ids": [
+            "xkx_0038",
+            "xkx_0041",
+            "yttlj_2201"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "石清从谁的身上搜到了小包？",
+          "retrieved_chunk_ids": [
+            "xkx_0038",
+            "xkx_0034",
+            "xkx_0041"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0018",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0019",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0031",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0038",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0041",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "yttlj_2201",
+          "title": "倚天屠龙记",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "primary_reason": "答案抽取或推理错误",
+      "tags": [
+        "answer_extraction_or_reasoning_error"
+      ],
+      "question": "暮霭苍茫中，那个十二三岁的小丐从水沟旁抓起、后来又被高个儿从吴道通手中接过去掷下的东西，是落在了什么位置？",
+      "gold": "水沟之旁",
+      "aliases": [
+        "水沟之旁",
+        "水沟旁"
+      ],
+      "prediction": "路边的泥沟旁",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0021",
+        "xkx_0022"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "暮霭苍茫中十二三岁的小丐从水沟旁抓起的物品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0021",
+            "xkx_0022",
+            "xkx_0111"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "高个儿从吴道通手中接过的物品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0022",
+            "xkx_0031",
+            "xkx_0021"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "高个儿掷向水沟的物品落在了什么位置？",
+          "retrieved_chunk_ids": [
+            "xkx_0017",
+            "xkx_0022",
+            "tlbb_1311"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0021",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0022",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0111",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0022",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0031",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0021",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "那个被吴道通仓促间藏进自己心心念念之物、后来又被高个儿掷到先前所提位置、最终在小丐咬手中之物时吐出来的异物是什么？",
+      "gold": "铁片",
+      "aliases": [
+        "铁片"
+      ],
+      "prediction": "烧饼",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.3333333333333333,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0022",
+        "xkx_0045"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0025"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "高个儿将吴道通仓促间塞进怀里的物品掷到了什么位置？",
+          "retrieved_chunk_ids": [
+            "xkx_0025",
+            "xkx_0020",
+            "xkx_0018"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "小丐吐出的异物是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0356",
+            "xkx_0111",
+            "xkx_0093"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0025",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0020",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0018",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0356",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0111",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0093",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "石清从周牧身上搜出的、那件原本是周牧从某人身上得到的物件；而周牧为了找到它，曾命下属剥掉那人的衣服后要做什么？",
+      "gold": "细细搜查",
+      "aliases": [
+        "细细搜查"
+      ],
+      "prediction": "说出他所知的关于安金刀的隐秘",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0041"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0021",
+        "xkx_0034"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石清从周牧身上搜出的物品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0034",
+            "xkx_0033",
+            "xkx_0029"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "周牧是从谁的身上搜到黑玉断续膏的？",
+          "retrieved_chunk_ids": [
+            "yttlj_1338",
+            "xkx_0035",
+            "xkx_0034"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "周牧为了从吴道通手中取得黑玉断续膏，命下属剥掉吴道通的衣服后要求吴道通做什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0031",
+            "xkx_0021",
+            "xkx_0034"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0034",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0033",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0029",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "yttlj_1338",
+          "title": "倚天屠龙记",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0035",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0034",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "no_gold_evidence_retrieved"
+      ],
+      "question": "与石清交手时所持兵器能和对方所用之剑比试、并且还曾被用来砍向人影脑袋的那件武器是什么？",
+      "gold": "金刀",
+      "aliases": [
+        "金刀"
+      ],
+      "prediction": "白剑",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0038",
+        "xkx_0039",
+        "xkx_0050"
+      ],
+      "retrieved_gold_chunks": [],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石清与谢烟客交手时使用的武器是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0762",
+            "xkx_0711",
+            "xkx_0761"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石清用来和谢烟客的长剑比试的武器是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0740",
+            "xkx_0085",
+            "xkx_0761"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "谢烟客砍向人影脑袋时使用的武器是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0117",
+            "xkx_0086",
+            "xkx_0097"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0762",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0711",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0761",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0740",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0085",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0761",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "石清还剑入鞘后表示想结交的那位朋友，与他交手时石清使用的武器是什么？",
+      "gold": "墨剑",
+      "aliases": [
+        "墨剑"
+      ],
+      "prediction": "长剑",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0039"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0040"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石清还剑入鞘后表示要结交的朋友是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0040",
+            "xajh_0349",
+            "xkx_0251"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石清与安奉日交手时使用的武器是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0048",
+            "xkx_0041",
+            "xkx_0038"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0040",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xajh_0349",
+          "title": "笑傲江湖",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0251",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0048",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0041",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0038",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "安奉日曾提出要向那位后来将他打败的人讨教几招；这位人物与元澄交手时，元澄在被其长剑逼向左腕之际做出了什么行为？",
+      "gold": "反掌将小包掷回",
+      "aliases": [
+        "反掌将小包掷回",
+        "将小包反掌掷回"
+      ],
+      "prediction": "缩手退避",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0046"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0037",
+        "xkx_0038"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "安奉日是被谁打败的？",
+          "retrieved_chunk_ids": [
+            "xkx_0038",
+            "xkx_0039",
+            "xkx_0037"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "安奉日提出要向谁讨教几招？",
+          "retrieved_chunk_ids": [
+            "xkx_0038",
+            "xajh_1918",
+            "xkx_0037"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "元澄被石清的长剑逼向左腕时做出了什么行为？",
+          "retrieved_chunk_ids": [
+            "xkx_0036",
+            "xkx_0037",
+            "xkx_0529"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0038",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0039",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0037",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0038",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xajh_1918",
+          "title": "笑傲江湖",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0037",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "那位曾为谢烟客的剑法喝彩的人，与石清交手时，石清使用的武器是什么？",
+      "gold": "墨剑",
+      "aliases": [
+        "墨剑"
+      ],
+      "prediction": "长剑",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0039"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0053"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "为谢烟客的剑法喝彩的人是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0053",
+            "xkx_0741",
+            "xkx_0093"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石清与安奉日交手时使用的武器是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0048",
+            "xkx_0041",
+            "xkx_0038"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0053",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0741",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0093",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0048",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0041",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0038",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "谢烟客把那具被他踢出数丈的尸身对应之物收回后，后来又要求一个人说出要自己代办的事；这个人手里的那件东西，是谢烟客从谁手中接过来的？",
+      "gold": "狗杂种",
+      "aliases": [
+        "狗杂种"
+      ],
+      "prediction": "白自在",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0756"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0055",
+        "xkx_0757"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "谢烟客收回最后一枚玄铁令后，将谁的尸身踢出数丈？",
+          "retrieved_chunk_ids": [
+            "xkx_0055",
+            "xkx_0112",
+            "xkx_0054"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "谢烟客要求石破天说出要自己代办的事，是因为石破天从谁手中接了那件物品？",
+          "retrieved_chunk_ids": [
+            "xkx_0056",
+            "xkx_0757",
+            "xkx_0740"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0055",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0112",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0054",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0056",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0757",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0740",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 45,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "no_gold_evidence_retrieved"
+      ],
+      "question": "石清的儿子曾请求谢烟客前往凌霄城做什么？",
+      "gold": "将雪山派人众尽数杀了",
+      "aliases": [
+        "将雪山派人众尽数杀了",
+        "尽数杀了雪山派人众"
+      ],
+      "prediction": "救石清夫妇",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.0,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0059",
+        "xkx_0759"
+      ],
+      "retrieved_gold_chunks": [],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石清的儿子叫什么名字？",
+          "retrieved_chunk_ids": [
+            "xkx_0517",
+            "xkx_0526",
+            "xkx_0288"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "keyword_search",
+          "query": "石破天请求谢烟客前往凌霄城做什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0761",
+            "xkx_0741",
+            "xkx_0757"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0517",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0526",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0288",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0761",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0741",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0757",
+          "title": "侠客行",
+          "source": "keyword"
+        }
+      ]
+    },
+    {
+      "index": 53,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "石清的儿子曾被耿万钟指称想对其师侄女实施侵犯行为，这个人后来请求谢烟客前往凌霄城做什么？",
+      "gold": "将雪山派人众尽数杀了",
+      "aliases": [
+        "将雪山派人众尽数杀了",
+        "尽数杀了雪山派人众",
+        "把雪山派人众全都杀了"
+      ],
+      "prediction": "请侠客帮他们夺回被抢的凌霄城",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.3333333333333333,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0059",
+        "xkx_0759"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0064"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "耿万钟称石中玉想要对他的师侄女实施什么侵犯行为？",
+          "retrieved_chunk_ids": [
+            "xkx_0064",
+            "xkx_0063",
+            "xkx_0741"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石清的儿子叫什么名字？",
+          "retrieved_chunk_ids": [
+            "xkx_0517",
+            "xkx_0522",
+            "yttlj_0058"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "石破天请求谢烟客前往凌霄城做什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0757",
+            "xkx_0753",
+            "xkx_0741"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0064",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0063",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0741",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0517",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0522",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "yttlj_0058",
+          "title": "倚天屠龙记",
+          "source": "dense+rerank"
+        }
+      ]
+    },
+    {
+      "index": 66,
+      "primary_reason": "部分匹配/别名缺口",
+      "tags": [
+        "answer_extraction_or_reasoning_error",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "那位被耿万钟等人称作玄素庄主、且与耿万钟以内劲相碰时能令对方劲力当即受挫的人，曾把自己的儿子送到谁门下学艺？",
+      "gold": "雪山派大弟子「风火神龙」封万里",
+      "aliases": [
+        "雪山派大弟子「风火神龙」封万里",
+        "封万里",
+        "风火神龙封万里"
+      ],
+      "prediction": "雪山派",
+      "em": 0.0,
+      "f1": 0.4444444444444445,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0060",
+        "xkx_0062",
+        "xkx_0078"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "耿万钟的内劲与石清的内劲相碰后出现了什么结果？",
+          "retrieved_chunk_ids": [
+            "xkx_0078",
+            "xkx_0079",
+            "xkx_0276"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "耿万钟等人提到的玄素庄主是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0062",
+            "xkx_0061",
+            "xkx_0065"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "石清将自己的儿子送到谁门下学艺？",
+          "retrieved_chunk_ids": [
+            "xkx_0060",
+            "xkx_0480",
+            "xkx_0279"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0078",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0079",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0276",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0062",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0061",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0065",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 69,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "no_gold_evidence_retrieved"
+      ],
+      "question": "王万仞询问耿万钟是否要前去的那个地方，也正是石清夫妇当时所在之处；石清提到那里有一绝的面食叫什么？",
+      "gold": "龙须面",
+      "aliases": [
+        "龙须面"
+      ],
+      "prediction": "又细又长",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0043",
+        "xkx_0080",
+        "xkx_0081"
+      ],
+      "retrieved_gold_chunks": [],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "王万仞询问耿万钟要不要前去的地点是哪里？",
+          "retrieved_chunk_ids": [
+            "xkx_0068",
+            "xkx_0065",
+            "xkx_0062"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石清夫妇当时所在的地点是哪里？",
+          "retrieved_chunk_ids": [
+            "xkx_0532",
+            "xkx_0489",
+            "xkx_0270"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "石清提到的侯监集的牛面有什么特点？",
+          "retrieved_chunk_ids": [
+            "xkx_0085",
+            "xkx_0517",
+            "xkx_0275"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0068",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0065",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0062",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0532",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0489",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0270",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 70,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "石清夫妇当时所在之处，有一种被石清称作当地天下一绝的面食，这种面食是什么？",
+      "gold": "龙须面",
+      "aliases": [
+        "龙须面"
+      ],
+      "prediction": "侯监集龙须面",
+      "em": 0.0,
+      "f1": 0.6666666666666666,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0081"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0043"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石清夫妇当时所在的地点是哪里？",
+          "retrieved_chunk_ids": [
+            "xkx_0270",
+            "xkx_0775",
+            "xkx_0532"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石清提到的侯监集的天下一绝面食是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0043",
+            "xkx_0085",
+            "xkx_0527"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0270",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0775",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0532",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0043",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0085",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0527",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 80,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "谢烟客称作会趁人不备拿别人东西的那个孩子，正是大悲老人临死前说要把自己袋里某样东西送给的人；那件东西是什么？",
+      "gold": "泥人儿",
+      "aliases": [
+        "泥人儿"
+      ],
+      "prediction": "小丐",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0095"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0110",
+        "xkx_0111"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "谢烟客称呼会趁人不备拿别人东西的孩子为什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0097",
+            "xkx_0111",
+            "xkx_0096"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "大悲老人临死前说要把自己袋里的泥人儿送给谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0110",
+            "xkx_0158",
+            "xkx_0111"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "大悲老人临死前说要把自己袋里的泥人儿送给谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0110",
+            "xkx_0158",
+            "xkx_0111"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0097",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0111",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0096",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0110",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0158",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0111",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 83,
+      "primary_reason": "答案抽取或推理错误",
+      "tags": [
+        "answer_extraction_or_reasoning_error"
+      ],
+      "question": "把谢烟客领进饭店的那个人，起初称呼谢烟客时所用的那句称呼对应的那个与谢烟客交谈时的自称是什么？",
+      "gold": "狗杂种",
+      "aliases": [
+        "狗杂种"
+      ],
+      "prediction": "大大的好人",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0093",
+        "xkx_0097",
+        "xkx_0099"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "拉谢烟客走进饭店的人是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0115",
+            "xkx_0099",
+            "xkx_0093"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "小丐最初对谢烟客的称呼是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0097",
+            "xkx_0098",
+            "xkx_0093"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "那小丐与谢烟客交谈时的自称是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0107",
+            "xkx_0098",
+            "xkx_0092"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0115",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0099",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0093",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0097",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0098",
+          "title": "侠客行",
+          "source": "dense+rerank"
+        },
+        {
+          "chunk_id": "xkx_0093",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 84,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "听到左首前面树林里兵刃相交之声后，曾嘱咐小丐保持安静的那个人，最初被小丐怎么称呼？",
+      "gold": "大好人",
+      "aliases": [
+        "大好人"
+      ],
+      "prediction": "老贼",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.3333333333333333,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0093",
+        "xkx_0101"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0100"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "谢烟客听到左首前面树林的兵刃相交之声后要求小丐做什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0100",
+            "xkx_0084",
+            "xkx_0058"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "最初小丐称呼谢烟客为什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0100",
+            "xkx_0097",
+            "xkx_0112"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0100",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0084",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0058",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0100",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0097",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0112",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 87,
+      "primary_reason": "答案抽取或推理错误",
+      "tags": [
+        "answer_extraction_or_reasoning_error"
+      ],
+      "question": "那个曾用剑刺入大悲老人左肩并将其钉在树干上的人，在长乐帮中担任什么身份？",
+      "gold": "香主",
+      "aliases": [
+        "香主"
+      ],
+      "prediction": "米香主",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0104",
+        "xkx_0110"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "用剑刺入大悲老人左肩并将其钉在树干上的人是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0104",
+            "xkx_0105",
+            "xkx_0110"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "长乐帮的香主是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0106",
+            "xkx_0755",
+            "xkx_0182"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0104",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0105",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0110",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0106",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0755",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0182",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 106,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "文中那个八九岁之后就不再向其求恳任何事的人，在张无忌看来也是杀害临安府龙门镖局全家之人的谁？",
+      "gold": "他的母亲",
+      "aliases": [
+        "他的母亲",
+        "母亲"
+      ],
+      "prediction": "殷素素",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "yttlj_0867"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0123"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "那少年八九岁之后就不再向谁求恳任何事？",
+          "retrieved_chunk_ids": [
+            "xkx_0123",
+            "xkx_0124",
+            "xkx_0537"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "keyword_search",
+          "query": "张无忌认为杀害临安府龙门镖局全家的人是谁？",
+          "retrieved_chunk_ids": [
+            "yttlj_0153",
+            "yttlj_0144",
+            "yttlj_0190"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0123",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0124",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0537",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "yttlj_0153",
+          "title": "倚天屠龙记",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "yttlj_0144",
+          "title": "倚天屠龙记",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "yttlj_0190",
+          "title": "倚天屠龙记",
+          "source": "keyword"
+        }
+      ]
+    },
+    {
+      "index": 108,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "谢烟客首次给少年讲解穴道名称和方位时拿出的、后来又被写到大悲老人当作宝贝般藏在身上的那件物品是什么？",
+      "gold": "绘有经脉的泥人",
+      "aliases": [
+        "绘有经脉的泥人",
+        "泥人",
+        "经脉泥人"
+      ],
+      "prediction": "一十八个泥人",
+      "em": 0.0,
+      "f1": 0.6666666666666666,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0121"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0120",
+        "xkx_0124"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "谢烟客首次给少年讲解穴道名称和方位时拿出的物品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0124",
+            "xkx_0116",
+            "xkx_0119"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "大悲老人当作宝贝般藏在身上的物品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0120",
+            "xkx_0111",
+            "xkx_0105"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0124",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0116",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0119",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0120",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0111",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0105",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 121,
+      "primary_reason": "部分匹配/别名缺口",
+      "tags": [
+        "answer_extraction_or_reasoning_error",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "贝海石猜测那位少年所练高深内功的传授者，正是曾把颠倒次序的上乘内功教给他的那个人；按照此人的看法，若把那少年放到花花世界中去，过不了几天会有什么结果？",
+      "gold": "送了小命",
+      "aliases": [
+        "送了小命",
+        "小命不保",
+        "丢了性命"
+      ],
+      "prediction": "送了他小命",
+      "em": 0.0,
+      "f1": 0.8571428571428571,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0125",
+        "xkx_0141",
+        "xkx_0172"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "贝海石猜测石破天修习的高深内功是谁传授的？",
+          "retrieved_chunk_ids": [
+            "xkx_0141",
+            "xkx_0172",
+            "xkx_0239"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "keyword_search",
+          "query": "是谁将颠倒了次序的上乘内功传授给那少年的？",
+          "retrieved_chunk_ids": [
+            "xkx_0172",
+            "xkx_0125",
+            "tlbb_2438"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "谢烟客认为将那少年放到花花世界中过不了几天会有什么结果？",
+          "retrieved_chunk_ids": [
+            "xkx_0126",
+            "xkx_0125",
+            "xkx_0115"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0141",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0172",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0239",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0172",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0125",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "tlbb_2438",
+          "title": "天龙八部",
+          "source": "keyword"
+        }
+      ]
+    },
+    {
+      "index": 130,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "石破天口中睡在他房里的那名女子，就是曾站在房门口提醒他不要上当、并自称是少爷身边那类身份的少女。她是谁？",
+      "gold": "侍剑姊姊",
+      "aliases": [
+        "侍剑姊姊",
+        "侍剑姐姐"
+      ],
+      "prediction": "侍剑",
+      "em": 0.0,
+      "f1": 0.6666666666666666,
+      "hop_recall": 0.3333333333333333,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0157",
+        "xkx_0647"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0202"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "侍剑自称是少爷的什么人？",
+          "retrieved_chunk_ids": [
+            "xkx_0178",
+            "xkx_0182",
+            "xkx_0196"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "站在房门口提醒石破天不要上当的少女叫什么名字？",
+          "retrieved_chunk_ids": [
+            "xkx_0203",
+            "xkx_0201",
+            "yttlj_0058"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "石破天口中睡在他房里的女子是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0649",
+            "xkx_0202",
+            "yttlj_0660"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0178",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0182",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0196",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0203",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0201",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "yttlj_0058",
+          "title": "倚天屠龙记",
+          "source": "dense+rerank"
+        }
+      ]
+    },
+    {
+      "index": 141,
+      "primary_reason": "部分匹配/别名缺口",
+      "tags": [
+        "answer_extraction_or_reasoning_error",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "那位把颠倒次序的上乘内功传给少年的人，曾认为若放这少年下山到花花世界里去，过不了几天会有什么结果？",
+      "gold": "送了小命",
+      "aliases": [
+        "送了小命",
+        "会送了小命"
+      ],
+      "prediction": "送了他小命",
+      "em": 0.0,
+      "f1": 0.8571428571428571,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0125",
+        "xkx_0172"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "是谁将颠倒了次序的上乘内功传授给那少年的？",
+          "retrieved_chunk_ids": [
+            "xkx_0172",
+            "xkx_0125",
+            "tlbb_2438"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "keyword_search",
+          "query": "谢烟客认为放少年下山到花花世界中过不了几天会有什么结果？",
+          "retrieved_chunk_ids": [
+            "xkx_0125",
+            "xkx_0126",
+            "xkx_0118"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0172",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0125",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "tlbb_2438",
+          "title": "天龙八部",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0125",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0126",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0118",
+          "title": "侠客行",
+          "source": "keyword"
+        }
+      ]
+    },
+    {
+      "index": 142,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "no_gold_evidence_retrieved"
+      ],
+      "question": "那个被少女称作少爷、并让那位曾在对方扑来时吓得退到门边的少女告知其姓名的失忆少年，叫什么名字？",
+      "gold": "石破天",
+      "aliases": [
+        "石破天"
+      ],
+      "prediction": "左子穆",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.0,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0156",
+        "xkx_0171",
+        "xkx_0182"
+      ],
+      "retrieved_gold_chunks": [],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "害怕那少女扑来而退到门边的少女叫什么名字？",
+          "retrieved_chunk_ids": [
+            "tlbb_2051",
+            "yue_0026",
+            "tlbb_2052"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "阿青告知失忆少年他的姓名是什么？",
+          "retrieved_chunk_ids": [
+            "xajh_2179",
+            "yue_0031",
+            "yue_0029"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "tlbb_2051",
+          "title": "天龙八部",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "yue_0026",
+          "title": "越女剑",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "tlbb_2052",
+          "title": "天龙八部",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xajh_2179",
+          "title": "笑傲江湖",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "yue_0031",
+          "title": "越女剑",
+          "source": "dense+rerank"
+        },
+        {
+          "chunk_id": "yue_0029",
+          "title": "越女剑",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 155,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "那位曾被一名少女告知自己姓名、后来又说睡在他房里的女子就是那位与被称作“少爷”的少年对话的少女，这名失忆少年叫什么名字？",
+      "gold": "石破天",
+      "aliases": [
+        "石破天"
+      ],
+      "prediction": "石中玉",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0182"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0156",
+        "xkx_0202"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石破天口中睡在他房里的女子是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0649",
+            "xkx_0202",
+            "xkx_0319"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "和被称作“少爷”的少年对话的少女叫什么名字？",
+          "retrieved_chunk_ids": [
+            "xkx_0156",
+            "xkx_0152",
+            "tlbb_1580"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "那少女告知失忆少年他的姓名是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0153",
+            "xkx_0152",
+            "xkx_0147"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0649",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0202",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0319",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0156",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0152",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "tlbb_1580",
+          "title": "天龙八部",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 157,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "石破天曾偶尔陪着喝白酒的那个人，小丐最初是怎么称呼他的？",
+      "gold": "大好人",
+      "aliases": [
+        "大好人"
+      ],
+      "prediction": "老伯伯",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0093"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0205"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石破天曾偶尔陪谁喝白酒？",
+          "retrieved_chunk_ids": [
+            "xkx_0205",
+            "xkx_0803",
+            "yttlj_1712"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "小丐最初对谢逊的称呼是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0097",
+            "xkx_0112",
+            "xkx_0111"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0205",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0803",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "yttlj_1712",
+          "title": "倚天屠龙记",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0097",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0112",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0111",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 159,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "石破天正待回答、忽然听见说话声从上方传来时，向他发问的那名女子，后来半夜敲响了他所住客店的窗户；她再与石破天一路疾驰，到四更天时抵达的是哪个镇的镇外？",
+      "gold": "龙潭镇",
+      "aliases": [
+        "龙潭镇"
+      ],
+      "prediction": "长乐镇",
+      "em": 0.0,
+      "f1": 0.5,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0548"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0206",
+        "xkx_0648"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石破天正待回答丁珰的问题时，听到的说话声来自什么位置？",
+          "retrieved_chunk_ids": [
+            "xkx_0206",
+            "xkx_0236",
+            "xkx_0220"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "半夜敲响石破天所住客店房间窗户的人是谁？",
+          "retrieved_chunk_ids": [
+            "tlbb_1462",
+            "xkx_0553",
+            "tlbb_1791"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "丁珰与石破天一路疾驰，到四更天时抵达了哪个镇的镇外？",
+          "retrieved_chunk_ids": [
+            "xkx_0648",
+            "xkx_0314",
+            "xkx_0319"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0206",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0236",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0220",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "tlbb_1462",
+          "title": "天龙八部",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0553",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "tlbb_1791",
+          "title": "天龙八部",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 162,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "书中那位被老者称作“阿珰”的人物，与这位老者具体是什么关系？",
+      "gold": "爷孙",
+      "aliases": [
+        "爷孙"
+      ],
+      "prediction": "祖孙",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0330"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0208",
+        "xkx_0308"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "称呼丁珰为阿珰的老者是丁珰的什么人？",
+          "retrieved_chunk_ids": [
+            "xkx_0208",
+            "xkx_0212",
+            "xkx_0217"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "丁珰的爷爷是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0308",
+            "xkx_0582",
+            "xkx_0300"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "丁不三和丁珰是什么关系？",
+          "retrieved_chunk_ids": [
+            "xkx_0299",
+            "xkx_0526",
+            "xkx_0406"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0208",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0212",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0217",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0308",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0582",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0300",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 164,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "认为自己和石破天关系非同一般的那位老人的孙女叫什么名字？",
+      "gold": "丁珰",
+      "aliases": [
+        "丁珰"
+      ],
+      "prediction": "丁不二",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0215"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0217"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "丁珰的爷爷认为自己和石破天是什么关系？",
+          "retrieved_chunk_ids": [
+            "xkx_0554",
+            "xkx_0323",
+            "xkx_0217"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "丁珰的孙女叫什么名字？",
+          "retrieved_chunk_ids": [
+            "xkx_0223",
+            "xkx_0210",
+            "xkx_0211"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0554",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0323",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0217",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0223",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0210",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0211",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 167,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "和石破天一同跟在关东群豪之后、后来提到长乐帮里那位绰号为“着手成春”的大夫的女子，鬓上佩戴的饰品是什么？",
+      "gold": "珠花",
+      "aliases": [
+        "珠花"
+      ],
+      "prediction": "金丝玉蝴蝶",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0637"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0218",
+        "xkx_0584"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "丁珰提到的长乐帮中绰号为“着手成春”的大夫姓什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0218",
+            "xkx_0593",
+            "xkx_0753"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "和石破天一同跟在关东群豪之后的人是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0584",
+            "xkx_0605",
+            "xkx_0603"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "丁珰鬓上佩戴的饰品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0550",
+            "xkx_0640",
+            "xkx_0299"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0218",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0593",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0753",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0584",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0605",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0603",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 173,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss",
+        "partial_match_or_alias_gap"
+      ],
+      "question": "与石破天举行成婚拜堂仪式的那名女子，后来和他驰到四更天时到达了哪个镇的镇外？",
+      "gold": "龙潭镇",
+      "aliases": [
+        "龙潭镇"
+      ],
+      "prediction": "长乐镇",
+      "em": 0.0,
+      "f1": 0.5,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0225"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0648"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "与石破天举行成婚拜堂仪式的女子是谁？",
+          "retrieved_chunk_ids": [
+            "yttlj_2246",
+            "yttlj_2245",
+            "xkx_0603"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石破天和小昭驰到四更天时到达了哪个镇的镇外？",
+          "retrieved_chunk_ids": [
+            "xkx_0648",
+            "xkx_0767",
+            "xkx_0781"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "yttlj_2246",
+          "title": "倚天屠龙记",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "yttlj_2245",
+          "title": "倚天屠龙记",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0603",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0648",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0767",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0781",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 181,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "被丁不三认作自己那层亲属关系的人，曾把地下的长剑掷给白万剑；后来白万剑点了他全身多少处穴道？",
+      "gold": "数十处",
+      "aliases": [
+        "数十处"
+      ],
+      "prediction": "四五十处",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.6666666666666666,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [
+        "xkx_0231"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0283",
+        "xkx_0413"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "丁不三认为石破天和自己是什么亲属关系？",
+          "retrieved_chunk_ids": [
+            "xkx_0526",
+            "xkx_0415",
+            "xkx_0554"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "将地下的长剑掷给白万剑的人是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0283",
+            "xkx_0413",
+            "tlbb_2143"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "白万剑点了石破天全身多少处穴道？",
+          "retrieved_chunk_ids": [
+            "xkx_0283",
+            "xkx_0284",
+            "xkx_0261"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0526",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0415",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0554",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0283",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0413",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "tlbb_2143",
+          "title": "天龙八部",
+          "source": "keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 186,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "石破天在到访的雪山派众人中唯一认得的那个人，陈冲之后来被他要求归还给此人的物品是什么？",
+      "gold": "剑",
+      "aliases": [
+        "剑"
+      ],
+      "prediction": "长剑",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.5,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0191"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0239"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "石破天在到访的雪山派众人中唯一认得的人是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0262",
+            "xkx_0377",
+            "xkx_0239"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "石破天要求陈冲之还给白万剑的物品是什么？",
+          "retrieved_chunk_ids": [
+            "xkx_0255",
+            "xkx_0187",
+            "xkx_0184"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0262",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0377",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0239",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0255",
+          "title": "侠客行",
+          "source": "keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0187",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0184",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 196,
+      "primary_reason": "答案抽取或推理错误",
+      "tags": [
+        "answer_extraction_or_reasoning_error"
+      ],
+      "question": "石破天曾见过有人在柱上连刺六剑，剑痕形成雪花六出之形；这个人当时拔剑出鞘后先刺向的那件物品所在之处是哪里？",
+      "gold": "长乐帮总舵",
+      "aliases": [
+        "长乐帮总舵"
+      ],
+      "prediction": "石清夫妇寓居的客店",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 1.0,
+      "valid_tool_call_count": 3,
+      "missing_gold_chunks": [],
+      "retrieved_gold_chunks": [
+        "xkx_0251",
+        "xkx_0252",
+        "xkx_0385"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "白万剑拔剑出鞘后出剑刺向的是什么物品？",
+          "retrieved_chunk_ids": [
+            "xkx_0251",
+            "xkx_0274",
+            "xkx_0275"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "在柱上连刺六剑形成雪花六出之形的人是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0251",
+            "xkx_0252",
+            "xkx_0385"
+          ]
+        },
+        {
+          "turn": 3,
+          "name": "hybrid_search",
+          "query": "石破天见到白万剑在柱上连刺六剑时，白万剑当时所在的地点是哪里？",
+          "retrieved_chunk_ids": [
+            "xkx_0251",
+            "xkx_0252",
+            "xkx_0276"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0251",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0274",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0275",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0251",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0252",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0385",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    },
+    {
+      "index": 200,
+      "primary_reason": "检索/桥接缺失",
+      "tags": [
+        "retrieval_or_bridge_miss"
+      ],
+      "question": "那个奉令要清理雪山派门户之人的女儿，与他是什么亲属关系？",
+      "gold": "父亲",
+      "aliases": [
+        "父亲"
+      ],
+      "prediction": "母亲",
+      "em": 0.0,
+      "f1": 0.0,
+      "hop_recall": 0.3333333333333333,
+      "valid_tool_call_count": 2,
+      "missing_gold_chunks": [
+        "xkx_0255",
+        "xkx_0709"
+      ],
+      "retrieved_gold_chunks": [
+        "xkx_0701"
+      ],
+      "tool_queries": [
+        {
+          "turn": 1,
+          "name": "keyword_search",
+          "query": "白万剑奉令要清理的雪山派门户的对象是谁？",
+          "retrieved_chunk_ids": [
+            "xkx_0243",
+            "xkx_0701",
+            "xkx_0417"
+          ]
+        },
+        {
+          "turn": 2,
+          "name": "hybrid_search",
+          "query": "史婆婆是白万剑的什么人？",
+          "retrieved_chunk_ids": [
+            "xkx_0701",
+            "xkx_0710",
+            "xkx_0378"
+          ]
+        }
+      ],
+      "top_evidence": [
+        {
+          "chunk_id": "xkx_0243",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0701",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0417",
+          "title": "侠客行",
+          "source": "keyword"
+        },
+        {
+          "chunk_id": "xkx_0701",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0710",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        },
+        {
+          "chunk_id": "xkx_0378",
+          "title": "侠客行",
+          "source": "dense+keyword+rerank"
+        }
+      ]
+    }
+  ]
+}

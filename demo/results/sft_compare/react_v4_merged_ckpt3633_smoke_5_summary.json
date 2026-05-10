@@ -1,0 +1,22 @@
+{
+  "count": 5,
+  "assistant_start_anchor": "none",
+  "protocol_constraints": "none",
+  "avg_em": 1.0,
+  "avg_f1": 1.0,
+  "avg_hop_recall": 0.5666666666666667,
+  "answer_tag_rate": 1.0,
+  "valid_tool_call_rate": 1.0,
+  "think_tag_rate": 1.0,
+  "missing_think_tool_rate": 0.0,
+  "empty_answer_think_rate": 0.0,
+  "malformed_think_rate": 0.0,
+  "malformed_tool_fragment_rate": 0.0,
+  "multi_action_turn_rate": 0.0,
+  "starts_with_closing_tool_rate": 0.0,
+  "max_turns_exceeded_rate": 0.0,
+  "avg_valid_tool_calls": 2.4,
+  "avg_turns": 3.4,
+  "results_file": "results\\sft_compare\\react_v4_merged_ckpt3633_smoke_5.jsonl",
+  "format": "jsonl_records"
+}
