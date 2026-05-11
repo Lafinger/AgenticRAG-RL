@@ -93,8 +93,10 @@ def test_build_oracle_trace_to_sft_and_grpo_rows() -> None:
     assert final_answer["tools"] == TOOL_SCHEMAS
     assert sharegpt_records[0]["messages"][0]["role"] == "system"
     assert sharegpt_records[0]["tools"] == TOOL_SCHEMAS
-    assert grpo_rows[0]["agent_name"] == "tool_agent"
-    assert grpo_rows[0]["tools"] == TOOL_SCHEMAS
+    assert grpo_rows[0]["data_source"] == "novel_agentic_rag"
+    assert grpo_rows[0]["ability"] == "multi_hop_qa"
+    assert grpo_rows[0]["extra_info"]["need_tools_kwargs"] is True
+    assert set(grpo_rows[0]["extra_info"]["tools_kwargs"]) == {"keyword_search", "dense_search", "hybrid_search"}
     assert grpo_rows[0]["reward_model"]["ground_truth"]["gold_chunks"] == ["corpus_chunkids_000001", "corpus_chunkids_000001"]
 
 

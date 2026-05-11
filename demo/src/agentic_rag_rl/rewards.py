@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass, field
 
 from .evaluation import hop_precision_recall_f1, hop_recall
@@ -30,9 +32,20 @@ def _format_score(prediction: str) -> float:
     score = 0.0
     if "<answer>" in prediction and "</answer>" in prediction:
         score += 0.10
-    if "<tool_call>" in prediction:
+    if _has_valid_json_tool_call(prediction):
         score += 0.04
     return min(score, 0.10)
+
+
+def _has_valid_json_tool_call(prediction: str) -> bool:
+    for match in re.findall(r"<tool_call>\s*(.*?)\s*</tool_call>", prediction, flags=re.DOTALL):
+        try:
+            payload = json.loads(match.strip())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict) and payload.get("name") and isinstance(payload.get("arguments"), dict):
+            return True
+    return False
 
 
 def _search_effort(tool_calls: int, hop_count: int) -> float:

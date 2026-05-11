@@ -1,28 +1,63 @@
 tools:
-  - name: keyword_search
-    type: http
-    endpoint: http://localhost:8790/search
-    method: POST
-    timeout: 30
-    payload_template:
-      query: "{query}"
-      top_k: 5
-      tool: keyword_search
-  - name: dense_search
-    type: http
-    endpoint: http://localhost:8790/search
-    method: POST
-    timeout: 30
-    payload_template:
-      query: "{query}"
-      top_k: 5
-      tool: dense_search
-  - name: hybrid_search
-    type: http
-    endpoint: http://localhost:8790/search
-    method: POST
-    timeout: 30
-    payload_template:
-      query: "{query}"
-      top_k: 5
-      tool: hybrid_search
+  - class_name: training.tools.novel_search_tool.KeywordSearchTool
+    config:
+      top_k: 3
+      max_text_len: 420
+      timeout: 30
+      retrieval_server_url: "http://127.0.0.1:8790"
+      type: native
+    tool_schema:
+      type: function
+      function:
+        name: keyword_search
+        description: 使用关键词匹配检索中文小说段落，适合精确查找人物、地点、事件和关系线索。
+        parameters:
+          type: object
+          properties:
+            query:
+              type: string
+              description: 搜索查询关键词
+          required:
+            - query
+
+  - class_name: training.tools.novel_search_tool.DenseSearchTool
+    config:
+      top_k: 3
+      max_text_len: 420
+      timeout: 30
+      retrieval_server_url: "http://127.0.0.1:8790"
+      type: native
+    tool_schema:
+      type: function
+      function:
+        name: dense_search
+        description: 使用向量语义检索中文小说段落，适合查找表达不同但语义相关的证据。
+        parameters:
+          type: object
+          properties:
+            query:
+              type: string
+              description: 语义搜索查询
+          required:
+            - query
+
+  - class_name: training.tools.novel_search_tool.HybridSearchTool
+    config:
+      top_k: 3
+      max_text_len: 420
+      timeout: 30
+      retrieval_server_url: "http://127.0.0.1:8790"
+      type: native
+    tool_schema:
+      type: function
+      function:
+        name: hybrid_search
+        description: 融合关键词和向量检索结果并重排，适合需要多证据召回的小说问答。
+        parameters:
+          type: object
+          properties:
+            query:
+              type: string
+              description: 搜索查询
+          required:
+            - query

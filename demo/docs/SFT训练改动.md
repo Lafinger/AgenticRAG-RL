@@ -325,4 +325,14 @@ results\sft_compare\react_v4_full_ckpt3633_50_summary.json
 5. Agent loop 主测评使用 `--assistant-start-anchor none --protocol-constraints none`。
 6. V1/V2/V3 的数据、checkpoint 和 merged model 只能用于问题追溯，不能作为当前有效基线。
 
+V4 通过后，下一阶段 GRPO 不再使用旧 `scripts\train_grpo_unsloth.py` 作为主线，而是以 `models\Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v4-merged` 为初始模型，进入 example 风格的 verl multi-turn tool-agent GRPO：
+
+```text
+training\start_grpo_tool_agent.sh
+training\config\novel_tool_config.yaml
+training\tools\novel_search_tool.py
+```
+
+GRPO parquet 使用 `data\novel_eval\grpo_agentic_train.parquet` 和 `data\novel_eval\grpo_agentic_val.parquet`，字段为 `data_source/prompt/ability/reward_model/extra_info/metadata`。这属于 V4 SFT 之后的强化学习阶段，不改变 V4 SFT 数据和 checkpoint 的有效性。
+
 如果后续 V4 测评仍不达标，优化应继续在 canonical Agentic SFT 主线内完成，优先检查协议边界权重、assistant 起始状态、最终答案样本比例、stop criteria 和首 token probe，而不是恢复已经废弃的独立训练路线。

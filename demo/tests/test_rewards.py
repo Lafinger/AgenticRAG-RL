@@ -61,3 +61,23 @@ def test_reward_v9a_uses_hop_f1() -> None:
 
     assert round(result.breakdown["hop_precision_recall"], 2) == 0.5
     assert round(result.score, 2) == 0.68
+
+
+def test_format_score_does_not_reward_query_only_tool_call() -> None:
+    inputs = RewardInputs(
+        prediction="<tool_call>侯监集</tool_call>",
+        target="侯赢",
+        answer_aliases=["侯赢"],
+        gold_chunks=["chunk-a"],
+        retrieved_chunk_ids=[],
+        hop_count=1,
+        tool_calls=0,
+        judge_correctness=0.0,
+        judge_faithfulness=0.0,
+        grounded_answer=0.0,
+    )
+
+    result = score_response(inputs, reward_version="v9a")
+
+    assert result.breakdown["format"] == 0.0
+    assert result.score == 0.0

@@ -127,7 +127,22 @@ content = 原始检索证据
 </tool_response><|im_end|>
 ```
 
-这样 SFT、Agent loop 和后续 GRPO 都共享同一套 `tools` schema 和 renderer 逻辑，不会出现训练时是手写 `<tool_response>`、推理时又是另一种格式的协议漂移。项目不直接使用 tokenizer 原生 `tools=` 模板作为主渲染路径，因为它不会要求短 `<think>`，并可能在最终答案前补空 `<think>`。
+这样 SFT 和 Agent loop 共享同一套 `tools` schema 和 renderer 逻辑，不会出现训练时是手写 `<tool_response>`、推理时又是另一种格式的协议漂移。后续 GRPO 使用同一套 canonical 工具名称和 tool response 文本约定，但工具 schema 由 verl 的 `training/config/novel_tool_config.yaml` 加载。项目不直接使用 tokenizer 原生 `tools=` 模板作为主渲染路径，因为它不会要求短 `<think>`，并可能在最终答案前补空 `<think>`。
+
+### Q1.6: GRPO 为什么不用 `scripts/train_grpo_unsloth.py`？
+
+答：当前要严格复刻 example 的 multi-turn tool-agent GRPO。example 的关键不是“调用一个 GRPOTrainer”，而是 verl 在 rollout 过程中真实执行工具：模型生成 `<think> + <tool_call>`，`tool_agent` 根据 `tool_config_path` 调用 `BaseTool`，再把检索结果作为 `<tool_response>` 放回下一轮上下文。
+
+因此 demo 当前 GRPO 主线是：
+
+```text
+training/start_grpo_tool_agent.sh
+training/config/novel_tool_config.yaml
+training/tools/novel_search_tool.py
+training/reward_agentic_rag.py
+```
+
+`scripts/train_grpo_unsloth.py` 只保留为历史 TRL/Unsloth 实验入口，不代表严格复刻 example 的主线。
 
 ### Q2: 151644 对应什么？
 
