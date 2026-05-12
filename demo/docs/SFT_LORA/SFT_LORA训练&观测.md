@@ -205,7 +205,7 @@ uv run --no-sync python `
   --overwrite
 ```
 
-smoke checkpoint 先用 `docs\训练测评.md` 的 5 条 Agent loop 命令检查：`starts_with_closing_tool_rate <= 0.05`、`think_tag_rate >= 0.90`、`valid_tool_call_rate >= 0.80` 后，再跑完整训练。已有主线结果不需要重复执行 smoke：`checkpoint-3633` 的 50 条无锚点主测评已通过验收。
+smoke checkpoint 先用 `docs\SFT_LORA\SFT_LORA训练测评.md` 的 5 条 Agent loop 命令检查：`starts_with_closing_tool_rate <= 0.05`、`think_tag_rate >= 0.90`、`valid_tool_call_rate >= 0.80` 后，再跑完整训练。已有主线结果不需要重复执行 smoke：`checkpoint-3633` 的 50 条无锚点主测评已通过验收。
 
 继续训练或从最新 checkpoint 恢复时，默认使用 `--resume`；输出目录保持在配置中的 `training\outputs\unsloth_sft_qwen3_4b_lora_react_v4`：
 
@@ -406,7 +406,7 @@ uv run --no-sync python `
 3. 5 条 smoke 样本中工具轮为短 `<think>` 加 JSON `<tool_call>`，不能大面积出现首轮 `</tool_call>`。
 4. 50 条 Agent loop 中 `think_tag_rate >= 0.95`、`valid_tool_call_rate >= 0.95`、`answer_tag_rate >= 0.80`、`starts_with_closing_tool_rate <= 0.05`。当前 `checkpoint-3633` 已满足这些门槛。
 
-Agent loop 命令和 checkpoint 选择方法见 `docs\训练测评.md`。
+Agent loop 命令和 checkpoint 选择方法见 `docs\SFT_LORA\SFT_LORA训练测评.md`。
 
 ## 常见问题
 

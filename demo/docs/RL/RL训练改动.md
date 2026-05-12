@@ -2,6 +2,17 @@
 
 本文记录 demo 工程 GRPO 主线从旧 TRL/Unsloth 单轮入口，切换到 example 风格 `verl + vLLM + Ray + tool_agent + multi-turn tools` 的改动。这里的 GRPO 指 SFT v4 之后的强化学习阶段，不改变 SFT v4 数据、checkpoint 和 merged model 的有效性。
 
+相关操作文档：
+
+| 文档 | 内容 |
+| --- | --- |
+| `RL数据流.md` | GRPO parquet 生成、schema 和 tool-agent 消费方式 |
+| `RL训练&观测.md` | retrieval server、verl 启动入口、核心参数和日志观测 |
+| `RL训练测评.md` | GRPO 后 Agent loop smoke / 50 条主测评 |
+| `RL训练样本长度计算.md` | rollout、tool response、batch 和上下文长度预算 |
+| `RL训练追溯.md` | 当前可用的日志、raw turns、reward 和检索追溯口径 |
+| `RL_资源推算.md` | GRPO 显存、rollout token 和多卡资源估算 |
+
 ## 当前结论
 
 当前严格复刻 example 的 GRPO 主线是：
