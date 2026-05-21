@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import signal
 import subprocess
 import sys
@@ -19,13 +19,13 @@ SECRET_NAME = "agentic-rag-rl-secrets"
 LOCAL_DEMO_DIR = Path(__file__).resolve().parents[1]
 LOCAL_REPO_DIR = LOCAL_DEMO_DIR.parent
 
-REMOTE_ROOT = Path("/workspace/AgenticRAG-RL")
+REMOTE_ROOT = PurePosixPath("/workspace/AgenticRAG-RL")
 REMOTE_PROJECT_DIR = REMOTE_ROOT / "demo"
 REMOTE_VERL_DIR = REMOTE_ROOT / "example" / "verl"
 
-DATA_PATH = Path("/vol/data")
-MODELS_PATH = Path("/vol/models")
-OUTPUTS_PATH = Path("/vol/outputs")
+DATA_PATH = PurePosixPath("/vol/data")
+MODELS_PATH = PurePosixPath("/vol/models")
+OUTPUTS_PATH = PurePosixPath("/vol/outputs")
 
 TRAIN_FILE = DATA_PATH / "novel_eval" / "grpo_agentic_train.parquet"
 VAL_FILE = DATA_PATH / "novel_eval" / "grpo_agentic_val.parquet"
@@ -50,13 +50,18 @@ data_volume = modal.Volume.from_name("agentic-rag-rl-data", create_if_missing=Tr
 models_volume = modal.Volume.from_name("agentic-rag-rl-models", create_if_missing=True)
 outputs_volume = modal.Volume.from_name("agentic-rag-rl-outputs", create_if_missing=True)
 
+
+def _container_path(path: PurePosixPath) -> Path:
+    return Path(path.as_posix())
+
+
 runtime_packages = [
     "fastapi>=0.115",
     "faiss-cpu>=1.13",
     "httpx>=0.28",
     "jieba>=0.42",
     "networkx>=3.4",
-    "numpy>=2.0",
+    "numpy<2.0.0",
     "pandas>=2.2",
     "pyarrow>=17.0",
     "pydantic>=2.9",
@@ -65,13 +70,14 @@ runtime_packages = [
     "rank-bm25>=0.2.2",
     "requests>=2.32",
     "scikit-learn>=1.5",
-    "sentence-transformers>=5.4",
+    "sentence-transformers==2.7.0",
     "swanlab>=0.7.12",
     "uvicorn>=0.30",
 ]
 
 image = (
-    modal.Image.from_registry("verlai/verl:app-verl0.4-vllm0.8.5-mcore0.12.1")
+    modal.Image.from_registry("verlai/verl:vllm011.latest")
+    .entrypoint([])
     .apt_install("curl", "git", "procps")
     .uv_pip_install(*runtime_packages)
     .env(
@@ -143,15 +149,15 @@ def _base_env() -> dict[str, str]:
 
 def _require_paths() -> dict[str, bool]:
     checks = {
-        "train_file": TRAIN_FILE.is_file(),
-        "val_file": VAL_FILE.is_file(),
-        "index_dir": INDEX_DIR.is_dir(),
-        "bge_model": BGE_MODEL.is_dir(),
-        "reranker_model": RERANKER_MODEL.is_dir(),
-        "merged_model": MERGED_MODEL.is_dir(),
-        "project_src": (REMOTE_PROJECT_DIR / "src" / "agentic_rag_rl").is_dir(),
-        "project_training": (REMOTE_PROJECT_DIR / "training").is_dir(),
-        "verl_package": (REMOTE_VERL_DIR / "verl").is_dir(),
+        "train_file": _container_path(TRAIN_FILE).is_file(),
+        "val_file": _container_path(VAL_FILE).is_file(),
+        "index_dir": _container_path(INDEX_DIR).is_dir(),
+        "bge_model": _container_path(BGE_MODEL).is_dir(),
+        "reranker_model": _container_path(RERANKER_MODEL).is_dir(),
+        "merged_model": _container_path(MERGED_MODEL).is_dir(),
+        "project_src": _container_path(REMOTE_PROJECT_DIR / "src" / "agentic_rag_rl").is_dir(),
+        "project_training": _container_path(REMOTE_PROJECT_DIR / "training").is_dir(),
+        "verl_package": _container_path(REMOTE_VERL_DIR / "verl").is_dir(),
     }
     missing = [name for name, ok in checks.items() if not ok]
     print(json.dumps(checks, ensure_ascii=False, indent=2))
@@ -210,11 +216,13 @@ def _stop_process(process: subprocess.Popen[bytes] | None) -> None:
         process.wait(timeout=30)
 
 
-def _run(cmd: list[str], *, cwd: Path, env: dict[str, str]) -> None:
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
+def _run(cmd: list[str], *, cwd: PurePosixPath, env: dict[str, str]) -> None:
+    log_dir = _container_path(LOG_DIR)
+    log_file = _container_path(LOG_FILE)
+    log_dir.mkdir(parents=True, exist_ok=True)
     print("running command:")
     print(" ".join(cmd))
-    with LOG_FILE.open("a", encoding="utf-8") as handle:
+    with log_file.open("a", encoding="utf-8") as handle:
         handle.write("\n\n=== modal verl command ===\n")
         handle.write(" ".join(cmd))
         handle.write("\n")
@@ -356,14 +364,18 @@ def check_inputs() -> dict[str, bool]:
     volumes=volumes,
     secrets=[modal.Secret.from_name(SECRET_NAME)],
     timeout=24 * HOURS,
-    retries=modal.Retries(max_retries=2, backoff_coefficient=2.0, initial_delay=30.0),
-    max_inputs=1,
+    single_use_containers=True,
 )
 def train_smoke(*extra_args: str) -> None:
     smoke_args = (
         "trainer.total_training_steps=1",
         "trainer.save_freq=1",
         "trainer.test_freq=1",
+        "actor_rollout_ref.actor.fsdp_config.param_offload=True",
+        "actor_rollout_ref.actor.fsdp_config.optimizer_offload=True",
+        "actor_rollout_ref.actor.optim.override_optimizer_config={foreach:false}",
+        "actor_rollout_ref.rollout.gpu_memory_utilization=0.20",
+        "actor_rollout_ref.rollout.max_num_batched_tokens=2048",
         *extra_args,
     )
     _train(
@@ -385,7 +397,7 @@ def train_smoke(*extra_args: str) -> None:
     secrets=[modal.Secret.from_name(SECRET_NAME)],
     timeout=24 * HOURS,
     retries=modal.Retries(max_retries=3, backoff_coefficient=2.0, initial_delay=60.0),
-    max_inputs=1,
+    single_use_containers=True,
 )
 def train(*extra_args: str) -> None:
     _train(

@@ -8,17 +8,38 @@ param(
     [string]$IndexDir = "data\novel\indexes",
     [string]$BgeModelDir = "models\bge-m3",
     [string]$RerankerModelDir = "models\bge-reranker-v2-m3",
-    [string]$MergedModelDir = "models\Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v4-merged"
+    [string]$MergedModelDir = "models\Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v4-merged",
+    [string]$ModalExe = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
 
-function Require-Command {
-    param([string]$Name)
-    if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
-        throw "Command not found: $Name. Install Modal CLI first: python -m pip install modal; modal setup"
+function Resolve-ModalExecutable {
+    param([string]$ExplicitPath)
+    if ($ExplicitPath) {
+        if (Test-Path -LiteralPath $ExplicitPath) {
+            return (Resolve-Path -LiteralPath $ExplicitPath).Path
+        }
+        $explicitCommand = Get-Command $ExplicitPath -ErrorAction SilentlyContinue
+        if ($explicitCommand) {
+            return $explicitCommand.Source
+        }
+        throw "Command not found: $ExplicitPath. Install Modal CLI first: python -m pip install modal; modal setup"
     }
+
+    $venvModal = Join-Path $ProjectDir ".venv\Scripts\modal.exe"
+    if (Test-Path -LiteralPath $venvModal) {
+        return (Resolve-Path -LiteralPath $venvModal).Path
+    }
+
+    $command = Get-Command "modal" -ErrorAction SilentlyContinue
+    if ($command) {
+        return $command.Source
+    }
+    throw "Command not found: modal. Install Modal CLI first: python -m pip install modal; modal setup"
 }
 
 function Resolve-ProjectPath {
@@ -30,17 +51,17 @@ function Resolve-ProjectPath {
 }
 
 function Invoke-Modal {
-    param([string[]]$Args)
-    & modal @Args
+    param([string[]]$ModalArgs)
+    & $script:ModalCommand @ModalArgs
     if ($LASTEXITCODE -ne 0) {
-        throw "modal $($Args -join ' ') failed with exit code $LASTEXITCODE"
+        throw "modal $($ModalArgs -join ' ') failed with exit code $LASTEXITCODE"
     }
 }
 
 function Ensure-Volume {
     param([string]$Name)
     Write-Host "Ensuring Modal Volume: $Name"
-    & modal volume create $Name
+    & $script:ModalCommand volume create $Name
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "modal volume create $Name returned exit code $LASTEXITCODE. If the volume already exists, this is expected; otherwise fix Modal authentication or environment first."
     }
@@ -57,10 +78,11 @@ function Upload-Path {
         throw "Local path does not exist: $resolved"
     }
     Write-Host "Uploading $resolved -> ${Volume}:$RemotePath"
-    Invoke-Modal @("volume", "put", "--force", $Volume, $resolved, $RemotePath)
+    Invoke-Modal -ModalArgs @("volume", "put", "--force", $Volume, $resolved, $RemotePath)
 }
 
-Require-Command "modal"
+$script:ModalCommand = Resolve-ModalExecutable $ModalExe
+Write-Host "Using Modal CLI: $script:ModalCommand"
 
 Ensure-Volume $DataVolume
 Ensure-Volume $ModelsVolume

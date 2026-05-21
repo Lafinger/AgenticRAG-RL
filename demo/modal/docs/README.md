@@ -114,6 +114,11 @@ smoke 默认参数：
 - `ROLLOUT_N=2`
 - `SAVE_FREQ=1`
 - `TEST_FREQ=1`
+- `actor_rollout_ref.actor.fsdp_config.param_offload=True`
+- `actor_rollout_ref.actor.fsdp_config.optimizer_offload=True`
+- `actor_rollout_ref.actor.optim.override_optimizer_config={foreach:false}`
+- `actor_rollout_ref.rollout.gpu_memory_utilization=0.20`
+- `actor_rollout_ref.rollout.max_num_batched_tokens=2048`
 
 smoke 要验证四件事：
 
@@ -180,8 +185,8 @@ demo\training\outputs\modal_grpo_tool_agent_react_v4
 - Modal GPU Function 可能被抢占。当前脚本使用 `trainer.resume_mode=auto`、Modal 重试和基于 Volume 的输出目录来支持从 checkpoint 恢复。
 - Modal Function 单次最长运行时间为 24 小时。更长训练应依赖 checkpoint + retry/resume，而不是假设一次进程持续运行到结束。
 - 第一版刻意不使用 Modal 多节点集群。当前项目主线是 `trainer.nnodes=1`，先把单节点 4/8 GPU 跑稳。
-- Modal 封装脚本会把仓库里的 `example/verl` 运行时代码挂到镜像中，降低 tool-agent API 与当前项目不一致的风险。
-- 当前镜像基于 Modal 官方 GRPO + verl 示例使用的 `verlai/verl:app-verl0.4-vllm0.8.5-mcore0.12.1`，再叠加本项目代码和运行依赖。
+- Modal 封装脚本会挂载仓库里的 `example/verl` 运行时代码，并使用 `vllm011` 镜像来匹配当前 tool-agent 代码需要的 vLLM API。
+- 当前镜像基于 `verlai/verl:vllm011.latest`，再叠加本项目代码和运行依赖。
 
 ## 官方参考
 

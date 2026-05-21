@@ -297,7 +297,9 @@ class IndexedGraphRetriever:
         embeddings_path = target / "entity_embeddings.pkl"
         if not graph_path.exists() or not embeddings_path.exists():
             raise FileNotFoundError("knowledge_graph.json and entity_embeddings.pkl are required for graph_search.")
-        self.graph = nx.node_link_graph(json.loads(graph_path.read_text(encoding="utf-8")))
+        graph_payload = json.loads(graph_path.read_text(encoding="utf-8"))
+        edge_key = "edges" if "edges" in graph_payload else "links"
+        self.graph = nx.node_link_graph(graph_payload, edges=edge_key)
         with embeddings_path.open("rb") as handle:
             payload = pickle.load(handle)
         self.entities: list[str] = payload.get("entities", [])
