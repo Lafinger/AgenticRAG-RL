@@ -34,6 +34,7 @@ BGE_MODEL = MODELS_PATH / "bge-m3"
 RERANKER_MODEL = MODELS_PATH / "bge-reranker-v2-m3"
 MERGED_MODEL = MODELS_PATH / "Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v4-merged"
 OUTPUT_DIR = OUTPUTS_PATH / "grpo_tool_agent_react_v4"
+FORMAL_OUTPUT_DIR = OUTPUTS_PATH / "grpo_tool_agent_react_v4_h100x2"
 LOG_DIR = OUTPUTS_PATH / "logs"
 LOG_FILE = LOG_DIR / "grpo_tool_agent_react_v4.log"
 
@@ -255,6 +256,7 @@ def _verl_command(
     total_epochs: int,
     save_freq: int,
     test_freq: int,
+    output_dir: PurePosixPath,
     extra_args: tuple[str, ...],
 ) -> list[str]:
     cmd = [
@@ -311,7 +313,7 @@ def _verl_command(
         f"trainer.test_freq={test_freq}",
         f"trainer.total_epochs={total_epochs}",
         "trainer.resume_mode=auto",
-        f"trainer.default_local_dir={OUTPUT_DIR}",
+        f"trainer.default_local_dir={output_dir}",
     ]
     cmd.extend(extra_args)
     return cmd
@@ -326,6 +328,7 @@ def _train(
     total_epochs: int,
     save_freq: int,
     test_freq: int,
+    output_dir: PurePosixPath,
     extra_args: tuple[str, ...],
 ) -> None:
     data_volume.reload()
@@ -343,6 +346,7 @@ def _train(
             total_epochs=total_epochs,
             save_freq=save_freq,
             test_freq=test_freq,
+            output_dir=output_dir,
             extra_args=extra_args,
         )
         _run(cmd, cwd=REMOTE_VERL_DIR, env=_base_env())
@@ -386,13 +390,14 @@ def train_smoke(*extra_args: str) -> None:
         total_epochs=1,
         save_freq=1,
         test_freq=1,
+        output_dir=OUTPUT_DIR,
         extra_args=smoke_args,
     )
 
 
 @app.function(
     image=image,
-    gpu="H100:4",
+    gpu="H100:2",
     volumes=volumes,
     secrets=[modal.Secret.from_name(SECRET_NAME)],
     timeout=24 * HOURS,
@@ -400,13 +405,22 @@ def train_smoke(*extra_args: str) -> None:
     single_use_containers=True,
 )
 def train(*extra_args: str) -> None:
+    formal_args = (
+        "actor_rollout_ref.actor.fsdp_config.param_offload=True",
+        "actor_rollout_ref.actor.fsdp_config.optimizer_offload=True",
+        "actor_rollout_ref.actor.optim.override_optimizer_config={foreach:false}",
+        "actor_rollout_ref.rollout.gpu_memory_utilization=0.25",
+        "actor_rollout_ref.rollout.max_num_batched_tokens=2048",
+        *extra_args,
+    )
     _train(
-        n_gpus=4,
-        train_batch_size=32,
-        ppo_mini_batch_size=16,
+        n_gpus=2,
+        train_batch_size=16,
+        ppo_mini_batch_size=8,
         rollout_n=4,
         total_epochs=2,
         save_freq=5,
         test_freq=3,
-        extra_args=extra_args,
+        output_dir=FORMAL_OUTPUT_DIR,
+        extra_args=formal_args,
     )

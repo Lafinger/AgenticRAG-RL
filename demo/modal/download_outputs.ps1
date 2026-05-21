@@ -1,7 +1,7 @@
 param(
     [string]$OutputsVolume = "agentic-rag-rl-outputs",
-    [string]$RemotePath = "/grpo_tool_agent_react_v4",
-    [string]$LocalDestination = (Join-Path (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path "training\outputs\modal_grpo_tool_agent_react_v4"),
+    [string]$RemotePath = "/grpo_tool_agent_react_v4_h100x2",
+    [string]$LocalDestination = (Join-Path (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path "training\outputs\modal_grpo_tool_agent_react_v4_h100x2"),
     [string]$ModalExe = "",
     [switch]$SkipHuggingFaceWeights
 )

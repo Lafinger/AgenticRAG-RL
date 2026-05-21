@@ -17,8 +17,9 @@
 ## 使用建议
 
 - 本项目 Modal smoke 优先使用 `H100:1` 或 `H100:2`，先验证 retrieval server、verl、vLLM、tool-agent 和 reward 是否闭环。
-- 正式 GRPO 第一版建议使用 `H100:4` 或 `A100 80GB:4`，与当前 `trainer.nnodes=1`、`trainer.n_gpus_per_node=4` 的单节点配置保持一致。
-- 不建议第一版直接使用 Modal 多节点；先把单节点 4/8 GPU 的 checkpoint、resume 和输出下载流程跑稳。
+- 当前正式 GRPO 第一版使用 `H100:2`，与 `trainer.nnodes=1`、`trainer.n_gpus_per_node=2` 的单节点配置保持一致。
+- `H100:4` 或 `A100 80GB:4` 可作为后续吞吐扩容选项；扩容前应重新验证 batch、rollout 并发、checkpoint 和 resume。
+- 不建议第一版直接使用 Modal 多节点；先把单节点 2 GPU 的 checkpoint、resume 和输出下载流程跑稳。
 
 ## 参考来源
 

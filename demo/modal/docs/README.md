@@ -136,7 +136,13 @@ modal run --detach .\demo\modal\modal_grpo_tool_agent.py::train_smoke -- `
 
 ## 正式训练
 
-正式入口是单节点 4 GPU：
+正式入口是单节点 2 GPU。启动前先确认没有正在运行或 detached 的训练任务：
+
+```powershell
+modal app list
+```
+
+确认安全后启动正式训练：
 
 ```powershell
 modal run --detach .\demo\modal\modal_grpo_tool_agent.py::train
@@ -144,16 +150,22 @@ modal run --detach .\demo\modal\modal_grpo_tool_agent.py::train
 
 默认参数：
 
-- `gpu="H100:4"`
+- `gpu="H100:2"`
 - `trainer.nnodes=1`
-- `trainer.n_gpus_per_node=4`
-- `TRAIN_BATCH_SIZE=32`
-- `PPO_MINI_BATCH_SIZE=16`
+- `trainer.n_gpus_per_node=2`
+- `TRAIN_BATCH_SIZE=16`
+- `PPO_MINI_BATCH_SIZE=8`
 - `ROLLOUT_N=4`
 - `TOTAL_EPOCHS=2`
 - `SAVE_FREQ=5`
 - `TEST_FREQ=3`
 - `trainer.resume_mode=auto`
+- `trainer.default_local_dir=/vol/outputs/grpo_tool_agent_react_v4_h100x2`
+- `actor_rollout_ref.actor.fsdp_config.param_offload=True`
+- `actor_rollout_ref.actor.fsdp_config.optimizer_offload=True`
+- `actor_rollout_ref.actor.optim.override_optimizer_config={foreach:false}`
+- `actor_rollout_ref.rollout.gpu_memory_utilization=0.25`
+- `actor_rollout_ref.rollout.max_num_batched_tokens=2048`
 
 临时调参同样可以追加 Hydra 覆盖：
 
@@ -164,11 +176,11 @@ modal run --detach .\demo\modal\modal_grpo_tool_agent.py::train -- `
   trainer.save_freq=2
 ```
 
-不要让多个训练任务同时写入同一个 `/vol/outputs/grpo_tool_agent_react_v4` 目录。Modal Volume 支持并发访问，但同一文件的并发写入会由最后写入者覆盖，容易破坏 checkpoint。
+不要让多个训练任务同时写入同一个 `/vol/outputs/grpo_tool_agent_react_v4_h100x2` 目录。Modal Volume 支持并发访问，但同一文件的并发写入会由最后写入者覆盖，容易破坏 checkpoint。
 
 ## 下载训练产物
 
-smoke 或正式训练结束后执行：
+正式训练结束后执行：
 
 ```powershell
 .\demo\modal\download_outputs.ps1
@@ -177,14 +189,22 @@ smoke 或正式训练结束后执行：
 默认下载到：
 
 ```text
-demo\training\outputs\modal_grpo_tool_agent_react_v4
+demo\training\outputs\modal_grpo_tool_agent_react_v4_h100x2
+```
+
+如需下载旧 smoke 目录，显式指定远端和本地路径：
+
+```powershell
+.\demo\modal\download_outputs.ps1 `
+  -RemotePath /grpo_tool_agent_react_v4 `
+  -LocalDestination .\demo\training\outputs\modal_grpo_tool_agent_react_v4
 ```
 
 ## 运行注意事项
 
 - Modal GPU Function 可能被抢占。当前脚本使用 `trainer.resume_mode=auto`、Modal 重试和基于 Volume 的输出目录来支持从 checkpoint 恢复。
 - Modal Function 单次最长运行时间为 24 小时。更长训练应依赖 checkpoint + retry/resume，而不是假设一次进程持续运行到结束。
-- 第一版刻意不使用 Modal 多节点集群。当前项目主线是 `trainer.nnodes=1`，先把单节点 4/8 GPU 跑稳。
+- 第一版刻意不使用 Modal 多节点集群。当前项目主线是 `trainer.nnodes=1`，先把单节点 2 GPU 正式训练跑稳。
 - Modal 封装脚本会挂载仓库里的 `example/verl` 运行时代码，并使用 `vllm011` 镜像来匹配当前 tool-agent 代码需要的 vLLM API。
 - 当前镜像基于 `verlai/verl:vllm011.latest`，再叠加本项目代码和运行依赖。
 
