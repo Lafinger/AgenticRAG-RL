@@ -11,6 +11,9 @@
 | `modal_grpo_tool_agent.py` | Modal App 定义，包含镜像、Volume、输入检查、smoke 训练和正式 GRPO 训练入口。 |
 | `upload_assets.ps1` | 把 parquet 数据、检索索引、BGE 模型、reranker 和 SFT merged model 上传到 Modal Volume。 |
 | `download_outputs.ps1` | 从 Modal 输出 Volume 下载 GRPO checkpoint 和日志。 |
+| `download_latest_checkpoint.py` | 从旧 Modal workspace 逐文件下载最新正式 checkpoint，用于账号或 workspace 切换。 |
+| `resume_after_account_switch.py` | 在新 Modal workspace 创建资源、上传断点、运行输入检查，并可显式启动续训。 |
+| `docs/断点续训.md` | Modal 账号或 workspace 切换后的断点续训流程和当前已知 checkpoint 状态。 |
 | `docs/SECRETS.md` | Modal Secret 命名和环境变量说明。 |
 | `docs/modal显卡型号信息.md` | Modal 常用 GPU 型号、显存、价格和预算时长参考。 |
 
@@ -39,7 +42,8 @@
 └── Qwen3-4B-Instruct-2507-Unsloth-SFT-react-v4-merged/
 
 /vol/outputs/
-└── grpo_tool_agent_react_v4/
+├── grpo_tool_agent_react_v4/
+└── grpo_tool_agent_react_v4_h100x2/
 ```
 
 ## 前置条件
@@ -146,6 +150,22 @@ modal app list
 
 ```powershell
 modal run --detach .\demo\modal\modal_grpo_tool_agent.py::train
+```
+
+如果是在账号或 workspace 切换后续训，优先使用 [`断点续训.md`](断点续训.md) 中的包装脚本。当前已知 `global_step_160` 的 rank1 optimizer 分片损坏，正式续训命令需要跳过 optimizer 加载：
+
+```powershell
+.\demo\.venv\Scripts\python.exe .\demo\modal\resume_after_account_switch.py `
+  --skip-assets `
+  --skip-checkpoint-upload `
+  --start-training `
+  --train-extra-arg "actor_rollout_ref.actor.checkpoint.load_contents=[model,extra]"
+```
+
+2026-05-22 已用该方式预检跑通到 `global_step_161`，并确认 Modal App 已停止。远端最新指针为：
+
+```text
+agentic-rag-rl-outputs:/grpo_tool_agent_react_v4_h100x2/latest_checkpointed_iteration.txt = 161
 ```
 
 默认参数：
